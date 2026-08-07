@@ -12,18 +12,20 @@
 
 Proyek ini dirancang khusus untuk mengatasi permasalahan **ketiadaan jaringan internet di area pertanian/perkebunan terpencil**. Dengan arsitektur **Offline-First (Store & Forward)**, stasiun pusat ESP32 dapat beroperasi 100% secara otonom, mengendalikan pompa air Sanyo 220V, mengelola lampu indikator *Traffic Light*, serta mencatat data kebun ke dalam memori *Flash* internal.
 
-Pengguna dapat memantau dan mengendalikan alat melalui **Web Server Lokal** dari browser Smartphone tanpa perlu kuota internet, serta menyinkronkan data cuaca satelit global dari OpenWeatherMap melalui teknik *Browser Caching*.
+Pengguna dapat memantau dan mengendalikan alat melalui **Web Server Lokal** dari browser Smartphone tanpa perlu kuota internet, serta menyinkronkan data cuaca satelit resmi desa dari **BMKG API** melalui teknik *Browser Caching*.
 
 ---
 
 ## ✨ Fitur-Fitur Utama
 
 - 📡 **Komunikasi Nirkabel ESP-NOW:** Pengiriman data tanah dari ESP8266 di tengah kebun ke ESP32 sejauh 100m+ tanpa perlu *Router* WiFi.
+- 📈 **Grafik Oscilloscope SCADA Multi-Metric (Canvas 420px):** Menggambar pergerakan data kelembapan tanah, suhu, dan kelembapan udara secara real-time dengan sumbu X dinamis menggunakan jam nyata (`HH:MM:SS`) alih-alih nomor sampel buatan.
+- ⚖️ **Komparasi Lahan vs Satelit & AI Tips:** Membandingkan Suhu dan Kelembapan sensor DHT11 lokal secara langsung dengan data cuaca BMKG terdekat. Menampilkan saran asisten AI otomatis jika terdeteksi ancaman anomali cuaca atau jamur daun akibat kelembapan ekstrem.
 - ⚡ **Proteksi Dinamo Pompa Sanyo 20 Menit:** Fitur *Timer Cut-Off* otomatis yang mematikan pompa setelah 20 menit menyala untuk mencegah mesin gosong/terbakar akibat air habis.
 - 🚨 **Sistem Failsafe Interlock (Kunci Mutlak):** Jika sinyal sensor kebun hilang >8 detik atau kabel relay terputus, ESP32 secara instan memotong arus listrik ke pompa (Hardware Failsafe Lock) dan mengunci mode manual agar sistem 100% aman dari banjir kebun.
 - 🚦 **Lampu Indikator Fisik (Traffic Light):** Memberikan diagnosa cepat; Kuning Kedip = Cari Sinyal, Merah Kedip = Sinyal Hilang, Merah/Kuning Solid = Sedang Menyiram, Hijau Solid = Aman.
 - 💻 **Web Serial Debug Console (0-Byte RAM):** Emulator terminal hitam di browser HP untuk membaca log *debug* ESP32 secara *real-time* tanpa membebani RAM ESP32.
-- 🌐 **Sinkronisasi Satelit 2-Langkah:** Menggunakan memori sementara browser HP (*localStorage*) untuk mengambil data cuaca OpenWeatherMap saat ada internet, lalu menyuntikkannya ke ESP32.
+- 🌐 **Sinkronisasi Satelit 2-Langkah:** Menggunakan memori sementara browser HP (*localStorage*) untuk mengambil data cuaca BMKG saat ada internet di rumah, lalu menyuntikkannya ke ESP32 secara offline saat berada di kebun.
 - 💾 **Perekam Data Memori LittleFS & Auto-Wipe:** Data kebun dicatat otomatis setiap 1 jam. Jika ukuran file melebihi 50KB, memori akan melakukan *Auto-Wipe* otomatis agar *storage* awet seumur hidup.
 - 📱 **Siap Kompatibel dengan Flutter App:** Menyediakan REST API JSON (`/data`, `/pushWeather`, `/downloadLog`) yang siap diintegrasikan ke aplikasi mobile Flutter & Firebase.
 
