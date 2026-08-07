@@ -20,7 +20,8 @@ Pengguna dapat memantau dan mengendalikan alat melalui **Web Server Lokal** dari
 
 - 📡 **Komunikasi Nirkabel ESP-NOW:** Pengiriman data tanah dari ESP8266 di tengah kebun ke ESP32 sejauh 100m+ tanpa perlu *Router* WiFi.
 - ⚡ **Proteksi Dinamo Pompa Sanyo 20 Menit:** Fitur *Timer Cut-Off* otomatis yang mematikan pompa setelah 20 menit menyala untuk mencegah mesin gosong/terbakar akibat air habis.
-- 🚨 **Sistem Fail-Safe & Auto-Recovery:** Indikator LED Merah berkedip cepat (*blinking*) saat sensor rusak atau sinyal terputus, dan otomatis pulih (*Recovery*) begitu koneksi tersambung kembali.
+- 🚨 **Sistem Failsafe Interlock (Kunci Mutlak):** Jika sinyal sensor kebun hilang >8 detik atau kabel relay terputus, ESP32 secara instan memotong arus listrik ke pompa (Hardware Failsafe Lock) dan mengunci mode manual agar sistem 100% aman dari banjir kebun.
+- 🚦 **Lampu Indikator Fisik (Traffic Light):** Memberikan diagnosa cepat; Kuning Kedip = Cari Sinyal, Merah Kedip = Sinyal Hilang, Merah/Kuning Solid = Sedang Menyiram, Hijau Solid = Aman.
 - 💻 **Web Serial Debug Console (0-Byte RAM):** Emulator terminal hitam di browser HP untuk membaca log *debug* ESP32 secara *real-time* tanpa membebani RAM ESP32.
 - 🌐 **Sinkronisasi Satelit 2-Langkah:** Menggunakan memori sementara browser HP (*localStorage*) untuk mengambil data cuaca OpenWeatherMap saat ada internet, lalu menyuntikkannya ke ESP32.
 - 💾 **Perekam Data Memori LittleFS & Auto-Wipe:** Data kebun dicatat otomatis setiap 1 jam. Jika ukuran file melebihi 50KB, memori akan melakukan *Auto-Wipe* otomatis agar *storage* awet seumur hidup.
@@ -34,10 +35,10 @@ Pengguna dapat memantau dan mengendalikan alat melalui **Web Server Lokal** dari
 | Komponen / Modul | Pin Komponen | Pin ESP32 GPIO | Keterangan |
 | :--- | :---: | :---: | :--- |
 | **Sensor DHT11** | DATA | `GPIO 4` | Pembaca Suhu & Kelembapan Udara |
-| **Modul Relay** | IN | `GPIO 25` | Kendali Pompa Sanyo 220V |
-| **LED Hijau** | Anoda (+) | `GPIO 32` | Indikator Status AMAN |
-| **LED Kuning** | Anoda (+) | `GPIO 33` | Indikator Status PERINGATAN |
-| **LED Merah** | Anoda (+) | `GPIO 27` | Indikator Status BAHAYA / ERROR |
+| **Modul Relay 1** | IN | `GPIO 26` | Kendali Pompa Sanyo (Active LOW: `LOW`=ON, `HIGH`=OFF) |
+| **LED Hijau** | Anoda (+) | `GPIO 32` | Indikator Status AMAN (Active HIGH) |
+| **LED Kuning** | Anoda (+) | `GPIO 33` | Indikator Status PERINGATAN / MENUNGGU (Active HIGH) |
+| **LED Merah** | Anoda (+) | `GPIO 27` | Indikator Status BAHAYA / ERROR (Active HIGH) |
 
 ### Node Kebun (ESP8266 Sender)
 | Komponen | Pin Sensor | Pin ESP8266 |

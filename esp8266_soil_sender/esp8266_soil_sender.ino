@@ -88,5 +88,5 @@ void loop() {
     Serial.println(F(" | Status Transmisi: ⚡ MEMANCARKAN..."));
   }
 
-  delay(980); // Total Delay 1000 ms (1 Detik)
+  delay(2000); // Total Delay 1000 ms (1 Detik)
 }

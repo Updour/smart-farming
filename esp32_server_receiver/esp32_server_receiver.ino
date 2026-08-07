@@ -24,7 +24,8 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 
-const float batasSuhu = 30.0;  // Batas Hangat
+float batasSuhu = 30.0;        // Batas Hangat
+int batasTanah = 45;           // Batas Tanah Minimal
 const float suhuBahaya = 35.0; // Batas Bahaya Panas Ekstrem
 
 typedef struct struct_message {
@@ -113,7 +114,7 @@ String getSoilCategory(int8_t moisture) {
     return F("🌊 SANGAT BASAH / TERGENANG");
   if (moisture >= 65)
     return F("🌱 SANGAT LEMBAB (IDEAL SUBUR)");
-  if (moisture >= 45)
+  if (moisture >= batasTanah)
     return F("☘️ LEMBAB OPTIMAL");
   if (moisture >= 25)
     return F("🍂 TANAH MULAI KERING");
@@ -122,12 +123,13 @@ String getSoilCategory(int8_t moisture) {
 
 // Rumus Indeks Kesehatan Lahan (0 - 100%)
 uint8_t calculateFarmHealth() {
-  if (isSystemError || isEsp8266Unplugged || isRelayUnplugged || latestMoisturePercent < 0)
+  if (isSystemError || isEsp8266Unplugged || isRelayUnplugged ||
+      latestMoisturePercent < 0)
     return 0;
   int score = 100;
   if (latestMoisturePercent < 25)
     score -= 25;
-  else if (latestMoisturePercent < 45)
+  else if (latestMoisturePercent < batasTanah)
     score -= 15;
   else if (latestMoisturePercent >= 90)
     score -= 15;
@@ -174,20 +176,29 @@ String getSoilDepletionTime() {
 // Kesimpulan AI Diagnostik Kondisi Tanaman Real-Time
 String getPlantHealthSummary() {
   if (isEsp8266Unplugged || latestMoisturePercent < 0)
-    return F("🚨 [PERINGATAN TERPUTUS] ESP8266 DICABUT / MATI! Sinyal Hilang. Lampu Merah Berkedip! Pompa MUTLAK MATI!");
+    return F("🚨 [PERINGATAN TERPUTUS] ESP8266 DICABUT / MATI! Sinyal Hilang. "
+             "Lampu Merah Berkedip! Pompa MUTLAK MATI!");
   if (isRelayUnplugged)
-    return F("🚨 [PERINGATAN HARDWARE] KABEL RELAY (PIN 26) TERLEPAS / DICABUT!");
+    return F(
+        "🚨 [PERINGATAN HARDWARE] KABEL RELAY (PIN 26) TERLEPAS / DICABUT!");
   if (isStartupWaiting)
-    return "⏳ [INITIALIZING " + String(waitingPercent) + "%] Menunggu sinyal ESP8266... (Lampu Kuning Berkedip)";
+    return "⏳ [INITIALIZING " + String(waitingPercent) +
+           "%] Menunggu sinyal ESP8266... (Lampu Kuning Berkedip)";
 
   if (latestMoisturePercent >= 90) {
-    return F("🛑 [INTERLOCK AKAR 90%] Tanah sangat basah (≥90%). Pompa dikunci OFF otomatis untuk mencegah pembusukan akar tanaman!");
+    return F("🛑 [INTERLOCK AKAR 90%] Tanah sangat basah (≥90%). Pompa dikunci "
+             "OFF otomatis untuk mencegah pembusukan akar tanaman!");
   } else if (lastSuhuC >= suhuBahaya) {
-    return "☀️ [KONDISI 1: BAHAYA PANAS] Suhu tinggi (" + String(lastSuhuC, 1) + "°C). Penyiraman darurat diaktifkan.";
-  } else if (lastSuhuC > batasSuhu || latestMoisturePercent < 45) {
-    return "🍂 [KONDISI 2: PERINGATAN MENYIRAM] Kelembapan tanah (" + String(latestMoisturePercent) + "%) & suhu (" + String(lastSuhuC, 1) + "°C). Pompa menyala menyiram.";
+    return "☀️ [KONDISI 1: BAHAYA PANAS] Suhu tinggi (" + String(lastSuhuC, 1) +
+           "°C). Penyiraman darurat diaktifkan.";
+  } else if (lastSuhuC > batasSuhu || latestMoisturePercent < batasTanah) {
+    return "🍂 [KONDISI 2: PERINGATAN MENYIRAM] Kelembapan tanah (" +
+           String(latestMoisturePercent) + "%) & suhu (" +
+           String(lastSuhuC, 1) + "°C). Pompa menyala menyiram.";
   } else {
-    return "🌿 [KONDISI 3: AMAN & IDEAL] Suhu adem (" + String(lastSuhuC, 1) + "°C) & kelembapan tanah (" + String(latestMoisturePercent) + "%) ideal. Pompa MATI.";
+    return "🌿 [KONDISI 3: AMAN & IDEAL] Suhu adem (" + String(lastSuhuC, 1) +
+           "°C) & kelembapan tanah (" + String(latestMoisturePercent) +
+           "%) ideal. Pompa MATI.";
   }
 }
 
@@ -276,7 +287,8 @@ void appendLogData() {
     file.print(',');
     file.println(satRainPred);
     file.close();
-    Serial.println(F("💾 [LITTLEFS] Data log database berhasil dicatat & aman tersimpan."));
+    Serial.println(F(
+        "💾 [LITTLEFS] Data log database berhasil dicatat & aman tersimpan."));
   }
 }
 
@@ -303,7 +315,8 @@ void checkSystemStatus() {
     }
   }
 
-  // 1. TIMEOUT REALTIME SINYAL ESP8266: JIKA TERPUTUS >8 DETIK -> PERINGATAN DARURAT SAKLAR MERAH KEDIP!
+  // 1. TIMEOUT REALTIME SINYAL ESP8266: JIKA TERPUTUS >8 DETIK -> PERINGATAN
+  // DARURAT SAKLAR MERAH KEDIP!
   bool espNowTimeout = (lastRecvTime != 0 && (millis() - lastRecvTime > 8000));
 
   // 2. CEK APABILA KABEL RELAY (PIN 26) DICABUT / DISCONNECTED
@@ -315,7 +328,8 @@ void checkSystemStatus() {
 
   if (espNowTimeout) {
     isEsp8266Unplugged = true;
-    systemErrorMsg = F("🚨 PERINGATAN: SINYAL ESP8266 TERPUTUS / MATI! (Sinyal Hilang >8s)");
+    systemErrorMsg =
+        F("🚨 PERINGATAN: SINYAL ESP8266 TERPUTUS / MATI! (Sinyal Hilang >8s)");
     isSystemError = true;
     isStartupWaiting = false;
   } else if (isRelayUnplugged) {
@@ -331,12 +345,14 @@ void checkSystemStatus() {
       isStartupWaiting = false;
       isEsp8266Unplugged = true;
       isSystemError = true;
-      systemErrorMsg = F("🚨 PERINGATAN: ESP8266 TIDAK MENGIRIM DATA (MATI / TERPUTUS)!");
+      systemErrorMsg =
+          F("🚨 PERINGATAN: ESP8266 TIDAK MENGIRIM DATA (MATI / TERPUTUS)!");
     } else {
       isStartupWaiting = true;
       isSystemError = false;
       isEsp8266Unplugged = false;
-      systemErrorMsg = "⏳ MENUNGGU KONEKSI SENSOR [" + String(waitingPercent) + "%] (Lampu Kuning Berkedip)";
+      systemErrorMsg = "⏳ MENUNGGU KONEKSI SENSOR [" + String(waitingPercent) +
+                       "%] (Lampu Kuning Berkedip)";
     }
   } else {
     isEsp8266Unplugged = false;
@@ -363,7 +379,7 @@ void handleData() {
   } else if (lastSuhuC >= suhuBahaya) {
     bgClass = F("bahaya");
     textStatus = F("KONDISI 1: BAHAYA (Suhu Panas Ekstrem!)");
-  } else if (lastSuhuC > batasSuhu || latestMoisturePercent < 45) {
+  } else if (lastSuhuC > batasSuhu || latestMoisturePercent < batasTanah) {
     bgClass = F("peringatan");
     textStatus = F("PERINGATAN (Waktu Menyiram)");
   }
@@ -382,7 +398,8 @@ void handleData() {
   uint8_t connectedClients = WiFi.softAPgetStationNum();
 
   uint8_t dhtHealth = (isnan(lastSuhuC) || lastSuhuC == 0.0) ? 50 : 100;
-  uint8_t soilHealth = (lastRecvTime == 0 || millis() - lastRecvTime > 8000) ? 0 : 100;
+  uint8_t soilHealth =
+      (lastRecvTime == 0 || millis() - lastRecvTime > 8000) ? 0 : 100;
 
   float relayLifePercent = 100.0 - ((float)pumpCount / 1000.0);
   if (relayLifePercent < 0)
@@ -406,8 +423,10 @@ void handleData() {
   json += "\"heatC\":\"" + String(lastHeatIndexC, 1) + "\",";
   json += "\"heatF\":\"" + String(lastHeatIndexF, 1) + "\",";
   json += "\"dew\":\"" + String(lastDewPoint, 1) + "\",";
-  json += "\"soil\":\"" + String(latestMoisturePercent < 0 ? 0 : latestMoisturePercent) + "\",";
-  json += "\"soilCategory\":\"" + getSoilCategory(latestMoisturePercent) + "\",";
+  json += "\"soil\":\"" +
+          String(latestMoisturePercent < 0 ? 0 : latestMoisturePercent) + "\",";
+  json +=
+      "\"soilCategory\":\"" + getSoilCategory(latestMoisturePercent) + "\",";
   json += "\"soilDepletion\":\"" + getSoilDepletionTime() + "\",";
   json += "\"plantSummary\":\"" + getPlantHealthSummary() + "\",";
   json += "\"rawAdc\":\"" + String(latestRawAdc) + "\",";
@@ -429,7 +448,9 @@ void handleData() {
   json += "\"hourlyCount\":" + String(hourlyPumpCount) + ",";
   json += "\"hourlySecs\":" + String(hourlyPumpSecs) + ",";
   json += "\"uptime\":\"" + getUptime() + "\",";
-  json += "\"freeHeap\":" + String(ESP.getHeapSize() > 0 ? (ESP.getFreeHeap() / 1024) : 210) + ",";
+  json += "\"freeHeap\":" +
+          String(ESP.getHeapSize() > 0 ? (ESP.getFreeHeap() / 1024) : 210) +
+          ",";
   json += "\"pumpCount\":" + String(pumpCount) + ",";
   json += "\"totalPumpSecs\":" + String(totalPumpSecs) + ",";
   json += "\"waterLiters\":\"" + String(waterLiters, 1) + "\",";
@@ -481,8 +502,20 @@ void handleClearLogs() {
   totalPumpSecs = 0;
   hourlyPumpCount = 0;
   hourlyPumpSecs = 0;
-  Serial.println(F("🧹 [LITTLEFS] Berkas Log & Seluruh Counter Akumulasi Pompa Berhasil Direset Total!"));
-  server.send(200, "text/plain", F("Log Storage & Counter Pompa Berhasil Direset Total!"));
+  Serial.println(F("🧹 [LITTLEFS] Berkas Log & Seluruh Counter Akumulasi Pompa "
+                   "Berhasil Direset Total!"));
+  server.send(200, "text/plain",
+              F("Log Storage & Counter Pompa Berhasil Direset Total!"));
+}
+
+void handleSetThreshold() {
+  if (server.hasArg("soil") && server.hasArg("temp")) {
+    batasTanah = server.arg("soil").toInt();
+    batasSuhu = server.arg("temp").toFloat();
+    server.send(200, "text/plain", "Threshold Berhasil Diubah Sementara!");
+  } else {
+    server.send(400, "text/plain", "Bad Request");
+  }
 }
 
 void handleSetMode() {
@@ -497,14 +530,17 @@ void handleToggleRelay() {
     manualRelayState = (server.arg("s") == "on");
   }
 
-  if (manualRelayState && !isSystemError && !isEsp8266Unplugged && latestMoisturePercent >= 0) {
-     digitalWrite(RELAY1, LOW); // INSTAN ON KE PIN 26
-     isRelayOn = true;
-     Serial.println(F("⚡ [WEB OVERRIDE] MANUAL NYALAKAN POMPA -> PIN 26 DIBERI SINYAL LOW (0V) (ON!)"));
+  if (manualRelayState && !isSystemError && !isEsp8266Unplugged &&
+      latestMoisturePercent >= 0) {
+    digitalWrite(RELAY1, LOW); // INSTAN ON KE PIN 26
+    isRelayOn = true;
+    Serial.println(F("⚡ [WEB OVERRIDE] MANUAL NYALAKAN POMPA -> PIN 26 DIBERI "
+                     "SINYAL LOW (0V) (ON!)"));
   } else {
-     digitalWrite(RELAY1, HIGH); // INSTAN OFF KE PIN 26
-     isRelayOn = false;
-     Serial.println(F("⚡ [WEB OVERRIDE] MANUAL MATIKAN POMPA / FAILSAFE LOCK -> PIN 26 DIBERI SINYAL HIGH (3.3V) (OFF!)"));
+    digitalWrite(RELAY1, HIGH); // INSTAN OFF KE PIN 26
+    isRelayOn = false;
+    Serial.println(F("⚡ [WEB OVERRIDE] MANUAL MATIKAN POMPA / FAILSAFE LOCK "
+                     "-> PIN 26 DIBERI SINYAL HIGH (3.3V) (OFF!)"));
   }
 
   server.send(200, "text/plain", F("OK"));
@@ -516,39 +552,44 @@ void handleReboot() {
   ESP.restart();
 }
 
-// ==== UTAMA: LOGIKA 3 KONDISI REAL-TIME MURNI DENGAN HARDWARE FAILSAFE LOCK ====
+// ==== UTAMA: LOGIKA 3 KONDISI REAL-TIME MURNI DENGAN HARDWARE FAILSAFE LOCK
+// ====
 void updateRelayState() {
   bool butuhON = false;
 
-  // HARDWARE FAILSAFE INTERLOCK UTAMA: JIKA SINYAL TERPUTUS / ESP8266 DICABUT / MATI / HARDWARE ERROR / TANAH TERGENANG >=90%
-  if (isSystemError || isEsp8266Unplugged || isRelayUnplugged || latestMoisturePercent < 0 || isStartupWaiting) {
-     // MUTLAK KUNCI SAKLAR RELAY PIN 26 MATI TOTAL! (AUTO EXIT MANUAL)
-     isRelayOn = false;
-     isManualMode = false;
-     manualRelayState = false;
-     digitalWrite(RELAY1, HIGH); // SANGAT TEGAS PAKSA PIN 26 HIGH (3.3V / OFF)!
-     return;
+  // HARDWARE FAILSAFE INTERLOCK UTAMA: JIKA SINYAL TERPUTUS / ESP8266 DICABUT /
+  // MATI / HARDWARE ERROR / TANAH TERGENANG >=90%
+  if (isSystemError || isEsp8266Unplugged || isRelayUnplugged ||
+      latestMoisturePercent < 0 || isStartupWaiting) {
+    // MUTLAK KUNCI SAKLAR RELAY PIN 26 MATI TOTAL! (AUTO EXIT MANUAL)
+    isRelayOn = false;
+    isManualMode = false;
+    manualRelayState = false;
+    digitalWrite(RELAY1, HIGH); // SANGAT TEGAS PAKSA PIN 26 HIGH (3.3V / OFF)!
+    return;
   }
 
   if (latestMoisturePercent >= 90) {
-     butuhON = false;
-     isManualMode = false;
-     manualRelayState = false;
-     relayCooldown = false;
+    butuhON = false;
+    isManualMode = false;
+    manualRelayState = false;
+    relayCooldown = false;
   } else if (isManualMode) {
-     butuhON = manualRelayState;
+    butuhON = manualRelayState;
   } else {
-     // KONDISI 1 (Panas Ekstrem >= 35C) ATAU KONDISI 2 (Menyiram: Suhu > 30C ATAU Tanah < 45%)
-     if (lastSuhuC >= suhuBahaya || lastSuhuC > batasSuhu || latestMoisturePercent < 45) {
-        butuhON = true;
-     } else {
-        // KONDISI 3 (Aman: Suhu <= 30C DAN Tanah Lembab >= 45%)
-        butuhON = false;
-        relayCooldown = false;
-     }
+    // KONDISI 1 (Panas Ekstrem >= 35C) ATAU KONDISI 2 (Menyiram: Suhu > 30C
+    // ATAU Tanah < 45%)
+    if (lastSuhuC >= suhuBahaya || lastSuhuC > batasSuhu ||
+        latestMoisturePercent < batasTanah) {
+      butuhON = true;
+    } else {
+      // KONDISI 3 (Aman: Suhu <= 30C DAN Tanah Lembab >= 45%)
+      butuhON = false;
+      relayCooldown = false;
+    }
 
-     if (butuhON && relayCooldown)
-        butuhON = false;
+    if (butuhON && relayCooldown)
+      butuhON = false;
   }
 
   if (butuhON) {
@@ -558,13 +599,15 @@ void updateRelayState() {
       hourlyPumpCount++;
       relayStartTime = millis();
       digitalWrite(RELAY1, LOW);
-      Serial.println(F("⚡ [RELAY HARDWARE] PIN 26 DIBERI SINYAL LOW (0V) -> RELAY ON 1X!"));
+      Serial.println(F(
+          "⚡ [RELAY HARDWARE] PIN 26 DIBERI SINYAL LOW (0V) -> RELAY ON 1X!"));
     } else {
       if (!isManualMode && (millis() - relayStartTime >= MAX_RELAY_TIME)) {
         relayCooldown = true;
         isRelayOn = false;
         digitalWrite(RELAY1, HIGH);
-        Serial.println(F("🚨 [RELAY] 20 MENIT NONSTOP TERCAPAI -> AUTO COOLDOWN LOCK!"));
+        Serial.println(
+            F("🚨 [RELAY] 20 MENIT NONSTOP TERCAPAI -> AUTO COOLDOWN LOCK!"));
       } else {
         digitalWrite(RELAY1, LOW);
       }
@@ -575,37 +618,43 @@ void updateRelayState() {
   }
 }
 
-// ==== LOGIKA SEJATI INDIKATOR LAMPU TRAFFIC LIGHT (ACTIVE HIGH / COMMON GND) ====
+// ==== LOGIKA SEJATI INDIKATOR LAMPU TRAFFIC LIGHT (ACTIVE HIGH / COMMON GND)
+// ====
 void updateLEDState() {
   if (isSystemError || isEsp8266Unplugged || latestMoisturePercent < 0) {
-     // 1. SINYAL HILANG / TERPUTUS / DICABUT -> LAMPU MERAH BERKEDIP (250ms)!
-     digitalWrite(LED_HIJAU, LOW);  // OFF
-     digitalWrite(LED_KUNING, LOW); // OFF
-     digitalWrite(LED_MERAH, ((millis() / 250) % 2) ? HIGH : LOW); // HIGH = NYALA
+    // 1. SINYAL HILANG / TERPUTUS / DICABUT -> LAMPU MERAH BERKEDIP (250ms)!
+    digitalWrite(LED_HIJAU, LOW);  // OFF
+    digitalWrite(LED_KUNING, LOW); // OFF
+    digitalWrite(LED_MERAH,
+                 ((millis() / 250) % 2) ? HIGH : LOW); // HIGH = NYALA
   } else if (isStartupWaiting) {
-     // 2. AWAL BOOT / MENUNGGU KONEKSI (WAITING) -> LAMPU KUNING BERKEDIP (500ms)!
-     digitalWrite(LED_HIJAU, LOW);  // OFF
-     digitalWrite(LED_MERAH, LOW);  // OFF
-     digitalWrite(LED_KUNING, ((millis() / 500) % 2) ? HIGH : LOW); // HIGH = NYALA
+    // 2. AWAL BOOT / MENUNGGU KONEKSI (WAITING) -> LAMPU KUNING BERKEDIP
+    // (500ms)!
+    digitalWrite(LED_HIJAU, LOW); // OFF
+    digitalWrite(LED_MERAH, LOW); // OFF
+    digitalWrite(LED_KUNING,
+                 ((millis() / 500) % 2) ? HIGH : LOW); // HIGH = NYALA
   } else {
-     // 3. KONDISI 1: BAHAYA PANAS (>= 35.0 C) -> LAMPU MERAH SOLID ON
-     if (lastSuhuC >= suhuBahaya) {
-        digitalWrite(LED_HIJAU, LOW);  // OFF
-        digitalWrite(LED_KUNING, LOW); // OFF
-        digitalWrite(LED_MERAH, HIGH); // HIGH = NYALA SOLID
-     } 
-     // 4. KONDISI 2: PERINGATAN MENYIRAM (> 30.0 C ATAU TANAH < 45%) -> LAMPU KUNING SOLID ON
-     else if (lastSuhuC > batasSuhu || latestMoisturePercent < 45) {
-        digitalWrite(LED_HIJAU, LOW);  // OFF
-        digitalWrite(LED_MERAH, LOW);  // OFF
-        digitalWrite(LED_KUNING, HIGH); // HIGH = NYALA SOLID
-     } 
-     // 5. KONDISI 3: AMAN (SUHU <= 30.0 C DAN TANAH >= 45%) -> LAMPU HIJAU SOLID ON
-     else {
-        digitalWrite(LED_KUNING, LOW); // OFF
-        digitalWrite(LED_MERAH, LOW);  // OFF
-        digitalWrite(LED_HIJAU, HIGH); // HIGH = NYALA SOLID
-     }
+    // 3. KONDISI 1: BAHAYA PANAS (>= 35.0 C) -> LAMPU MERAH SOLID ON
+    if (lastSuhuC >= suhuBahaya) {
+      digitalWrite(LED_HIJAU, LOW);  // OFF
+      digitalWrite(LED_KUNING, LOW); // OFF
+      digitalWrite(LED_MERAH, HIGH); // HIGH = NYALA SOLID
+    }
+    // 4. KONDISI 2: PERINGATAN MENYIRAM (> 30.0 C ATAU TANAH < 45%) -> LAMPU
+    // KUNING SOLID ON
+    else if (lastSuhuC > batasSuhu || latestMoisturePercent < batasTanah) {
+      digitalWrite(LED_HIJAU, LOW);   // OFF
+      digitalWrite(LED_MERAH, LOW);   // OFF
+      digitalWrite(LED_KUNING, HIGH); // HIGH = NYALA SOLID
+    }
+    // 5. KONDISI 3: AMAN (SUHU <= 30.0 C DAN TANAH >= 45%) -> LAMPU HIJAU SOLID
+    // ON
+    else {
+      digitalWrite(LED_KUNING, LOW); // OFF
+      digitalWrite(LED_MERAH, LOW);  // OFF
+      digitalWrite(LED_HIJAU, HIGH); // HIGH = NYALA SOLID
+    }
   }
 }
 
@@ -624,7 +673,8 @@ void setup() {
 
   dht.begin();
   pinMode(RELAY1, OUTPUT);
-  digitalWrite(RELAY1, HIGH); // SANGAT TEGAS INSIALISASI AWAL MATI (HIGH / 3.3V)
+  digitalWrite(RELAY1,
+               HIGH); // SANGAT TEGAS INSIALISASI AWAL MATI (HIGH / 3.3V)
 
   pinMode(LED_HIJAU, OUTPUT);
   pinMode(LED_KUNING, OUTPUT);
@@ -661,6 +711,7 @@ void setup() {
   server.on("/downloadLog", HTTP_GET, handleDownloadLog);
   server.on("/clearLogs", HTTP_POST, handleClearLogs);
   server.on("/setMode", handleSetMode);
+  server.on("/setThreshold", handleSetThreshold);
   server.on("/toggleRelay", handleToggleRelay);
   server.on("/reboot", HTTP_POST, handleReboot);
   server.begin();
@@ -708,7 +759,8 @@ void loop() {
 
     if (!isSystemError && wasInErrorState) {
       Serial.println(F("\n✅ =========================================="));
-      Serial.println(F("✅ SYSTEM RECOVERY: Sinyal Radio ESP8266 Terhubung Kembali!"));
+      Serial.println(
+          F("✅ SYSTEM RECOVERY: Sinyal Radio ESP8266 Terhubung Kembali!"));
       Serial.println(F("============================================="));
       wasInErrorState = false;
     }
@@ -718,7 +770,8 @@ void loop() {
       Serial.println(F("\n🚨 ========= PERINGATAN HARDWARE DARURAT ========="));
       Serial.print(F("🚨 STATUS  : "));
       Serial.println(systemErrorMsg);
-      Serial.println(F("🔴 INDIKATOR: LAMPU TRAFFIC MERAH BERKEDIP (ESP8266 TERPUTUS / MATI) | RELAY POMPA MUTLAK KUNCI MATI!"));
+      Serial.println(F("🔴 INDIKATOR: LAMPU TRAFFIC MERAH BERKEDIP (ESP8266 "
+                       "TERPUTUS / MATI) | RELAY POMPA MUTLAK KUNCI MATI!"));
       Serial.println(F("=================================================="));
     } else if (isStartupWaiting) {
       wasInErrorState = true;
@@ -761,11 +814,14 @@ void loop() {
       Serial.println(F("========================================="));
 
       if (lastSuhuC >= suhuBahaya) {
-        Serial.print(F(" => STATUS: KONDISI 1: BAHAYA (PANAS EKSTREM) [LAMPU MERAH SOLID]"));
-      } else if (lastSuhuC > batasSuhu || latestMoisturePercent < 45) {
-        Serial.print(F(" => STATUS: KONDISI 2: PERINGATAN (WAKTU MENYIRAM) [LAMPU KUNING SOLID]"));
+        Serial.print(F(" => STATUS: KONDISI 1: BAHAYA (PANAS EKSTREM) [LAMPU "
+                       "MERAH SOLID]"));
+      } else if (lastSuhuC > batasSuhu || latestMoisturePercent < batasTanah) {
+        Serial.print(F(" => STATUS: KONDISI 2: PERINGATAN (WAKTU MENYIRAM) "
+                       "[LAMPU KUNING SOLID]"));
       } else {
-        Serial.print(F(" => STATUS: KONDISI 3: AMAN (RELIABLY OFF) [LAMPU HIJAU SOLID]"));
+        Serial.print(F(
+            " => STATUS: KONDISI 3: AMAN (RELIABLY OFF) [LAMPU HIJAU SOLID]"));
       }
 
       if (isRelayOn) {
