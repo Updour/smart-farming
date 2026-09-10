@@ -187,8 +187,7 @@ Contoh Jawaban yang Baik:
     const result = await window.fetchGeminiWithFallback(apiKey, {
       contents: window.agronomyChatHistory,
       generationConfig: {
-        maxOutputTokens: 800,
-        temperature: 0.65
+        temperature: 0.7
       }
     });
 
