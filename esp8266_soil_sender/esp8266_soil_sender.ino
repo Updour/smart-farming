@@ -64,7 +64,7 @@ void loop() {
   persenLembab = constrain(persenLembab, 0, 100);
 
   myData.persen = (int8_t)persenLembab;
-  myData.baterai = 100; // Daya Catu 3.3V Regulated
+  myData.baterai = 100; // Daya Catu 5V Adaptor (Regulated)
   myData.rawAdc = (uint16_t)sensorValue;
 
   // 3. INDIKATOR KEDIPAN FISIK LED LAPANGAN
@@ -74,18 +74,18 @@ void loop() {
   delay(20);
   digitalWrite(LED_BUILTIN_PIN, HIGH); // LED Mati
 
-  Serial.print(F("🌱 [ESP8266 SENDER AKURAT] Raw ADC: "));
+  Serial.print(F(" [ESP8266 SENDER AKURAT] Raw ADC: "));
   Serial.print(sensorValue);
   Serial.print(F(" | Soil: "));
   Serial.print(persenLembab);
   Serial.print(F("%"));
 
   if (lastSendStatus == 0) {
-    Serial.println(F(" | Status Transmisi: ✅ SUKSES MENDARAT"));
+    Serial.println(F(" | Status Transmisi:  SUKSES KIRIM DATA"));
   } else if (lastSendStatus > 0) {
-    Serial.println(F(" | Status Transmisi: ❌ GAGAL"));
+    Serial.println(F(" | Status Transmisi:  GAGAL"));
   } else {
-    Serial.println(F(" | Status Transmisi: ⚡ MEMANCARKAN..."));
+    Serial.println(F(" | Status Transmisi:  MEMANCARKAN..."));
   }
 
   delay(2000); // Total Delay 1000 ms (1 Detik)

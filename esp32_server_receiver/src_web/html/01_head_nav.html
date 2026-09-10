@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Farm Precision System - ESP32 Dashboard</title>
+
+  <!-- Google Fonts & Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- UNIFIED SPACE-SAVING SCADA HEADER BAR -->
+    <header class="unified-header" id="banner-box">
+      <!-- Left: Brand & Telemetry Status Subtitle -->
+      <div class="brand-block">
+        <div class="brand-title">
+          <div class="brand-icon-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+            </svg>
+          </div>
+          <span>SCADA Smart Farm</span>
+        </div>
+        <div class="brand-sub">
+          <span>Dashboard Agronomi Presisi &amp; Telemetri Real-Time</span>
+          <span class="status-divider">•</span>
+          <span id="banner-text" class="header-status-msg">Standalone Mode / Sensor Offline</span>
+        </div>
+      </div>
+
+      <!-- Right: Real-Time Status Indicators & Quick Action Controls -->
+      <div class="header-controls">
+        <div class="status-badge-bar">
+          <!-- PHYSICAL TRAFFIC LIGHT INDICATOR (ESP32 PINS 32, 33, 27) -->
+          <div class="badge-pill traffic-pill" id="traffic-light-widget" title="Indikator Fisik Traffic Light Lahan (Pin 32 Hijau, 33 Kuning, 27 Merah) - Klik untuk Detail" onclick="toggleLedDiag()" style="cursor: pointer;">
+            <div class="traffic-housing">
+              <span class="traffic-bulb bulb-red active blink" id="traffic-bulb-red" title="Merah: Bahaya / Terputus / Offline (Pin 27)"></span>
+              <span class="traffic-bulb bulb-yellow" id="traffic-bulb-yellow" title="Kuning: Peringatan / Menunggu / Standby (Pin 33)"></span>
+              <span class="traffic-bulb bulb-green" id="traffic-bulb-green" title="Hijau: Kondisi Normal (Pin 32)"></span>
+            </div>
+            <span id="traffic-label" class="traffic-label" style="color: #ef4444;">Offline</span>
+          </div>
+
+          <div class="badge-pill" id="badge-global-pump" style="color: var(--text-sub); display: inline-flex;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path></svg>
+            <span id="text-global-pump">Pompa OFF</span>
+          </div>
+          <div class="badge-pill" id="badge-global-lamp" style="color: var(--text-sub); display: inline-flex;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><path d="M9 18h6M10 22h4M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <span id="text-global-lamp">Lampu OFF</span>
+          </div>
+          <!-- GLOBAL MODE BADGE (AUTO vs MANUAL) -->
+          <div class="badge-pill badge-mode-auto" id="badge-global-mode" style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" onclick="switchTab('controls')" title="Mode Kendali Aktif - Klik untuk Ubah di Tab Kendali">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;" id="icon-global-mode"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span id="text-global-mode">AUTO</span>
+          </div>
+          <div class="badge-pill" id="badge-rtc-time" style="color: var(--text-main);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>RTC: Syncing...</span>
+          </div>
+          <div class="badge-pill" id="badge-rssi" style="color: var(--accent);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
+            <span>Sinyal: - dBm</span>
+          </div>
+        </div>
+
+        <div class="header-action-group">
+          <button type="button" class="btn btn-secondary header-btn" onclick="syncRtcWithBrowser()" title="Sinkronkan Jam RTC DS3231 dengan Waktu Peramban">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Sync Jam
+          </button>
+          <button type="button" class="btn btn-secondary header-btn" onclick="syncBMKGData()" title="Sinkronkan Prakiraan Cuaca Satelit BMKG">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+            </svg>
+            Sync BMKG
+          </button>
+          <button type="button" class="btn btn-primary header-btn" onclick="fetchData()" title="Perbarui Data Telemetri Terkini">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh Data
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- SCADA RUNNING TICKER BAR (REAL-TIME STREAM MARQUEE) -->
+    <div class="scada-ticker-bar" id="scada-ticker-bar" title="Streaming Telemetri Real-Time Lahan & Mikroklimat (Hover / Sentuh untuk Jeda)">
+      <div class="ticker-badge">
+        <span class="ticker-dot"></span>
+        <span class="ticker-label">LIVE STREAM</span>
+      </div>
+      <div class="ticker-marquee-wrapper">
+        <div class="ticker-track" id="ticker-track">
+          <span class="ticker-text" id="ticker-text">
+            Suhu: --°C &nbsp;•&nbsp; RH Udara: --% &nbsp;•&nbsp; Tanah: --% &nbsp;•&nbsp; Pompa: OFF &nbsp;•&nbsp; Lampu: OFF &nbsp;•&nbsp; Mode: AUTO &nbsp;•&nbsp; Jam: --:-- WIB &nbsp;•&nbsp; Sinyal: -- dBm &nbsp;•&nbsp; BMKG: Standby
+          </span>
+          <span class="ticker-text" id="ticker-text-clone">
+            Suhu: --°C &nbsp;•&nbsp; RH Udara: --% &nbsp;•&nbsp; Tanah: --% &nbsp;•&nbsp; Pompa: OFF &nbsp;•&nbsp; Lampu: OFF &nbsp;•&nbsp; Mode: AUTO &nbsp;•&nbsp; Jam: --:-- WIB &nbsp;•&nbsp; Sinyal: -- dBm &nbsp;•&nbsp; BMKG: Standby
+          </span>
+        </div>
+      </div>
+      <button type="button" class="ticker-lcd-toggle" id="btn-toggle-virtual-lcd" onclick="toggleVirtualLcdDrawer()" title="Buka / Tutup Layar Monitor LCD 16x2 Fisik (Digital Twin)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>LCD 16x2</span>
+        <span class="lcd-toggle-indicator" id="lcd-toggle-indicator">▼</span>
+      </button>
+    </div>
+
+
+    <!-- VIRTUAL LCD 16x2 HARDWARE MONITOR DRAWER (DIGITAL TWIN) -->
+    <div class="virtual-lcd-drawer" id="virtual-lcd-drawer" style="display: none;">
+      <div class="virtual-lcd-chassis">
+        <!-- Chassis Header -->
+        <div class="chassis-header">
+          <div class="chassis-screw" title="M3 Mount Screw"></div>
+          <div class="chassis-title-bar">
+            <span class="chassis-led-pwr" id="lcd-led-pwr" title="Power LED ESP32"></span>
+            <span class="chassis-model">DIGITAL TWIN • HARDWARE LCD 1602 I2C (0x27 / 0x3F)</span>
+          </div>
+          <div class="chassis-screw" title="M3 Mount Screw"></div>
+        </div>
+
+        <!-- LCD Screen Bezel with Glass Glare & Backlight -->
+        <div class="lcd-screen-bezel lcd-theme-blue" id="lcd-screen-bezel">
+          <div class="lcd-screen-glare"></div>
+          <div class="lcd-matrix-grid">
+            <div class="lcd-matrix-row" id="virtual-lcd-row-1">T: --.-C H: --% AUTO</div>
+            <div class="lcd-matrix-row" id="virtual-lcd-row-2">S: --%  P:OFF  L:OFF</div>
+          </div>
+
+        </div>
+
+        <!-- Chassis Toolbar & Controls -->
+        <div class="chassis-footer">
+          <div class="chassis-screw" title="M3 Mount Screw"></div>
+          <div class="chassis-toolbar">
+            <div class="chassis-page-selectors">
+              <button type="button" class="lcd-btn active" id="btn-lcd-page-0" onclick="setVirtualLcdPage(0)">Layar 1 (Telemetri)</button>
+              <button type="button" class="lcd-btn" id="btn-lcd-page-1" onclick="setVirtualLcdPage(1)">Layar 2 (Sistem &amp; Jam)</button>
+              <button type="button" class="lcd-btn" id="btn-lcd-auto-rotate" onclick="toggleVirtualLcdRotate()" title="Rotasi Otomatis Layar Tiap 4 Detik">Auto: ON</button>
+            </div>
+            <div class="chassis-theme-switch">
+              <button type="button" class="lcd-btn-action" onclick="cycleLcdBacklight()" title="Ganti Warna Backlight (Biru / Hijau / Amber / Dark)">Backlight</button>
+              <button type="button" class="lcd-btn-close" onclick="toggleVirtualLcdDrawer()" title="Tutup Panel Monitor LCD">✕</button>
+            </div>
+          </div>
+          <div class="chassis-screw" title="M3 Mount Screw"></div>
+        </div>
+      </div>
+    </div>
+
+

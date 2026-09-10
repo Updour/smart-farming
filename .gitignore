@@ -1,0 +1,14 @@
+# Antigravity & AI Agent directories
+.agents/
+.gemini/
+*.agents
+.system_generated/
+
+# Build artifacts & temp files
+*.tmp
+*.log
+.DS_Store
+
+# User-specific keys & local configs
+.env
+.env.local

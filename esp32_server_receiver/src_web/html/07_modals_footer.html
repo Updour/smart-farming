@@ -1,0 +1,182 @@
+    </div><!-- /.container -->
+
+    <!-- BOTTOM DOCK NAVIGATION BAR (RESPONSIVE ANDROID & DESKTOP) -->
+    <!-- Ditempatkan di luar .container agar position:fixed bekerja tanpa terpengaruh isolation:isolate -->
+    <nav class="tabs-nav bottom-dock" id="bottom-dock-nav" style="position: fixed !important; bottom: 15px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 999999 !important; display: flex !important; width: calc(100% - 32px) !important; max-width: 720px !important; margin: 0 !important; background: rgba(10,15,30,0.95) !important; border-radius: 24px !important;">
+      <button type="button" class="tab-btn active" data-tab="overview" onclick="switchTab('overview')" title="Monitoring Real-Time Telemetri Kebun">
+        <span class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+        </span>
+        <span class="tab-label">Monitoring</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab="charts" onclick="switchTab('charts')" title="Grafik Osiloskop & Tren 24 Jam">
+        <span class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </span>
+        <span class="tab-label">Grafik SCADA</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab="controls" onclick="switchTab('controls')" title="Kendali Relai & Irigasi Presisi">
+        <span class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </span>
+        <span class="tab-label">Kendali</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab="weather" onclick="switchTab('weather')" title="Satelit BMKG & Mikroiklim Kebun">
+        <span class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="M20 12h2"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+            <path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"></path>
+            <path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"></path>
+          </svg>
+        </span>
+        <span class="tab-label">Cuaca BMKG</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab="logs" onclick="switchTab('logs')" title="Histori & Arsip Log LittleFS">
+        <span class="tab-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <line x1="10" y1="9" x2="8" y2="9"></line>
+          </svg>
+        </span>
+        <span class="tab-label">Histori Log</span>
+      </button>
+    </nav>
+
+  <div class="modal-overlay" id="modal-sector-manager" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="kpi-icon-box" style="width:28px; height:28px; font-size:14px; background:rgba(16,185,129,0.15); color:var(--primary);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+            </div>
+            <div>
+              <span>Pengaturan Zonasi Sektor Lahan</span>
+              <span style="font-size:11px; font-weight:400; color:var(--text-sub); display:block; margin-top:2px;">Tersimpan otomatis di LocalStorage peramban Anda</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeSectorManagerModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Form Add/Edit (Hidden by default unless toggled) -->
+        <div id="sector-form-wrapper" style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:14px; padding:16px; margin-bottom:18px;">
+          <h4 id="sector-form-title" style="font-size:13px; font-weight:700; color:var(--primary); margin-bottom:12px;">➕ Tambah Sektor Baru</h4>
+          <input type="hidden" id="edit-sector-id" value="">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:12px;">
+            <div>
+              <label class="form-label">Kode / Nama Sektor:</label>
+              <input type="text" id="sec-input-code" placeholder="Contoh: Sektor A / Blok Barat" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">Varietas / Komoditas:</label>
+              <input type="text" id="sec-input-name" placeholder="Contoh: Cabai Rawit Merah" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">Fase Pertumbuhan:</label>
+              <select id="sec-input-stage" class="form-input">
+                <option value="semai">Semai / Pembibitan</option>
+                <option value="vegetatif">Vegetatif (Pertumbuhan Daun)</option>
+                <option value="generatif">Generatif (Bunga &amp; Buah)</option>
+                <option value="panen">Pematangan / Panen</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Usia Tanaman (HST):</label>
+              <input type="number" id="sec-input-age" min="1" max="999" placeholder="Contoh: 14" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">Luas Lahan (m²):</label>
+              <input type="number" id="sec-input-area" min="1" max="100000" value="100" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">Tipe Lingkungan:</label>
+              <select id="sec-input-env" class="form-input">
+                <option value="open">Lahan Terbuka (Open Field)</option>
+                <option value="greenhouse">Greenhouse / Naungan</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button type="button" class="btn btn-secondary" onclick="cancelSectorForm()" style="padding:6px 14px; font-size:12px;">Batal</button>
+            <button type="button" class="btn btn-primary" onclick="saveSectorFormData()" style="padding:6px 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Simpan Sektor</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sector List Header & Container -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:12px; font-weight:700; color:var(--text-main);">Daftar Sektor Lahan:</span>
+          <button type="button" class="btn btn-primary" onclick="openAddSectorForm()" style="padding:4px 10px; font-size:11px; border-radius:8px;">+ Tambah Sektor</button>
+        </div>
+        <div id="sector-manager-list" style="display:flex; flex-direction:column; gap:10px; max-height:280px; overflow-y:auto; padding-right:4px;">
+          <!-- Populated dynamically by renderSectorManagerList() -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid var(--card-border); margin-top:14px; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary" onclick="clearAllSectors()" style="color:var(--accent-rose); border-color:rgba(239,68,68,0.3); font-size:11px; padding:6px 12px;">
+            Kosongkan Semua Sektor
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="loadSamplePresetSectors()" style="color:var(--accent-emerald); border-color:rgba(16,185,129,0.3); font-size:11px; padding:6px 12px;">
+            Muat Contoh Template
+          </button>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="closeSectorManagerModal()" style="padding:8px 18px; font-size:12px;">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart Farm SCADA Modular JavaScript Engine (Strict Line Limit < 300 lines/module) -->
+  <script src="src_web/js/01_navigation.js"></script>
+  <script src="src_web/js/02_charts.js"></script>
+  <script src="src_web/js/02b_crop_history_chart.js"></script>
+  <script src="src_web/js/03_telemetry.js"></script>
+  <script src="src_web/js/04_telemetry_actuators.js"></script>
+  <script src="src_web/js/05_sectors.js"></script>
+  <script src="src_web/js/06_sector_modal.js"></script>
+  <script src="src_web/js/07_phenology.js"></script>
+  <script src="src_web/js/08_controls.js"></script>
+  <script src="src_web/js/09_agronomy.js"></script>
+  <script src="src_web/js/10_fertigation.js"></script>
+  <script src="src_web/js/11_disease_risk.js"></script>
+  <script src="src_web/js/12_weather.js"></script>
+  <script src="src_web/js/13_logs_init.js"></script>
+  <script src="src_web/js/14_agri_chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+    <!-- TAB 3: KENDALI & PRESISI -->
+    <div id="tab-controls" class="tab-content">
+      <div class="grid-two-col">
+        <!-- SMART PUMP CONTROL CENTER CARD -->
+        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+          <div class="chart-header-wrap" style="margin-bottom:14px;">
+            <div class="chart-title-area">
+              <div class="chart-icon-box emerald">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <div>
+                <span class="chart-title-text">Kendali Pompa Irigasi</span>
+                <span class="chart-subtitle-text">Pin 26 Active-Low • Interlock Proteksi Lahan</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="badge-pill" id="relay-status-badge" style="color:var(--text-sub); border-color:rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);"><span>Menunggu Data...</span></span>
+            </div>
+          </div>
+          <!-- Mode Switch Toggle -->
+          <div class="switch-group" style="margin-bottom: 18px; align-items: flex-start;">
+            <div>
+              <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mode Operasi</div>
+              <div id="mode-desc-text" style="font-size:11px; color:var(--text-sub);">Mode Otomatis (Sensor &amp; RTC)</div>
+            </div>
+            <div class="segment-control">
+              <button id="btn-pump-mode-auto" class="segment-btn active" onclick="toggleSystemMode(false)">Auto</button>
+              <button id="btn-pump-mode-manual" class="segment-btn" onclick="toggleSystemMode(true)">Manual</button>
+            </div>
+          </div>
+          <!-- Manual Action Buttons (Disabled by default in Auto Mode) -->
+          <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <button class="btn btn-primary" disabled="" id="btn-pump-on" onclick="sendRelayCommand('on')" style="flex:1; padding:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:700;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Nyalakan Pompa</span>
+            </button>
+            <button class="btn btn-danger" disabled="" id="btn-pump-off" onclick="sendRelayCommand('off')" style="flex:1; padding:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:700;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+              <span>Matikan Pompa</span>
+            </button>
+          </div>
+          <!-- Real-time Live Session Status Bar -->
+          <div id="pump-live-bar" style="display:none; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16,185,129,0.3); padding:8px 12px; border-radius:10px; margin-bottom:12px; font-size:12px; align-items:center; justify-content:space-between;">
+            <span style="color:var(--primary); font-weight:bold; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+              Pompa Sedang Menyiram Lahan...
+            </span>
+            <b id="pump-live-timer" style="color:var(--text-main);">AKTIF</b>
+          </div>
+          <!-- Pump Usage Stats Grid -->
+          <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+            <div>
+              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Frekuensi Pompa:</span>
+              <div id="stat-pump-count" style="font-size:15px; font-weight:bold; color:var(--text-main);">-- Kali</div>
+            </div>
+            <div>
+              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Total Durasi:</span>
+              <div id="stat-pump-secs" style="font-size:15px; font-weight:bold; color:var(--primary);">-- Detik</div>
+            </div>
+            <div>
+              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Estimasi Volume Air:</span>
+              <div id="stat-water-liters" style="font-size:14px; font-weight:bold; color:var(--secondary);">-- Liter</div>
+            </div>
+            <div>
+              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Biaya Listrik (PLN):</span>
+              <div id="stat-cost-idr" style="font-size:14px; font-weight:bold; color:var(--warning);">Rp --</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary" onclick="resetPumpStats()" style="width:100%; margin-top:10px; padding:6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Reset Statistik</span>
+          </button>
+          <!-- Dynamic Pump Calibration Form Collapsible -->
+          <div style="background:rgba(0,0,0,0.2); padding:10px 12px; border-radius:10px; margin-top:10px; border:1px solid rgba(255,255,255,0.08);">
+            <div onclick="togglePumpConfigForm()" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+              <span style="font-size:11px; font-weight:bold; color:var(--secondary); display:inline-flex; align-items:center; gap:6px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Kalibrasi Pompa &amp; Tarif Listrik PLN
+              </span>
+              <span id="pump-config-arrow" style="font-size:11px; color:var(--text-sub);">▼</span>
+            </div>
+            <div id="pump-config-body" style="display:none; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+                <div>
+                  <span style="font-size:10px; color:var(--text-sub);">Debit (L/Jam):</span>
+                  <input id="cfg-pump-lph" max="20000" min="100" placeholder="Menunggu Data..." type="number" value=""/>
+                </div>
+                <div>
+                  <span style="font-size:10px; color:var(--text-sub);">Daya (Watt):</span>
+                  <input id="cfg-pump-watt" max="3000" min="1" placeholder="Menunggu Data..." type="number" value=""/>
+                </div>
+                <div>
+                  <span style="font-size:10px; color:var(--text-sub);">Tarif PLN (Rp/kWh):</span>
+                  <input id="cfg-pln-tariff" max="5000" min="100" placeholder="Menunggu Data..." type="number" value=""/>
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="savePumpConfig()" style="width:100%; padding:6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Simpan Spesifikasi Pompa</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- LAMPU PENERANGAN (GROW LIGHT) CARD -->
+        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+          <div class="chart-header-wrap" style="margin-bottom:14px;">
+            <div class="chart-title-area">
+              <div class="chart-icon-box" style="color:#eab308; background:rgba(234, 179, 8, 0.15);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                  <path d="M9 18h6"></path>
+                  <path d="M10 22h4"></path>
+                </svg>
+              </div>
+              <div>
+                <span class="chart-title-text">Penerangan Grow Light</span>
+                <span class="chart-subtitle-text">Pin 25 • Jadwal Timer Otomatis</span>
+              </div>
+            </div>
+            <div id="lamp-status-badge" class="badge-pill" style="color:var(--text-sub); border-color:rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);">
+              <span>Menunggu Data...</span>
+            </div>
+          </div>
+
+
+          <!-- Lamp Schedule Timer -->
+          <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <span style="font-size:12px; font-weight:600; color:var(--text-main);">Timer Lampu (Auto)</span>
+              <label class="switch" style="transform: scale(0.85); transform-origin: right;">
+                <input type="checkbox" id="lamp-sched-en" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div>
+                <label style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:4px;">Jam Mulai Menyala:</label>
+                <input type="time" id="lamp-sched-time" class="form-input" style="background:rgba(15, 23, 42, 0.9);" />
+              </div>
+              <div>
+                <label style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:4px;">Durasi (Jam):</label>
+                <input type="number" id="lamp-sched-dur" class="form-input" min="1" max="24" style="background:rgba(15, 23, 42, 0.9);" />
+              </div>
+            </div>
+            <button class="btn" style="width:100%; margin-top:10px; padding:8px; font-size:12px; background:rgba(234, 179, 8, 0.2); color:#fde047; border:1px solid rgba(234, 179, 8, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveLampSchedule()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Simpan Jadwal Lampu</span>
+            </button>
+          </div>
+
+          <!-- Lamp Mode Switch Toggle -->
+          <div class="switch-group" style="margin-bottom: 18px; align-items: flex-start;">
+            <div style="flex:1; padding-right:10px;">
+              <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mode Operasi Lampu</div>
+              <div id="lamp-mode-desc-text" style="font-size:11px; color:var(--text-sub); line-height:1.4;">Mode Otomatis (Sensor & RTC)</div>
+            </div>
+            <div class="segment-control">
+              <button id="btn-lamp-mode-auto" class="segment-btn active" onclick="toggleLampSystemMode(false)">Auto</button>
+              <button id="btn-lamp-mode-manual" class="segment-btn" onclick="toggleLampSystemMode(true)">Manual</button>
+            </div>
+          </div>
+
+          <!-- Lamp Manual Action Buttons -->
+          <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <button class="btn" style="background:#ca8a04; color:#fff;" id="btn-lamp-on" onclick="sendLampRelayCommand('on')" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Nyalakan Lampu
+            </button>
+            <button class="btn btn-danger" id="btn-lamp-off" onclick="sendLampRelayCommand('off')" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg> Matikan Lampu
+            </button>
+          </div>
+        </div>
+
+        <!-- RTC HARDWARE & DYNAMIC SCHEDULE -->
+        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+          <div class="chart-header-wrap" style="margin-bottom:14px;">
+            <div class="chart-title-area">
+              <div class="chart-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div>
+                <span class="chart-title-text">Jam RTC &amp; Jadwal Harian</span>
+                <span class="chart-subtitle-text">Modul DS3231 I2C • Dual Slot Penyiraman Otomatis</span>
+              </div>
+            </div>
+            <span class="badge-pill" id="rtc-valid-badge" style="color:var(--secondary);">RTC Aktif</span>
+          </div>
+          <!-- RTC Live Time Display -->
+          <div style="background:rgba(6, 182, 212, 0.08); padding:12px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="font-size:11px; color:var(--text-sub); font-weight:bold;">JAM REAL-TIME RTC DS3231</div>
+              <div id="rtc-live-time" style="font-family:'Outfit',sans-serif; font-size:20px; font-weight:800; color:var(--text-main);">-</div>
+            </div>
+            <button class="btn btn-primary" onclick="syncRtcWithBrowser()" style="padding:8px 14px; font-size:11px; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              <span>Sync Jam HP</span>
+            </button>
+          </div>
+          <!-- Schedule Slot 1 (Pagi) -->
+          <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(6,182,212,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:13px; font-weight:700; color:var(--secondary); display:inline-flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                Slot 1 (Penyiraman Pagi)
+              </span>
+              <label class="switch" style="transform: scale(0.75); transform-origin: right; margin-left: auto;">
+                <input id="sched1-en" type="checkbox"/>
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div style="flex:1;">
+                <span style="font-size:10px; color:var(--text-sub);">Jam Siram:</span>
+                <input id="sched1-time" type="time" value=""/>
+              </div>
+              <div style="flex:1;">
+                <span style="font-size:10px; color:var(--text-sub);">Durasi (Menit):</span>
+                <input id="sched1-dur" max="60" min="1" type="number" value=""/>
+              </div>
+            </div>
+            <button class="btn" style="width:100%; margin-top:8px; padding:8px; font-size:12px; background:rgba(16, 185, 129, 0.15); color:var(--primary); border:1px solid rgba(16, 185, 129, 0.3); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveSchedule(1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Simpan Slot Pagi</span>
+            </button>
+          </div>
+          <!-- Schedule Slot 2 (Sore) -->
+          <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; border:1px solid rgba(245,158,11,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:13px; font-weight:700; color:var(--warning); display:inline-flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="12" y1="2" x2="12" y2="9"></line><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line><line x1="1" y1="18" x2="3" y2="18"></line><line x1="21" y1="18" x2="23" y2="18"></line><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line><line x1="23" y1="22" x2="1" y2="22"></line></svg>
+                Slot 2 (Penyiraman Sore)
+              </span>
+              <label class="switch" style="transform: scale(0.75); transform-origin: right; margin-left: auto;">
+                <input id="sched2-en" type="checkbox"/>
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div style="flex:1;">
+                <span style="font-size:10px; color:var(--text-sub);">Jam Siram:</span>
+                <input id="sched2-time" type="time" value=""/>
+              </div>
+              <div style="flex:1;">
+                <span style="font-size:10px; color:var(--text-sub);">Durasi (Menit):</span>
+                <input id="sched2-dur" max="60" min="1" type="number" value=""/>
+              </div>
+            </div>
+            <button class="btn" style="width:100%; margin-top:8px; padding:8px; font-size:12px; background:rgba(245, 158, 11, 0.15); color:var(--warning); border:1px solid rgba(245, 158, 11, 0.3); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveSchedule(2)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Simpan Slot Sore</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-two-col">
+        <!-- THRESHOLD CONTROL CARD (DYNAMIC CROP PROFILE & HARDWARE LIMITS) -->
+        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+          <div class="chart-header-wrap" style="margin-bottom:14px;">
+            <div class="chart-title-area">
+              <div class="chart-icon-box amber">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14"></line>
+                  <line x1="4" y1="10" x2="4" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12" y2="3"></line>
+                  <line x1="20" y1="21" x2="20" y2="16"></line>
+                  <line x1="20" y1="12" x2="20" y2="3"></line>
+                  <line x1="1" y1="14" x2="7" y2="14"></line>
+                  <line x1="9" y1="8" x2="15" y2="8"></line>
+                  <line x1="17" y1="16" x2="23" y2="16"></line>
+                </svg>
+              </div>
+              <div>
+                <span class="chart-title-text">Profil Budidaya &amp; Ambang Batas</span>
+                <span class="chart-subtitle-text">Parameter NVS Flash • Threshold Irigasi Otomatis</span>
+              </div>
+            </div>
+            <span class="badge-pill" id="badge-crop-profile" style="color:var(--primary); font-size:11px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);">Mode Semai Benih</span>
+          </div>
+          <!-- DYNAMIC DROPDOWN PROFIL TANAMAN -->
+          <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); margin-bottom:16px; margin-top:8px;">
+            <label style="font-size:12px; color:var(--text-main); font-weight:700; display:block; margin-bottom:10px;">
+              Pilih Karakteristik &amp; Fase Tanaman:
+            </label>
+            <select id="crop-profile-select" onchange="onCropProfileChange(this.value)" style="width:100%; padding:10px 12px; border-radius:10px; background:#1e293b; color:#f8fafc; border:1.5px solid var(--primary); font-size:13px; font-weight:600; cursor:pointer; outline:none; transition:border-color 0.2s;">
+              <option value="0">Penyemaian Benih (Nursery / Kecambah)</option>
+              <option value="1">Tanaman Buah (Vegetatif: Daun, Batang &amp; Akar)</option>
+              <option value="2">Tanaman Buah (Generatif: Bunga &amp; Buah)</option>
+              <option value="3">Kustom / Pengaturan Manual Slider</option>
+            </select>
+            <!-- Dynamic Profile Guidance Box -->
+            <div id="crop-profile-guidance" style="margin-top:10px; font-size:11px; line-height:1.5; color:var(--text-sub); background:rgba(16,185,129,0.08); border-left:3px solid var(--primary); padding:10px; border-radius:8px;">
+              <!-- Dikelola otomatis oleh JavaScript -->
+            </div>
+
+            <!-- GEMINI AI INTEGRATION -->
+            <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">
+              <label style="font-size:12px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                Otentikasi API Key Gemini
+              </label>
+              <div style="margin-bottom:12px;">
+                <input type="password" id="gemini-api-key" placeholder="Paste API Key Gemini di sini" value="" style="width:100%; padding:10px 12px; border-radius:8px; font-size:12px; background:rgba(0,0,0,0.3); border:1px solid rgba(168, 85, 247, 0.3); color:var(--text-main); outline:none; transition:border-color 0.2s; font-family:monospace;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='rgba(168, 85, 247, 0.3)'" onchange="saveGeminiKey(this.value)"/>
+              </div>
+              <button class="btn" id="btn-gemini-ai" style="width:100%; padding:12px; font-size:13px; font-weight:700; background:linear-gradient(135deg, #6366f1, #a855f7, #ec4899); color:#fff; border:none; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); transition: transform 0.2s;" onclick="askGeminiAgronomist()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path></svg>
+                <span id="gemini-btn-text">Auto-Set via Gemini AI ✨</span>
+              </button>
+            </div>
+
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+              <span>Batas Tanah Minimal (Siram jika &lt; ini):</span>
+              <b id="val-slider-soil" style="color:var(--primary);">65%</b>
+            </div>
+            <input id="slider-soil" max="90" min="10" oninput="onSliderManualChange('soil', this.value)" type="range" value="65"/>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+              <span>Batas Suhu Panas (Siram jika &gt; ini):</span>
+              <b id="val-slider-temp" style="color:var(--danger);">30°C</b>
+            </div>
+            <input id="slider-temp" max="45" min="20" oninput="onSliderManualChange('temp', this.value)" type="range" value="30"/>
+          </div>
+        </div>
+
+        <!-- KALKULATOR DOSIS PUPUK PRESISI -->
+        <div class="card" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));">
+          <div class="chart-header-wrap" style="margin-bottom:14px;">
+            <div class="chart-title-area">
+              <div class="chart-icon-box purple">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+                </svg>
+              </div>
+              <div>
+                <span class="chart-title-text">Kalkulator Dosis Pupuk &amp; Fertigasi</span>
+                <span class="chart-subtitle-text">Formulasi Makro/Mikro • Rekomendasi Aplikasi Presisi</span>
+              </div>
+            </div>
+            <span class="badge-pill" style="color:#a855f7; border-color:rgba(168,85,247,0.3);">Model Agronomi NPK</span>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-bottom:12px;">
+            <div style="grid-column: 1 / -1;">
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Pilih Jenis Pupuk Pertanian:</label>
+              <select id="fert-formula" onchange="calculateFertigationDose()" class="form-input">
+                <option selected="" value="npk_phonska">NPK Phonska / NPK Mutiara 15-15-15 (Majemuk Seimbang)</option>
+                <option value="urea">UREA (Nitrogen 46% - Pertumbuhan Daun &amp; Batang)</option>
+                <option value="sp36">SP-36 / TSP (Fosfat 36% - Perakaran &amp; Anakan)</option>
+                <option value="kcl">KCL / MOP (Kalium 60% - Bobot Buah &amp; Anti Rontok)</option>
+                <option value="za">Pupuk ZA (Sulfur 24% + N 21% - Aroma &amp; Hijau Daun)</option>
+                <option value="kno3_putih">KNO3 Putih (Kalium Nitrat 13-0-45 - Pembuahan Generatif)</option>
+                <option value="mkp">Pupuk MKP (Mono Kalium Fosfat 0-52-34 - Anti Rontok Bunga)</option>
+                <option value="ab_mix">AB Mix Presisi (Fertigasi Kocor Drip Hydroponic)</option>
+                <option value="dolomit">Kapur Dolomit (CaMg - Penetral pH Media Asam)</option>
+                <option value="humic">Asam Humat Organik (Pembenah Tanah &amp; Nutrisi)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Harga Pupuk (Rp/kg):</label>
+              <input id="fert-price-kg" min="500" oninput="calculateFertigationDose()" step="500" type="number" value="18000" class="form-input"/>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Metode Aplikasi:</label>
+              <select id="fert-method" onchange="calculateFertigationDose()" class="form-input">
+                <option selected="" value="kocor">Kocor Pelarutan Air (Fertigasi)</option>
+                <option value="tabur">Tabur / Benam Guludan Tanah</option>
+                <option value="foliar">Semprot Daun (Foliar Spray)</option>
+              </select>
+            </div>
+          </div>
+          <div id="fert-result-box" style="background:rgba(168, 85, 247, 0.08); padding:12px; border-radius:10px; font-size:12px; line-height:1.6; margin-top:14px; word-break: break-word;">
+            Memproses rekomendasi dosis pupuk dinamis...
+          </div>
+        </div>
+      </div>
+
+      <!-- MANAJEMEN PROFIL TANAMAN & PANDUAN PRAKTIS LAPANGAN (FARMER-CENTRIC) -->
+      <div class="card" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); margin-bottom: 20px;">
+        <div class="chart-header-wrap" style="margin-bottom:14px;">
+          <div class="chart-title-area">
+            <div class="chart-icon-box emerald">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </div>
+            <div>
+              <span class="chart-title-text">Panduan Tanam &amp; Kesiapan Bibit Lapangan</span>
+              <span class="chart-subtitle-text">Pedoman Praktis Petani • Kesiapan Pindah Tanam, Pengairan &amp; Perlindungan Panas</span>
+            </div>
+          </div>
+          <span class="badge-pill" style="color:#10b981; border-color:rgba(16,185,129,0.3);">Model Lapangan Petani</span>
+        </div>
+
+        <!-- Preset Tanaman 1-Klik -->
+        <div style="margin-bottom: 14px;">
+          <div style="font-size:11.5px; color:var(--text-sub); margin-bottom:8px; font-weight:700; letter-spacing:0.3px;">PILIH CEPAT JENIS TANAMAN:</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Cabai Rawit Merah', 'semai', 14, 'polybag', 100)" style="padding:6px 14px; font-size:12px; font-weight:600;">Cabai Rawit</button>
+            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Bawang Merah Bima', 'semai', 10, 'open', 250)" style="padding:6px 14px; font-size:12px; font-weight:600;">Bawang Merah</button>
+            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Tomat Servo F1', 'semai', 18, 'greenhouse', 150)" style="padding:6px 14px; font-size:12px; font-weight:600;">Tomat Servo</button>
+            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Melon Golden Light', 'semai', 12, 'greenhouse', 300)" style="padding:6px 14px; font-size:12px; font-weight:600;">Melon Golden</button>
+            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Padi Ciherang Sawah', 'semai', 20, 'open', 1000)" style="padding:6px 14px; font-size:12px; font-weight:600;">Padi Sawah</button>
+          </div>
+        </div>
+
+        <!-- 5 INPUT UTAMA PETANI (SEDERHANA & CEPAT) -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:14px;">
+          <div>
+            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Nama Komoditas Tanaman:</label>
+            <input id="crop-name" onchange="updateCropAgronomyAnalysis()" placeholder="Pilih preset di atas atau ketik nama..." type="text" class="form-input"/>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Tahap / Fase Pertumbuhan:</label>
+            <select id="crop-stage" onchange="updateCropAgronomyAnalysis()" class="form-input">
+              <option selected="" value="semai">Pembibitan / Semai (Persemaian)</option>
+              <option value="pindah">Baru Pindah Tanam (1-7 Hari di Lahan)</option>
+              <option value="vegetatif">Pertumbuhan Batang &amp; Daun (Vegetatif)</option>
+              <option value="generatif">Pembungaan &amp; Pembuahan (Generatif)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Umur Bibit / Tanam (HST / Hari):</label>
+            <input id="crop-age-days" max="180" min="1" placeholder="Masukkan HST..." oninput="updateCropAgronomyAnalysis()" type="number" class="form-input"/>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Jumlah Daun Sejati:</label>
+            <select id="crop-leaves-count" onchange="updateCropAgronomyAnalysis()" class="form-input">
+              <option value="2">1-2 Helai (Masih Muda / Belum Siap)</option>
+              <option selected="" value="4">3-4 Helai (Cukup Siap Pindah)</option>
+              <option value="6">5-6 Helai (Sangat Ideal / Siap Tanam)</option>
+              <option value="8">&gt;6 Helai (Wajib Segera Dipindah)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Kekuatan Akar di Media Semai:</label>
+            <select id="crop-root-status" onchange="updateCropAgronomyAnalysis()" class="form-input">
+              <option value="loose">Akar Masih Rapuh / Tanah Rontok saat Dicabut</option>
+              <option selected="" value="solid">Akar Menggumpal Padat (Tanah Utuh/Kuat)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TOGGLE PENGATURAN LANJUTAN (OPSIONAL UNTUK YANG MEMILIKI ALAT UKUR) -->
+        <button type="button" class="agri-advanced-toggle-btn" id="btn-toggle-agri-adv" onclick="toggleAdvancedAgronomy()">
+          <span>Pengaturan Lanjutan (Luas Lahan, pH Tanah &amp; EC Pupuk)</span>
+          <span id="agri-adv-icon">▼</span>
+        </button>
+
+        <div id="agri-advanced-drawer" style="display:none; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.12); border-radius:10px; padding:12px; margin-bottom:16px;">
+          <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px;">Parameter opsional bagi teknisi atau petani yang memiliki alat ukur:</div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Lingkungan Pembibitan:</label>
+              <select id="crop-env" onchange="updateCropAgronomyAnalysis()" class="form-input">
+                <option value="open">Lahan Terbuka Bebas</option>
+                <option selected="" value="greenhouse">Greenhouse / Naungan Paranet / UV</option>
+                <option value="polybag">Tray Semai / Polybag Pembibitan</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Luas Lahan / Bedengan (m²):</label>
+              <input id="crop-area-size" max="50000" min="1" oninput="updateCropAgronomyAnalysis()" type="number" placeholder="100" class="form-input"/>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">pH Tanah Media (Batas: 5.5 - 6.8):</label>
+              <input id="crop-ph-level" max="9.0" min="4.0" oninput="updateCropAgronomyAnalysis()" step="0.1" type="number" placeholder="6.5" class="form-input"/>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Kekuatan EC Nutrisi (mS/cm):</label>
+              <input id="crop-ec-level" max="5.0" min="0.2" oninput="updateCropAgronomyAnalysis()" step="0.1" type="number" placeholder="1.0" class="form-input"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- HASIL KEPUTUSAN & PANDUAN PRAKTIS PETANI -->
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 16px;">
+          <!-- Bar Header Hasil & Tombol Aksi -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path><path d="M12 6v6l4 2"></path></svg>
+              <div>
+                <div id="ai-agri-title" style="font-size:14px; font-weight:700; color:var(--primary);">Panduan Lapangan: Belum Ada Tanaman Dipilih</div>
+                <div id="ai-agri-subtitle" style="font-size:11px; color:var(--text-sub);">Evaluasi Kesiapan Bibit &amp; Jadwal Siram Berdasarkan Suhu Riil</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary" onclick="speakAgronomyVoiceReport()" style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Dengarkan Suara Ringkasan Laporan">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <span>Suara Panduan</span>
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="window.print()" style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Cetak Ringkasan Panduan">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                <span>Cetak PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KARTU KESIMPULAN UTAMA 3 DETIK (THE 3-SECOND RULE) -->
+          <div class="agri-status-banner status-waiting" id="card-agri-status-banner">
+            <div class="agri-status-title" id="ai-status-title">
+              <span>STATUS: MENUNGGU PEMILIHAN PRESET TANAMAN</span>
+            </div>
+            <div class="agri-status-desc" id="ai-status-desc">
+              Silakan pilih preset komoditas di atas atau masukkan nama dan usia tanaman di formulir.
+            </div>
+            <div class="agri-status-sub" id="ai-status-sub">
+              Jadwal Siram &amp; Pindah Tanam: Menunggu pemilihan komoditas dan hari setelah tanam (HST).
+            </div>
+          </div>
+
+          <!-- PROGRESS KESIAPAN BIBIT -->
+          <div id="card-transplant-readiness" style="background:rgba(15,23,42,0.6); padding:12px 14px; border-radius:10px; margin-bottom:14px; border:1px solid rgba(255,255,255,0.06);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:12px;">
+              <span style="font-weight:700; color:var(--text-main);">Tingkat Kesiapan Tanam:</span>
+              <b id="ai-readiness-percent" style="color:var(--text-sub); font-size:13px;">--% (Menunggu Data)</b>
+            </div>
+            <div style="width:100%; height:12px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; position:relative;">
+              <div id="ai-readiness-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #10b981, #06b6d4); border-radius:10px; transition:width 0.5s ease;"></div>
+            </div>
+          </div>
+
+          <!-- 4 CHECKLIST PRAKTIS KONDISI BIBIT & LAHAN (BUANG METRIK ANGIN) -->
+          <div class="agri-quick-grid">
+            <div class="agri-quick-card">
+              <div class="agri-quick-label">DAUN SEJATI</div>
+              <div class="agri-quick-val" id="ai-leaves-badge">-- Helai</div>
+              <div class="agri-quick-hint" id="ai-leaves-hint" style="color:var(--text-sub);">Menunggu input</div>
+            </div>
+
+            <div class="agri-quick-card">
+              <div class="agri-quick-label">KEKUATAN AKAR</div>
+              <div class="agri-quick-val" id="ai-root-badge">--</div>
+              <div class="agri-quick-hint" id="ai-root-hint" style="color:var(--text-sub);">Menunggu input</div>
+            </div>
+
+            <div class="agri-quick-card">
+              <div class="agri-quick-label">SUHU SENSOR AKTUAL</div>
+              <div class="agri-quick-val" id="ai-metric-heat">--°C</div>
+              <div class="agri-quick-hint" id="ai-note-heat" style="color:var(--text-sub);">Menunggu sensor DHT11</div>
+            </div>
+
+            <div class="agri-quick-card">
+              <div class="agri-quick-label">TAKARAN AIR SIRAM</div>
+              <div class="agri-quick-val" id="ai-metric-irrigation">-- Liter</div>
+              <div class="agri-quick-hint" id="ai-note-irrigation" style="color:var(--text-sub);">Menunggu luas lahan</div>
+            </div>
+          </div>
+
+          <!-- KOTAK PANDUAN TINDAKAN PRAKTIS PETANI HARI INI -->
+          <div id="ai-agronomy-advice" style="background:rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius:10px; padding:12px 14px; font-size:12px; line-height:1.6;">
+            <b>Panduan Tindakan Lapangan:</b><br/>
+            Silakan pilih preset komoditas tanaman di atas untuk menampilkan panduan lapangan yang sesuai dengan telemetri sensor riil kebun Anda.
+          </div>
+        </div>
+      </div>
+
+    </div>

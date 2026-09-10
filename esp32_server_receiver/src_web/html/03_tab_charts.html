@@ -1,0 +1,225 @@
+    <!-- TAB 2: GRAFIK SCADA -->
+    <div id="tab-charts" class="tab-content">
+      <!-- Card 1: Live Real-Time Oscilloscope -->
+      <div class="card">
+        <div class="chart-header-wrap">
+          <div class="chart-title-area">
+            <div class="chart-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <span class="chart-title-text">Oscilloscope SCADA Real-Time</span>
+              <span class="chart-subtitle-text">Sampling Live 1-Detik • Filter Kondisioning Sinyal</span>
+            </div>
+          </div>
+          <div class="chart-controls-wrap">
+            <div class="chart-filter-group" title="Kondisioning Sinyal Masukan">
+              <button class="chart-filter-btn active" id="btn-osc-raw" onclick="setOscFilterMode('raw')">Raw</button>
+              <button class="chart-filter-btn" id="btn-osc-ema" onclick="setOscFilterMode('ema')">EMA Filter</button>
+            </div>
+            <div class="chart-filter-group" title="Rentang Titik Buffer">
+              <button class="chart-filter-btn active" id="btn-buf-30" onclick="setOscBufferSize(30)">30s</button>
+              <button class="chart-filter-btn" id="btn-buf-60" onclick="setOscBufferSize(60)">60s</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Series Toggles (Output Filters) -->
+        <div class="chart-legend-row">
+          <button class="chart-toggle-chip active" id="osc-toggle-soil" style="--chip-border:rgba(16,185,129,0.5);--chip-bg:rgba(16,185,129,0.12);" onclick="toggleOscSeries('soil')">
+            <span class="chip-dot" style="background:#10b981;"></span>
+            <span>Kelembapan Tanah</span>
+            <span class="chip-val" id="osc-val-soil">--%</span>
+          </button>
+          <button class="chart-toggle-chip active" id="osc-toggle-temp" style="--chip-border:rgba(6,182,212,0.5);--chip-bg:rgba(6,182,212,0.12);" onclick="toggleOscSeries('temp')">
+            <span class="chip-dot" style="background:#06b6d4;"></span>
+            <span>Suhu Udara</span>
+            <span class="chip-val" id="osc-val-temp">--°C</span>
+          </button>
+          <button class="chart-toggle-chip active" id="osc-toggle-hum" style="--chip-border:rgba(168,85,247,0.5);--chip-bg:rgba(168,85,247,0.12);" onclick="toggleOscSeries('hum')">
+            <span class="chip-dot" style="background:#a855f7;"></span>
+            <span>Kelembapan RH</span>
+            <span class="chip-val" id="osc-val-hum">--%</span>
+          </button>
+          <button class="chart-toggle-chip active" id="osc-toggle-threshold" style="--chip-border:rgba(239,68,68,0.5);--chip-bg:rgba(239,68,68,0.12);" onclick="toggleOscThreshold()">
+            <span class="chip-dot" style="background:#ef4444;"></span>
+            <span>Garis Batas Siram &amp; Bahaya</span>
+          </button>
+        </div>
+
+        <!-- Canvas Oscilloscope Chart Container -->
+        <div class="chart-container" style="height:230px; position:relative;">
+          <canvas id="scadaChart"></canvas>
+          <div id="osc-crosshair-tooltip" style="display:none; position:absolute; top:10px; right:14px; background:rgba(15,23,42,0.92); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:6px 12px; font-size:11px; pointer-events:none; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></div>
+        </div>
+        <div class="chart-footer-meta">
+          <span id="osc-rate-text">Pindai: 1.0 Hz • Antialiased Sumbu Ganda (Kiri: 0-100%, Kanan: 0-50°C)</span>
+          <span style="color:var(--text-sub);" id="osc-status-text">Buffer: 0 Titik (Raw Data)</span>
+        </div>
+      </div>
+
+      <!-- Card 2: 24-Hour Trend Aggregation -->
+      <div class="card">
+        <div class="chart-header-wrap">
+          <div class="chart-title-area">
+            <div class="chart-icon-box amber">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </div>
+            <div>
+              <span class="chart-title-text">Tren Fluktuasi 24 Jam</span>
+              <span class="chart-subtitle-text">Agregasi Siklus Harian LittleFS Flash Memory</span>
+            </div>
+          </div>
+          <div class="chart-controls-wrap">
+            <div class="chart-filter-group" title="Filter Rentang Waktu">
+              <button class="chart-filter-btn active" id="btn-h-all" onclick="setHourlyRange('all')">24 Jam</button>
+              <button class="chart-filter-btn" id="btn-h-day" onclick="setHourlyRange('day')">Siang (06-18)</button>
+              <button class="chart-filter-btn" id="btn-h-night" onclick="setHourlyRange('night')">Malam (18-06)</button>
+            </div>
+            <button class="btn btn-secondary" id="btn-refresh-hourly" onclick="refreshHourlyData()" style="padding:4px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <span>Refresh Tren</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Series Toggles (Output Filters) -->
+        <div class="chart-legend-row">
+          <button class="chart-toggle-chip active" id="h-toggle-soil" style="--chip-border:rgba(16,185,129,0.5);--chip-bg:rgba(16,185,129,0.12);" onclick="toggleHourlySeries('soil')">
+            <span class="chip-dot" style="background:#10b981;"></span>
+            <span>Rata-rata Tanah (%)</span>
+          </button>
+          <button class="chart-toggle-chip active" id="h-toggle-temp" style="--chip-border:rgba(6,182,212,0.5);--chip-bg:rgba(6,182,212,0.12);" onclick="toggleHourlySeries('temp')">
+            <span class="chip-dot" style="background:#06b6d4;"></span>
+            <span>Rata-rata Suhu (°C)</span>
+          </button>
+          <button class="chart-toggle-chip active" id="h-toggle-hum" style="--chip-border:rgba(168,85,247,0.5);--chip-bg:rgba(168,85,247,0.12);" onclick="toggleHourlySeries('hum')">
+            <span class="chip-dot" style="background:#a855f7;"></span>
+            <span>Kelembapan Udara (%)</span>
+          </button>
+          <button class="chart-toggle-chip active" id="h-toggle-pump" style="--chip-border:rgba(245,158,11,0.5);--chip-bg:rgba(245,158,11,0.12);" onclick="toggleHourlySeries('pump')">
+            <span class="chip-dot" style="background:#f59e0b;"></span>
+            <span>Durasi Pompa (Detik)</span>
+          </button>
+          <button class="chart-toggle-chip active" id="h-toggle-lamp" style="--chip-border:rgba(234,179,8,0.5);--chip-bg:rgba(234,179,8,0.12);" onclick="toggleHourlySeries('lamp')">
+            <span class="chip-dot" style="background:#eab308;"></span>
+            <span>Lampu / Grow Light (Waktu Nyala)</span>
+          </button>
+        </div>
+
+        <!-- Canvas Hourly Chart Container -->
+        <div class="chart-container" style="height:250px; position:relative;">
+          <canvas id="hourlyChart"></canvas>
+          <div id="hourly-crosshair-tooltip" style="display:none; position:absolute; top:10px; right:14px; background:rgba(15,23,42,0.92); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:6px 12px; font-size:11px; pointer-events:none; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></div>
+        </div>
+
+        <!-- 24-Hour Quick Statistics Summary Matrix -->
+        <div class="hourly-stats-grid" id="hourly-stats-summary" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:12px; margin-bottom:10px;">
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Suhu Min / Max</div>
+            <div id="stat-24h-temp" style="font-size:12px; font-weight:700; color:#06b6d4; margin-top:2px;">-- / --</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Rata-rata Tanah</div>
+            <div id="stat-24h-soil" style="font-size:12px; font-weight:700; color:#10b981; margin-top:2px;">--%</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Penyiraman Pompa</div>
+            <div id="stat-24h-pump" style="font-size:12px; font-weight:700; color:#f59e0b; margin-top:2px;">-- Kali (--s)</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Waktu Lampu Aktif</div>
+            <div id="stat-24h-lamp" style="font-size:12px; font-weight:700; color:#eab308; margin-top:2px;">-- Jam</div>
+          </div>
+        </div>
+
+        <div class="chart-footer-meta">
+          <span id="hourly-axis-text">Sumbu X: Jam 00:00 s/d 23:00 WIB</span>
+          <span id="hourly-summary-text" style="color:var(--accent-emerald);">Deteksi Evaporasi: Menunggu Analisis Log</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Crop Growth History & Phenology Timeline (Local Storage) -->
+      <div class="card" style="margin-top: 18px;">
+        <div class="chart-header-wrap">
+          <div class="chart-title-area">
+            <div class="chart-icon-box emerald">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </div>
+            <div>
+              <span class="chart-title-text">Riwayat Pertumbuhan &amp; Siklus Hidup Tanaman</span>
+              <span class="chart-subtitle-text">Catatan Perkembangan Hari demi Hari (HST) • Disimpan di Memori Lokal</span>
+            </div>
+          </div>
+          <div class="chart-controls-wrap" style="flex-wrap:wrap; gap:6px;">
+            <button type="button" class="btn btn-primary" onclick="logTodayCropGrowth()" style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Simpan Catatan Perkembangan Tanaman Hari Ini">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Catat Hari Ini</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="shareCropReportWhatsApp()" style="padding:5px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px; color:#22c55e; border-color:rgba(34,197,94,0.3);" title="Bagikan Ringkasan Laporan ke WhatsApp">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              <span>Bagikan WA</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="printCropReport()" style="padding:5px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Cetak Ringkasan Riwayat Tanam / PDF">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              <span>Cetak Laporan</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="exportCropHistoryJSON()" style="padding:5px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Unduh File Cadangan JSON">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Unduh JSON</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="triggerImportCropHistoryJSON()" style="padding:5px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Pulihkan Data dari File JSON">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <span>Pulihkan</span>
+            </button>
+            <input type="file" id="crop-import-file-input" accept=".json" style="display:none;" onchange="importCropHistoryJSON(event)">
+            <button type="button" class="btn btn-secondary" onclick="resetCropHistory()" style="padding:5px 10px; font-size:11px; color:#ef4444;" title="Reset Siklus Tanam Baru">
+              <span>Reset Siklus</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Crop History Summary Matrix -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:12px;">
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Umur Tanaman</div>
+            <div id="crop-hist-hst" style="font-size:13px; font-weight:700; color:#10b981; margin-top:2px;">-- HST</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Fase Saat Ini</div>
+            <div id="crop-hist-stage" style="font-size:13px; font-weight:700; color:var(--text-main); margin-top:2px;">--</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Kesiapan / Vigor</div>
+            <div id="crop-hist-vigor" style="font-size:13px; font-weight:700; color:#06b6d4; margin-top:2px;">--%</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Perkiraan Panen</div>
+            <div id="crop-hist-eta" style="font-size:13px; font-weight:700; color:#eab308; margin-top:2px;">-- Hari Lagi</div>
+          </div>
+        </div>
+
+        <!-- Canvas Crop History Chart Container -->
+        <div class="chart-container" style="height:230px; position:relative;">
+          <canvas id="cropHistoryChart"></canvas>
+          <div id="crop-hist-tooltip" style="display:none; position:absolute; top:10px; right:14px; background:rgba(15,23,42,0.92); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:6px 12px; font-size:11px; pointer-events:none; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></div>
+        </div>
+        <div class="chart-footer-meta">
+          <span id="crop-hist-footer-status">Data tersimpan di LocalStorage peramban • Kurva Pertumbuhan Sigmoid (S-Curve)</span>
+          <span id="crop-hist-points-text" style="color:var(--text-sub);">0 Catatan Tersimpan</span>
+        </div>
+      </div>
+    </div>
+

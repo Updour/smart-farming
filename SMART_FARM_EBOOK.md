@@ -1,3 +1,584 @@
+# 📖 BUKU PANDUAN PINTAR SMART FARM IOT & KEBUN MODERN ESP32
+**Buku Pegangan Lapangan Super Praktis: Dari Nol Belanja Alat, Pasang Kabel, Isi Program, Pantau Kebun Lewat Layar HP, Hingga Otomatis Siram & Pupuk (Khusus Pemula, Orang Awam & Petani)**
+
+---
+
+*Penyusun: Tim Lapangan Smart Farm, Dokter Tanaman & Praktisi Pertanian Presisi*  
+*Edisi: 4.2 (Edisi Lengkap & Bebas Macet: Panduan Driver USB, Daftar Belanja & Kode Program)*  
+*Lokasi Proyek: `/media/budgei/Development2/arduino/Sketchbook`*  
+*Program Alat: `esp32_server_receiver.ino` (Kotak Rumah) & `esp8266_soil_sender.ino` (Kotak Kebun)*
+
+---
+
+## 🧭 KAMUS CEPAT ORANG AWAM (BACA INI DULU!)
+
+Bagi Anda yang baru pertama kali menyentuh alat elektronik atau merasa "gaptek", jangan takut! Semua istilah canggih di sistem ini sebenarnya punya padanan sederhana di kehidupan sehari-hari:
+
+| Istilah di Layar / Buku | Artinya dalam Bahasa Sehari-hari | Analogi Gampangnya |
+| :--- | :--- | :--- |
+| **ESP32 (Kotak Rumah)** | Otak komputer utama yang ditaruh di dalam rumah/panel gubuk. | Seperti **Kepala Mandor** yang mencatat data dan memencet sakelar pompa. |
+| **ESP8266 (Kotak Kebun)** | Alat kecil pengirim data yang ditancapkan dekat bedengan tanah. | Seperti **Kurir Kebun** yang tiap detik lari ngabarin kondisi tanah ke rumah. |
+| **ESP-NOW** | Sinyal radio khusus jarak jauh antar alat tanpa internet. | Mirip **Walkie-Talkie (HT)** satpam, tetap nyambung walau sinyal HP mati total. |
+| **Zero-Dummy (Anti-Bohong)**| Sistem pantang menampilkan angka rekaan/palsu. | Kalau kabel copot, layar tulis **`--`**, bukan pura-pura sehat. |
+| **VWC (Kelembapan Tanah)** | Berapa persen basahnya tanah kebun. | Seperti seberapa basah **spons cuci piring** saat diperas air. |
+| **VPD (Tingkat Haus Daun)** | Seberapa kencang udara menyedot air dari daun. | Makin terik & kering anginnya, daun makin haus dan gampang layu. |
+| **Relai (Relay)** | Sakelar listrik otomatis pemutus dan penyambung kabel pompa. | Seperti **sakelar lampu dinding**, tapi dipencet otomatis oleh komputer. |
+| **RTC (Jam Digital)** | Modul jam yang punya baterai koin sendiri. | Seperti **jam dinding**, tetap tahu jam berapa walau mati lampu. |
+| **Digital Twin LCD** | Cermin kembaran layar kotak kebun yang muncul di layar HP. | Seperti **kaca cermin**; apa yang tampil di kebun, persis sama di HP Anda. |
+| **Traffic Light (Lampu 3 Warna)**| Lampu tiang penunjuk kondisi lahan (Merah, Kuning, Hijau). | Persis **lampu merah jalan raya**: Merah bahaya, Kuning siap-siap, Hijau aman. |
+| **Arduino IDE** | Aplikasi gratis di komputer/laptop untuk mengisi program ke alat. | Seperti **kabel data pengisi lagu ke HP**, memasukkan nyawa ke otak alat. |
+| **Driver USB (CH340/CP2102)**| Kunci pembuka agar laptop bisa menyapa papan ESP. | Seperti **kunci pintu**, tanpa ini laptop tidak tahu ada alat yang dicolok. |
+
+---
+
+## 📑 DAFTAR ISI PANDUAN
+
+1. [BAB 1: Cara Kerja Kebun Pintar (Tanpa Kuota & Tanpa Ribet)](#bab-1-cara-kerja-kebun-pintar-tanpa-kuota--tanpa-ribet)
+2. [BAB 2: Daftar Belanja Alat, Peringatan Sensor, & Panduan Pasang Kabel](#bab-2-daftar-belanja-alat-peringatan-sensor--panduan-pasang-kabel)
+3. [BAB 3: Cara Buka Layar Kontrol di HP (Semudah Buka Browser)](#bab-3-cara-buka-layar-kontrol-di-hp-semudah-buka-browser)
+4. [BAB 4: Tab 1 — Layar Pantau Utama, Cermin LCD & Lampu Kebun](#bab-4-tab-1--layar-pantau-utama-cermin-lcd--lampu-kebun)
+5. [BAB 5: Tab 2 — Grafik Naik-Turun Kebun & Kirim Laporan via WhatsApp](#bab-5-tab-2--grafik-naik-turun-kebun--kirim-laporan-via-whatsapp)
+6. [BAB 6: Tab 3 — Atur Pompa Siram Otomatis & Lampu Pemanas Malam](#bab-6-tab-3--atur-pompa-siram-otomatis--lampu-pemanas-malam)
+7. [BAB 7: Tab 4 — Umur Tanaman (HST) & Kebutuhan Air Tiap Fase](#bab-7-tab-4--umur-tanaman-hst--kebutuhan-air-tiap-fase)
+8. [BAB 8: Tab 5 — Prakiraan Hujan Satelit BMKG (Otomatis Tunda Siram)](#bab-8-tab-5--prakiraan-hujan-satelit-bmkg-otomatis-tunda-siram)
+9. [BAB 9: Tab 6 — Takaran Pupuk Dapur (Sendok Makan, Gelas Aqua, Tangki Semprot)](#bab-9-tab-6--takaran-pupuk-dapur-sendok-makan-gelas-aqua-tangki-semprot)
+10. [BAB 10: Tab 7 — Dokter Tanaman & Cek Penyakit Lewat Foto Daun](#bab-10-tab-7--dokter-tanaman--cek-penyakit-lewat-foto-daun)
+11. [BAB 11: Tab 8 — Catatan Riwayat Kebun & Simpan Cadangan](#bab-11-tab-8--catatan-riwayat-kebun--simpan-cadangan)
+12. [BAB 12: Pertolongan Pertama Masalah Lapangan (Tanya-Jawab Cepat)](#bab-12-pertolongan-pertama-masalah-lapangan-tanya-jawab-cepat)
+13. [BAB 13: Panduan Lengkap Arduino IDE & Solusi Driver Port COM Laptop](#bab-13-panduan-lengkap-arduino-ide--solusi-driver-port-com-laptop)
+14. [BAB 14: Kode Lengkap Kotak Kebun (ESP8266 Sender) & Cara Kerjanya](#bab-14-kode-lengkap-kotak-kebun-esp8266-sender--cara-kerjanya)
+15. [BAB 15: Kode Lengkap Kotak Rumah (ESP32 Gateway) & Kompilasi Web Otomatis](#bab-15-kode-lengkap-kotak-rumah-esp32-gateway--kompilasi-web-otomatis)
+16. [BAB 16: Panduan Mengubah Nama WiFi, Sandi, & Jam Siram Sesuai Keinginan](#bab-16-panduan-mengubah-nama-wifi-sandi--jam-siram-sesuai-keinginan)
+
+---
+
+## BAB 1: CARA KERJA KEBUN PINTAR (TANPA KUOTA & TANPA RIBET)
+
+### 1.1. Bayangkan Anda Punya Penjaga Kebun Pribadi 24 Jam
+Alat ini bekerja tanpa kenal lelah untuk menjaga tanaman Anda:
+1. **Mencelupkan Jari ke Tanah**: Setiap saat mengecek apakah tanah masih basah atau sudah kering kerontang.
+2. **Merasakan Hawa Udara**: Membaca apakah hawa di sekitar daun terlalu panas menyengat atau sejuk nyaman.
+3. **Menyalakan Keran Otomatis**: Jika tanah kering, pompa otomatis hidup. Begitu tanah sudah kenyang air, pompa langsung mati.
+4. **Memberitahu Anda Lewat Lampu**: Ada lampu 3 warna di tiang kebun. Cukup lirik dari jauh: kalau hijau artinya aman, kuning waspada, merah darurat.
+5. **Bisa Dilihat dari HP Sambil Ngopi**: Cukup sambungkan HP Anda ke sinyal alat, seluruh kondisi kebun terbuka di layar tanpa pulsa sama sekali.
+
+### 1.2. Prinsip "Anti-Bohong" (Zero-Dummy)
+Banyak alat di pasaran yang jika kabelnya putus, di layar HP masih tertulis "28°C" pura-pura normal. Di alat kita:
+* **Jujur 100%**: Kalau kabel pengirim di kebun lepas atau kehabisan baterai, layar akan jujur menulis **`--`** dan bertuliskan **"Sensor Terputus"**.
+* **Lampu Hijau Hanya untuk yang Benar-Benar Aman**: Lampu hijau tidak akan pernah menyala kalau alat sedang ragu atau tidak ada data.
+
+---
+
+## BAB 2: DAFTAR BELANJA ALAT, PERINGATAN SENSOR, & PANDUAN PASANG KABEL
+
+Banyak orang ragu memulai karena takut biayanya mahal hingga jutaan rupiah. Padahal seluruh komponen sistem ini sangat murah dan mudah dibeli di toko online (Tokopedia, Shopee, Bukalapak) dengan total modal hanya sekitar **Rp 180.000 sampai Rp 220.000 saja!**
+
+### 2.1. Daftar Belanja Komponen Lengkap (Tinggal Cari di Toko Online):
+
+| No | Nama Barang yang Dicari | Fungsi Sederhana | Perkiraan Harga |
+| :---: | :--- | :--- | :--- |
+| 1 | **ESP32 DevKit V1 (30 Pin)** | Otak utama penerima & pemancar web di rumah | Rp 55.000 – Rp 65.000 |
+| 2 | **NodeMCU ESP8266 (atau Wemos D1 Mini)** | Kotak kecil pengirim data nirkabel dari kebun | Rp 25.000 – Rp 35.000 |
+| 3 | **Sensor Kelembapan Tanah Kapasitif v1.2** *(Bilah Hitam)* | Mengukur basahnya tanah tanpa takut karatan | Rp 12.000 – Rp 18.000 |
+| 4 | **Sensor Suhu Udara DHT11** | Mengukur sejuk/panasnya hawa daun tanaman | Rp 12.000 – Rp 15.000 |
+| 5 | **Layar LCD 16x2 Biru + Modul I2C Backpack** | Layar kecil kotak rumah (hemat kabel, cukup 4 pin)| Rp 25.000 – Rp 30.000 |
+| 6 | **Modul Jam RTC DS1302 + Baterai Koin CR2032** | Menjaga jam tetap cocok walau listrik padam | Rp 8.000 – Rp 12.000 |
+| 7 | **Modul Relai 2-Channel 5V (Relay Module)** | Sakelar otomatis untuk pompa air & lampu pemanas | Rp 12.000 – Rp 16.000 |
+| 8 | **Lampu LED 5mm (Hijau, Kuning, Merah) + Resistor 220Ω** | Lampu tiang penunjuk kondisi lahan 3 warna | Rp 3.000 – Rp 5.000 |
+| 9 | **Kabel Jumper Pelangi Dupont (Female-to-Female & Male-to-Female)** | Kabel colok praktis tanpa perlu solder timah | Rp 10.000 – Rp 15.000 |
+| 10 | **Adaptor Charger HP 5V 2A + Kabel Micro-USB** | Sumber listrik colokan rumah & kotak kebun | Rp 20.000 – Rp 25.000 |
+| **TOTAL ESTIMASI MODAL** | *(Dapat komputer canggih pemantau kebun lengkap!)* | **± Rp 180.000 – Rp 220.000** |
+
+---
+
+### 2.2. ⚠️ Peringatan Emas: Jangan Salah Beli Sensor Tanah!
+Di toko online ada 2 macam sensor tanah dengan harga mirip, tetapi kualitasnya bagaikan bumi dan langit:
+* ❌ **JANGAN BELI: Sensor Tanah Resistif (Bilah Garpu Besi Terbuka)**:
+  * Bentuknya bercabang dua seperti garpu makan dengan lapisan kuningan/besi terbuka.
+  * **Kelemahannya**: Karena besi dialiri listrik langsung di dalam lumpur basah, bilahnya akan **berkarat, menghitam, dan hancur lebur dalam 1–2 minggu saja** akibat korosi kimia (*elektrolisis*).
+* ✅ **WAJIB BELI: Sensor Kelembapan Tanah Kapasitif v1.2 (Bilah Hitam Rata)**:
+  * Bentuknya sebilah papan tipis warna hitam mulus tanpa ada kawat logam telanjang.
+  * **Kelebihannya**: Sensor ini mengukur medan frekuensi, bukan arus setrum. **Tahan berbulan-bulan hingga bertahun-tahun di dalam lumpur kebun tanpa pernah berkarat!**
+
+---
+
+### 2.3. Aturan Emas Warna Kabel (Hafalkan 3 Ini Saja!)
+Agar tidak korslet, selalu samakan warna kabel:
+* 🔴 **Kabel MERAH**: Sumber Listrik Positif (**3.3V atau 5V**).
+* ⚫ **Kabel HITAM**: Jalur Arus Negatif / Arde (**GND**).
+* 🟡 **Kabel KUNING / WARNA LAIN**: Jalur Kirim Data / Sinyal.
+
+---
+
+### 2.4. Bagian 1: Alat di Bedengan Kebun (ESP8266 + Sensor Tanah)
+
+Alat ini ditaruh di dalam toples/kotak plastik kedap air di tengah bedengan tanaman.
+
+```
+  ┌──────────────────────────────────┐            ┌────────────────────────────────┐
+  │ Sensor Tanah Kapasitif Hitam     │            │ Kotak Pemancar (ESP8266)       │
+  │                                  │            │                                │
+  │ Kaki VCC (Kabel Merah)           ├───────────►│ Lubang pin bertuliskan 3.3V    │
+  │ Kaki GND (Kabel Hitam)           ├───────────►│ Lubang pin bertuliskan GND     │
+  │ Kaki AOUT (Kabel Kuning)         ├───────────►│ Lubang pin bertuliskan A0      │
+  └──────────────────────────────────┘            │                                │
+                                                  │ Colok Powerbank / Charger 5V   │
+                                                  └────────────────────────────────┘
+```
+
+> ⚠️ **Cara Tancap Sensor ke Tanah**: 
+> Tancapkan bilah hitam ke tanah **hanya sampai batas garis putih melintang**. Jangan kubur bagian kepala yang ada komponennya ke dalam lumpur agar tahan bertahun-tahun.
+
+---
+
+### 2.5. Bagian 2: Panel Utama di Rumah / Gubuk (ESP32)
+
+Alat ini adalah "bos" yang menerima data dari kebun, menampilkan angka di layar LCD biru, dan menyalakan pompa air.
+
+```
+                                  ┌────────────────────────────────┐
+                                  │      PAPAN UTAMA ESP32         │
+                                  │                                │
+     Sensor Suhu Udara (DHT11) ───┤ Lubang Pin 4                   │
+                                  │                                │
+     Layar LCD Biru (Kabel SDA) ──┤ Lubang Pin 21                  │
+     Layar LCD Biru (Kabel SCL) ──┤ Lubang Pin 22                  │
+                                  │                                │
+     Jam Digital RTC (Kabel DAT) ─┤ Lubang Pin 14                  │
+     Jam Digital RTC (Kabel CLK) ─┤ Lubang Pin 12                  │
+     Jam Digital RTC (Kabel RST) ─┤ Lubang Pin 13                  │
+                                  │                                │
+     Kabel Sakelar Pompa Air ─────┤ Lubang Pin 26                  │
+     Kabel Sakelar Lampu Malam ───┤ Lubang Pin 25                  │
+                                  │                                │
+     Lampu Tiang Hijau ───────────┤ Lubang Pin 32 (Lewat Resistor) │
+     Lampu Tiang Kuning ──────────┤ Lubang Pin 33 (Lewat Resistor) │
+     Lampu Tiang Merah ───────────┤ Lubang Pin 27 (Lewat Resistor) │
+                                  │                                │
+     Listrik Colokan Adaptor ─────┤ Lubang VIN (5V) & Lubang GND   │
+                                  └────────────────────────────────┘
+```
+
+#### Cara Pasang Sakelar Pompa Air (Kotak Relai Hitam):
+* Anggap relai seperti **sakelar lampu biasa** di dinding rumah Anda.
+* Ambil satu kabel listrik pompa air Anda (biasanya kabel warna cokelat/hitam), lalu **gunting di tengah**.
+* Masukkan ujung guntingan pertama ke lubang baut bertuliskan **COM**, dan ujung guntingan kedua ke lubang **NO**. Kencangkan bautnya dengan obeng kecil.
+* Saat alat memberi perintah siram, relai berbunyi *"cetuk"* dan pompa air langsung mengalir!
+
+---
+
+## BAB 3: CARA BUKA LAYAR KONTROL DI HP (SEMUDAH BUKA BROWSER)
+
+Anda tidak perlu download aplikasi apapun di Google Play Store atau repot bikin akun.
+
+### 3.1. Tiga Langkah Sangat Mudah:
+1. **Nyalakan Listrik Alat**: Colokkan charger adaptor ESP32 ke stopkontak rumah.
+2. **Buka Menu Wi-Fi di HP Anda**:
+   * Cari nama Wi-Fi: **`SmartFarm_ESP32`**.
+   * Klik sambungkan (jaringan lokal ini gratis, tidak menyedot kuota internet HP Anda).
+3. **Buka Google Chrome atau Safari di HP**:
+   * Ketik angka ini di tempat biasa Anda mengetik alamat web:
+     ```
+     192.168.4.1
+     ```
+   * Tekan tombol **Cari / Masuk**. Layar kendali kebun langsung terbuka seketika!
+
+### 3.2. Bikin Ikon di Layar Depan HP (Biar Besok Tinggal Sekali Klik)
+* Di Google Chrome HP, klik titik tiga (`⋮`) di pojok kanan atas ➔ Pilih **"Tambahkan ke Layar Utama" (Add to Home screen)**.
+* Ikon Smart Farm akan muncul di layar HP Anda layaknya aplikasi resmi. Besok tinggal sentuh ikon itu untuk pantau kebun!
+
+---
+
+## BAB 4: TAB 1 — LAYAR PANTAU UTAMA, CERMIN LCD & LAMPU KEBUN
+
+Saat web terbuka di HP, Anda berada di **Tab 1: Monitoring**:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ 🟢 NORMAL   │ 💧 POMPA: MATI    │ 💡 LAMPU: MATI       │ 🕒 JAM 14:25  │
+├────────────────────────────────────────────────────────────────────────┤
+│ [📊 MONITORING]  [📈 GRAFIK 24J]  [⚙️ KONTROL]  [🌱 TANAMAN]  [🛰️ BMKG]│
+├────────────────────────────────────────────────────────────────────────┤
+│ ┌────────────────────────────────────────────────────────────────────┐ │
+│ │  CERMIN LAYAR KOTAK KEBUN (DIGITAL TWIN LCD)                       │ │
+│ │  ┌──────────────────────────────────────────────────────────────┐  │ │
+│ │  │ [1] T:29.4C  H:68%  S:72%  [OK]                              │  │ │
+│ │  │ [2] 14:25:00 | POMPA:OFF  LAMPU:OFF                          │  │ │
+│ │  └──────────────────────────────────────────────────────────────┘  │ │
+│ └────────────────────────────────────────────────────────────────────┘ │
+│ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌───────────┐ │
+│ │ BASAHNYA TANAH │ │ SUHU UDARA     │ │ KABUT UDARA    │ │ KEKUATAN  │ │
+│ │ (PERSEN AIR)   │ │ SEKITAR DAUN   │ │ (KELEMBAPAN)   │ │ BATERAI   │ │
+│ │     72 %       │ │    29.4 °C     │ │     68 %       │ │   4.12 V  │ │
+│ └────────────────┘ └────────────────┘ └────────────────┘ └───────────┘ │
+│ ┌────────────────────────────────────────────────────────────────────┐ │
+│ │  LAMPU LALU LINTAS LAHAN (TIANG FISIK PIN 27, 33, 32)              │ │
+│ │  [MERAH: MATI]       [KUNING: MATI]        [HIJAU: MENYALA TERANG] │ │
+│ └────────────────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 4.1. Cermin Layar Kotak Kebun (Digital Twin LCD)
+* **Apa gunanya?** Ini adalah cermin langsung dari layar kecil biru yang ada di kotak alat. Jadi walau Anda sedang rebahan di kamar atau duduk di teras, Anda bisa melihat persis apa yang sedang tertulis di layar kotak kebun tanpa harus jalan kaki ke luar.
+* **Layar 1**: Menampilkan Suhu (T), Kelembapan Udara (H), dan Kelembapan Tanah (S).
+* **Layar 2**: Menampilkan Jam digital saat ini, serta status pompa dan lampu malam.
+
+### 4.2. Empat Kartu Angka Utama (Cara Bacanya Super Gampang)
+1. **Basahnya Tanah (72%)**: 
+   * Jika angka di atas 60%: Tanah basah segar, tanaman kenyang.
+   * Jika angka di bawah 45%: Tanah mulai kering kehausan, perlu disiram.
+2. **Suhu Udara Sekitar Daun (29.4 °C)**:
+   * Menunjukkan apakah kebun sedang sejuk atau terik panas. Kalau sudah tembus di atas 35°C, tanaman mulai kegerahan.
+3. **Kabut Udara / Kelembapan (68%)**:
+   * Menunjukkan seberapa lembap angin di sekitar bedengan.
+4. **Kekuatan Baterai Kebun (4.12 V)**:
+   * Menunjukkan isi baterai alat di bedengan. Kalau angkanya turun di bawah 3.7 Volt, saatnya ganti baterai atau cas ulang powerbank.
+
+### 4.3. Lampu Lalu Lintas Kebun (Tiang 3 Warna)
+Di tiang kebun ada lampu 3 warna. Dari kejauhan Anda cukup melirik warnanya:
+* 🟢 **Lampu Hijau Menyala (Pin 32)**: **Aman Santai!** Tanah kenyang air, suhu sejuk, tanaman tumbuh tenang.
+* 🟡 **Lampu Kuning Menyala (Pin 33)**: **Waspada / Siap-siap!** Tanah mulai agak kering dan sebentar lagi akan disiram, atau jam jadwal siram pagi/sore sedang aktif.
+* 🔴 **Lampu Merah Berkedip (Pin 27)**: **Darurat Bahaya!** Terjadi saat hawa panas membakar ($>35^\circ$C) atau kabel alat di kebun terlepas. Pompa air otomatis dikunci mati agar kebun tidak banjir.
+
+---
+
+## BAB 5: TAB 2 — GRAFIK NAIK-TURUN KEBUN & KIRIM LAPORAN VIA WHATSAPP
+
+### 5.1. Osiloskop Garis Hidup (Melihat Keringnya Tanah dari Jam ke Jam)
+Di tab kedua, Anda melihat garis warna-warni yang berjalan seperti detak jantung di rumah sakit:
+* **Garis Biru**: Air tanah. Anda bisa melihat bagaimana air berkurang pelan-pelan saat matahari siang terik, dan langsung melonjak naik begitu pompa menyiram.
+* **Garis Oranye**: Suhu udara. Memperlihatkan puncak panas siang hari dan sejuknya malam hari.
+
+### 5.2. Tombol Ajaib "Kirim Laporan WA"
+Bagi Anda yang mengelola kebun milik juragan, kelompok tani, atau keluarga:
+* Cukup klik tombol hijau bertuliskan **"Kirim Laporan WA"**.
+* HP Anda akan otomatis membuka WhatsApp dengan teks laporan yang sudah tersusun rapi: tanggal, jam, umur tanaman, kondisi tanah, dan catatan apakah tanaman aman. Anda tinggal tekan kirim tanpa perlu mengetik panjang!
+
+---
+
+## BAB 6: TAB 3 — ATUR POMPA SIRAM OTOMATIS & LAMPU PEMANAS MALAM
+
+Di tab ketiga, Anda bisa mengatur kapan alat harus menyiram tanaman:
+
+### 6.1. Dua Cara Menyiram:
+1. **Cara Otomatis (Sensor Air)**:
+   * Anda tentukan batasnya dengan menggeser slider: *"Kalau tanah kering sampai 50%, tolong pompa dinyalakan. Begitu tanah sudah basah 75%, tolong pompa dimatikan sendiri ya."*
+   * Pompa akan bekerja sendiri siang malam tanpa perlu Anda tungguin.
+2. **Cara Jadwal Jam (Alarm RTC)**:
+   * Anda bisa atur jam siram seperti memasang alarm di HP:
+     * **Siram Pagi**: Tiap pukul 06:00 pagi selama 15 menit.
+     * **Siram Sore**: Tiap pukul 17:00 sore selama 10 menit.
+3. **Cara Manual (Tombol Sakelar)**:
+   * Mau ngetes pipa atau nyiram dadakan? Cukup sentuh tombol **"Nyalakan Pompa"** di layar HP, pompa langsung berputar. Sentuh lagi untuk mematikan.
+
+### 6.2. Pengaman Otomatis Anti-Banjir (Penyelamat Kebun!)
+Pernahkah Anda khawatir saat ditinggal pergi, kabel sensor copot lalu pompa nyala terus sampai tanaman mati busuk dan rumah kebanjiran?
+* **Alat ini punya Otak Pengaman 60 Detik**: Jika selama 1 menit alat di rumah tidak mendengar kabar dari alat di kebun, sistem langsung memutuskan: *"Gawat, sinyal hilang! Matikan pompa air sekarang juga!"*
+* Kebun Anda dijamin 100% selamat dari kebanjiran.
+
+---
+
+## BAB 7: TAB 4 — UMUR TANAMAN (HST) & KEBUTUHAN AIR TIAP FASE
+
+Tanaman itu seperti manusia: waktu masih bayi minumnya beda dengan saat sudah remaja dan dewasa.
+
+### 7.1. Cukup Pilih Tanggal Tanam Sekali Saja
+Di tab ini, Anda tinggal memilih tanggal kapan bibit pertama kali ditanam ke bedengan. Sistem akan menghitung sendiri: *"Hari ini tanaman bapak/ibu berumur 24 Hari Setelah Tanam (HST)"*. Data ini tidak akan hilang walau HP mati.
+
+### 7.2. Empat Babak Hidup Tanaman:
+
+| Babak Hidup | Umur (HST) | Hausnya Air | Yang Perlu Diperhatikan Petani |
+| :--- | :--- | :--- | :--- |
+| **1. Masa Semai (Bayi)** | 0 – 14 Hari | Sedang (60-70%) | Jaga tanah tetap lembap gembur. Jangan becek lumpur agar akar bayi tidak busuk. |
+| **2. Masa Vegetatif (Remaja)**| 15 – 35 Hari| Banyak (65-75%) | Daun dan cabang bertambah banyak. Butuh pupuk pembentuk daun (Nitrogen). |
+| **3. Masa Berbunga (Dewasa)** | 36 – 55 Hari| Paling Banyak (70-80%)| Bunga mulai bermunculan. Jangan sampai telat disiram agar bunga tidak rontok. |
+| **4. Masa Buah & Panen** | 56 Hari ke atas| Dikurangi (50-60%)| Kurangi air sedikit agar rasa buah lebih manis dan tidak gampang membusuk di pohon. |
+
+---
+
+## BAB 8: TAB 5 — PRAKIRAAN HUJAN SATELIT BMKG (OTOMATIS TUNDA SIRAM)
+
+### 8.1. Menyambung ke Satelit Cuaca BMKG
+Alat ini terhubung dengan stasiun cuaca BMKG terdekat (wilayah Leces, Probolinggo).
+
+### 8.2. Fitur Cerdas: Jangan Buang-Buang Listrik & Air Sumur!
+* Jika satelit melihat awan mendung tebal dan memprediksi sebentar lagi akan turun hujan lebat, sistem akan memberi tanda peringatan: *"Bakal ada hujan deras sebentar lagi, penyiraman pompa ditunda dulu."*
+* Mengapa harus menyiram pakai pompa dan buang listrik jika alam sebentar lagi menyiramkannya secara gratis?
+
+---
+
+## BAB 9: TAB 6 — TAKARAN PUPUK DAPUR (SENDOK MAKAN, GELAS AQUA, TANGKI SEMPROT)
+
+Buku-buku pertanian sering menyuruh: *"Campurkan 3.42 gram pupuk per meter persegi"*. Di kebun mana ada yang bawa timbangan emas?
+Sistem kami mengubah hitungan rumit itu menjadi **Alat Takar Nyata yang Ada di Dapur**:
+
+| Takaran Nyata di Dapur | Sama dengan Berapa Banyak Pupuk Butiran? |
+| :--- | :--- |
+| 🥄 **1 Sendok Makan Peres (sdm)** | Kira-kira **10 Gram** pupuk NPK |
+| 🥄 **1 Sendok Makan Munjung (sdm)**| Kira-kira **15 Gram** pupuk NPK |
+| 🥛 **1 Gelas Plastik Aqua (220 ml)**| Kira-kira **1 Gelas = 150 sampai 180 Gram** pupuk NPK |
+| 🪣 **1 Ember Cat / Ember Cor Kecil** | Kira-kira **10 sampai 15 Liter Air** larutan kocor |
+| 🎒 **1 Tangki Semprot Gendong (Knapsack)** | Kira-kira **16 Liter Air** |
+| ✋ **1 Genggam Tangan Petani** | Kira-kira **35 sampai 40 Gram** untuk pupuk tabur melingkar |
+
+### Contoh Nyata di Layar:
+Jika Anda mengetik luas bedengan cabai $25\,\text{m}^2$, layar tidak hanya memberi angka gram, tapi langsung menuliskan instruksi yang sangat gampang dipahami:
+> **Petunjuk Praktis Lapangan**:  
+> *"Ambil **1 Gelas Plastik Aqua munjung** pupuk NPK. Larutkan ke dalam **1 Ember Cor (15 Liter air)**, lalu aduk sampai larut. Siramkan larutan tersebut sebanyak **1 cangkir kecil** ke setiap lubang tanaman."*
+
+---
+
+## BAB 10: TAB 7 — DOKTER TANAMAN & CEK PENYAKIT LEWAT FOTO DAUN
+
+Tidak perlu bingung mencari mantri atau penyuluh pertanian saat tanaman Anda mendadak sakit:
+
+### 10.1. Tanya Jawab Bebas (Konsultasi Pakar)
+* Anda bisa mengetik pertanyaan apa saja dengan bahasa Indonesia sehari-hari, misalnya:
+  * *"Kenapa daun cabai saya keriting dan menguning?"*
+  * *"Di kebun suhunya 32 derajat dan tanah 40%, tanaman saya harus diapain ya?"*
+* **Dokter Pintar**: Jawaban yang diberikan bukan teori kosong, karena sistem langsung membaca suhu kebun dan basahnya tanah Anda saat itu juga.
+
+### 10.2. Cek Penyakit dari Foto Daun (Kamera HP)
+1. Ambil foto daun yang berbercak hitam, berjamur putih, atau bolong dimakan hama.
+2. Klik tombol **"Pilih Foto Daun"** di layar HP.
+3. Sistem akan memeriksa foto tersebut dan memberi tahu: jenis penyakitnya (misal: patek / antraknosa atau jamur karat daun), lengkap dengan nama obat semprot atau fungisida yang harus Anda beli di toko pertanian.
+
+---
+
+## BAB 11: TAB 8 — CATATAN RIWAYAT KEBUN & SIMPAN CADANGAN
+
+### 11.1. Layar Catatan Langsung (Live Telemetry Feed)
+Di tab ini Anda bisa melihat tulisan baris demi baris dari paket data yang masuk dari kebun setiap saat. Seperti struk kasir yang mencatat waktu, suhu, dan kelembapan secara berurutan.
+
+### 11.2. Tombol Simpan Cadangan (Backup Pengaturan)
+Semua setelan yang sudah Anda atur (target air, tanggal tanam, jam siram) bisa Anda unduh ke HP dalam bentuk file cadangan dengan menekan tombol **"Unduh Cadangan JSON"**. Jika suatu hari ganti HP, tinggal unggah lagi file tersebut dan semua setelan kembali seperti semula.
+
+---
+
+## BAB 12: PERTOLONGAN PERTAMA MASALAH LAPANGAN (TANYA-JAWAB CEPAT)
+
+Kalau ada sesuatu yang aneh terjadi pada alat, jangan panik! Baca tabel solusi di bawah ini:
+
+| Kejadian di Alat / Layar | Artinya Apa? | Apa yang Harus Saya Lakukan? |
+| :--- | :--- | :--- |
+| **Layar HP ada tulisan `--` dan "Menunggu Sensor..."** | Alat rumah sedang menunggu kiriman data pertama dari alat kebun. | Tunggu sekitar 10–15 detik. Pastikan alat di kebun baterainya sudah terpasang dan lampunya menyala. |
+| **Lampu tiang Merah berkedip-kedip terus** | Sensor di kebun mati / kabelnya copot, atau hawa kebun sangat panas ($>35^\circ\text{C}$). | Cek kotak alat di kebun: apakah baterainya habis? Apakah kabelnya lepas ditarik binatang? |
+| **Lampu tiang Kuning berkedip perlahan** | Alat baru saja dinyalakan listriknya (*Booting* awal). | Santai saja, itu normal. Beberapa detik lagi akan berubah hijau setelah sinyal masuk. |
+| **Layar LCD biru di kotak kebun gelap / tidak ada tulisan** | Kabel listriknya kendur atau setelan kontrasnya kurang pas. | Pastikan kabel LCD dicolok ke pin **5V (VIN)**. Ambil obeng kecil minus, lalu putar baut kecil warna biru di belakang layar LCD sampai hurufnya terlihat tajam. |
+| **Pompa berbunyi *"cetuk"* tapi air tidak keluar** | Sambungan kabel ke pompa air atau pipa ada yang macet. | Cek apakah colokan listrik pompa sudah terpasang ke stopkontak PLN. Cek apakah sumur ada airnya atau pipa tersumbat kotoran. |
+| **HP mendadak putus dari Wi-Fi `SmartFarm_ESP32`** | HP Anda mendeteksi Wi-Fi ini tidak ada internetnya, lalu otomatis pindah ke kuota HP. | Buka menu Wi-Fi di HP, sambungkan lagi ke `SmartFarm_ESP32`. Jika ada pesan pop-up bertuliskan *"Jaringan ini tidak ada internet, tetap sambungkan?"*, centang pilihan **"Ya / Tetap Terhubung"**. |
+| **Bilah sensor tanah berkerak putih** | Ada sisa garam pupuk yang menempel di lempeng sensor. | Cabut sensor tanah, lap lempeng hitamnya dengan kain lap basah sampai bersih, lalu tancapkan kembali ke tanah. |
+
+---
+
+## BAB 13: PANDUAN LENGKAP ARDUINO IDE & SOLUSI DRIVER PORT COM LAPTOP
+
+Banyak orang awam mengira mengisi program ke mikrokontroler itu sesulit meretas komputer. Padahal kenyataannya: **semudah menyalin teks dan menekan tombol panah di layar komputer!**
+
+### 13.1. Langkah 1: Download & Pasang Arduino IDE di Komputer / Laptop
+1. Buka browser komputer Anda dan kunjungi situs resmi:
+   ```
+   https://www.arduino.cc/en/software
+   ```
+2. Pilih versi komputer Anda (**Windows**, **macOS**, atau **Linux**).
+3. Klik tombol **"Just Download"** (Gratis 100%), lalu pasang seperti memasang aplikasi biasa.
+
+---
+
+### 13.2. Langkah 2: Mengenalkan ESP32 dan ESP8266 ke Arduino IDE
+Secara bawaan, Arduino IDE hanya kenal papan Arduino biasa. Kita perlu memberitahunya alamat untuk mengunduh papan pintar ESP:
+1. Buka Arduino IDE di komputer Anda.
+2. Klik menu di kiri atas: **File ➔ Preferences** (atau tekan `Ctrl + ,`).
+3. Pada kotak isian bernama **"Additional boards manager URLs"**, salin dan tempelkan 2 alamat berikut (pisahkan dengan tanda koma):
+   ```
+   https://espressif.github.io/arduino-esp32/package_esp32_index.json, http://arduino.esp8266.com/stable/package_esp8266com_index.json
+   ```
+4. Klik tombol **OK**.
+5. Sekarang buka menu: **Tools ➔ Board ➔ Boards Manager**.
+   * Di kotak pencarian, ketik: `esp32` ➔ Klik tombol **Install**.
+   * Di kotak pencarian, ketik: `esp8266` ➔ Klik tombol **Install**.
+   * Tunggu sampai selesai. Sekarang komputer Anda sudah kenal kedua papan kebun pintar ini!
+
+---
+
+### 13.3. Langkah 3: Memasang 4 Buku Panduan Tambahan (Library)
+Library adalah kode bantuan agar Arduino bisa langsung bicara dengan layar LCD, sensor suhu, dan jam RTC:
+1. Di Arduino IDE, klik menu: **Sketch ➔ Include Library ➔ Manage Libraries...** (atau klik ikon buku di bilah kiri).
+2. Cari dan klik tombol **Install** untuk 4 nama berikut satu per satu:
+   1. `LiquidCrystal_I2C` (pilih karya Frank de Brabander)
+   2. `Rtc by Makuna` (pilih karya Michael C. Miller)
+   3. `DHT sensor library` (pilih karya Adafruit)
+   4. `Adafruit Unified Sensor` (pilih karya Adafruit)
+
+---
+
+### 13.4. 💡 Tips Penyelamat: "Kenapa Port COM Tidak Muncul di Laptop?" (Driver USB CH340 / CP2102)
+Ini adalah masalah nomor satu yang dialami 90% pemula: kabel USB sudah dicolok ke laptop, tetapi menu **Tools ➔ Port** di Arduino IDE berwarna abu-abu redup atau tidak bisa diklik!
+
+* **Penyebabnya**: Laptop Anda belum punya driver chip penerjemah USB (kebanyakan papan ESP buatan pabrik menggunakan chip **CH340** atau **CP2102**).
+* **Solusi Cepat 1 Menit**:
+  1. Cari di Google: *"Download Driver CH340 Windows"* (atau buka situs resmi WCH: `https://www.wch.cn/downloads/CH341SER_ZIP.html`).
+  2. Ekstrak file zip, lalu buka file `SETUP.EXE` dan klik tombol **INSTALL**.
+  3. *(Jika papan Anda memakai chip persegi kecil bertuliskan SILABS CP2102)*: Cari di Google *"CP210x Universal Windows Driver"* dari Silicon Labs, lalu klik install.
+  4. Cabut kabel USB papan ESP dari laptop, lalu colokkan kembali.
+  5. Buka lagi menu **Tools ➔ Port**: Seketika nama port (misalnya **COM3**, **COM4**, atau **COM5**) akan langsung muncul berwarna hitam dan siap dipilih!
+
+> 💡 **Penting Juga**: Gunakan kabel data USB yang bagus (yang biasa dipakai untuk transfer file foto dari HP ke laptop). Jangan gunakan kabel murahan yang hanya berfungsi untuk mengisi daya listrik saja (*charging-only cable*), karena kabel charger biasa tidak memiliki jalur kabel data di dalamnya.
+
+---
+
+### 13.5. Langkah 4: Cara Memasukkan Program ke Papan (Flashing / Upload)
+1. Colokkan kabel USB papan ESP ke lubang laptop.
+2. Di Arduino IDE:
+   * **Untuk Kotak Kebun (ESP8266)**: Buka menu **Tools ➔ Board** ➔ Pilih **NodeMCU 1.0 (ESP-12E Module)** atau **LOLIN(WEMOS) D1 R2 & mini**.
+   * **Untuk Kotak Rumah (ESP32)**: Buka menu **Tools ➔ Board** ➔ Pilih **DOIT ESP32 DEVKIT V1**.
+   * **Pilih Lubang Port (COM)**: Buka menu **Tools ➔ Port** ➔ Pilih port yang sudah terdeteksi (misal `COM3` atau `COM4`).
+3. Klik tombol **Tanda Panah Kanan (➔) [Upload]** di pojok kiri atas jendela Arduino IDE.
+4. *(Khusus beberapa papan ESP32)*: Jika saat upload di layar bawah muncul tulisan `Connecting........_____.....`, cukup **tekan dan tahan tombol kecil bertuliskan "BOOT"** di papan ESP32 selama 2 detik sampai proses persentase upload mulai berjalan, lalu lepas tombolnya.
+5. Tunggu sampai muncul tulisan warna hijau:
+   ```
+   Done uploading.
+   ```
+6. **Selamat!** Program sudah tertanam permanen di dalam otak alat Anda dan tidak akan hilang walau listrik dicabut!
+
+---
+
+### 13.6. Langkah 5: Memeriksa Kejujuran Alat via Serial Monitor (115200 Baud)
+Ingin melihat apa yang sedang dipikirkan oleh alat Anda?
+1. Di Arduino IDE, klik ikon kaca pembesar di pojok kanan atas bernama **Serial Monitor** (atau tekan `Ctrl + Shift + M`).
+2. Di pojok kanan bawah jendela Serial Monitor, pastikan kecepatannya dipilih: **115200 baud**.
+3. Layar komputer akan langsung mencetak data riil setiap detik:
+   ```
+   [ESP8266 SENDER AKURAT] Raw ADC: 380 | Soil: 68% | Status Transmisi: SUKSES KIRIM DATA
+   ```
+   Jika teks ini sudah mengalir, tandanya alat kebun Anda sudah 100% sehat dan siap dipasang di bedengan!
+
+---
+
+## BAB 14: KODE LENGKAP KOTAK KEBUN (ESP8266 SENDER) & CARA KERJANYA
+
+Berikut adalah seluruh isi kode program untuk kotak pemancar di bedengan tanah ([esp8266_soil_sender.ino](file:///media/budgei/Development2/arduino/Sketchbook/esp8266_soil_sender/esp8266_soil_sender.ino)). Kode ini sangat ringkas (kurang dari 100 baris) sehingga pemula pun bisa membacanya dengan sangat mudah:
+
+```cpp
+#include <ESP8266WiFi.h>
+#include <espnow.h>
+extern "C" {
+#include <user_interface.h>
+}
+
+#define LED_BUILTIN_PIN 2 // Lampu kecil biru di papan ESP8266
+
+// Alamat Siaran Bersama (Broadcast) ke Seluruh Udara Kebun
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+// Amplop Surat Data (Harus Persis Sama dengan Kotak Rumah ESP32)
+typedef struct struct_message {
+  int8_t persen;   // Basahnya tanah (0 sampai 100%)
+  int8_t baterai;  // Estimasi baterai kebun (0 sampai 100%)
+  uint16_t rawAdc; // Angka mentah sensor tanah (0 sampai 1024)
+} struct_message;
+
+struct_message myData;
+volatile int lastSendStatus = -1;
+
+void OnDataSent(uint8_t *mac_addr, uint8_t status) { 
+  lastSendStatus = status; 
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN_PIN, OUTPUT);
+  digitalWrite(LED_BUILTIN_PIN, HIGH); // Lampu mati awal
+
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+
+  // DONGKRAK DAYA PANCAR RADIO KE MAKSIMAL (Tembus Pepohonan s.d 300 Meter)
+  WiFi.setOutputPower(20.5);
+  wifi_set_phy_mode(PHY_MODE_11B); // Gelombang radio panjang tembus dinding
+  wifi_set_channel(1);            // Kanal 1 (Wajib sama dengan ESP32 di rumah!)
+
+  if (esp_now_init() != 0) {
+    Serial.println(F("Gagal menghidupkan radio ESP-NOW"));
+    return;
+  }
+
+  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+  esp_now_register_send_cb(OnDataSent);
+  esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+}
+
+void loop() {
+  // 1. MEMBACA TANAH 5 KALI BIAR HASILNYA TENANG & TIDAK GOYANG
+  long sumAdc = 0;
+  for (int i = 0; i < 5; i++) {
+    sumAdc += analogRead(A0);
+    delay(2);
+  }
+  int sensorValue = sumAdc / 5;
+
+  // 2. RUMUS KALIBRASI TANAH KEBUN ANDA:
+  // Angka 480 = Tanah Kering (0%), Angka 200 = Tanah Tergenang Air (100%)
+  const int dryValue = 480;
+  const int wetValue = 200;
+
+  int persenLembab = map(sensorValue, dryValue, wetValue, 0, 100);
+  persenLembab = constrain(persenLembab, 0, 100);
+
+  // Masukkan angka ke amplop surat
+  myData.persen = (int8_t)persenLembab;
+  myData.baterai = 100; // Tegangan stabil adaptor 5V
+  myData.rawAdc = (uint16_t)sensorValue;
+
+  // 3. KEDIPKAN LAMPU BIRU & TEMBAKKAN SURAT DATA KE UDARA
+  lastSendStatus = -1;
+  digitalWrite(LED_BUILTIN_PIN, LOW); // Lampu biru menyala sebentar
+  esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
+  delay(20);
+  digitalWrite(LED_BUILTIN_PIN, HIGH); // Lampu biru mati lagi
+
+  Serial.print(F("Data Terkirim -> Tanah: "));
+  Serial.print(persenLembab);
+  Serial.println(F("%"));
+
+  delay(2000); // Istirahat 2 detik, lalu kirim lagi
+}
+```
+
+### 💡 Penjelasan Baris Kode Penting untuk Orang Awam:
+1. **`broadcastAddress = {0xFF, ...}`**: Artinya surat data dilempar ke udara secara terbuka (*Broadcast*). Anda tidak perlu repot mencari alamat MAC Address atau nomor seri papan.
+2. **`wifi_set_channel(1)`**: Menetapkan bahwa gelombang radio berjalan di **Kanal 1**. Ini kunci rahasianya! Kotak rumah ESP32 juga berada di Kanal 1 sehingga keduanya langsung nyambung seketika.
+3. **`dryValue = 480` dan `wetValue = 200`**: Ini adalah batas kalibrasi tanah Anda. Kalau di kebun Anda saat kering terbaca `520`, Anda tinggal mengganti angka `480` menjadi `520`!
+4. **`delay(2000)`**: Mengatur jeda pengiriman setiap 2 detik sekali agar hemat daya dan tidak boros baterai.
+
+---
+
+## BAB 15: KODE LENGKAP KOTAK RUMAH (ESP32 GATEWAY) & KOMPILASI WEB OTOMATIS
+
+Kotak rumah dikendalikan oleh file [esp32_server_receiver.ino](file:///media/budgei/Development2/arduino/Sketchbook/esp32_server_receiver/esp32_server_receiver.ino). File ini adalah stasiun pusat komando yang sangat cerdas:
+1. **Penerima Radio ESP-NOW**: Menangkap paket data kelembapan tanah dan daya baterai dari kotak kebun tanpa router.
+2. **Sensor Suhu Udara DHT11 (Pin 4)**: Mengukur suhu lingkungan dan kelembapan udara.
+3. **Layar LCD 16x2 I2C (Pin 21 SDA, Pin 22 SCL)**: Menampilkan status fisik dengan 7 karakter grafis kustom CGRAM.
+4. **Jam Digital RTC DS1302 (Pin 14 DAT, Pin 12 CLK, Pin 13 RST)**: Menjaga jadwal siram pagi & sore tetap akurat walau listrik padam.
+5. **Relai Pompa Air (Pin 26) & Relai Lampu Pemanas (Pin 25)**: Sakelar otomatis dengan logika *Active-Low*.
+6. **Lampu Tiang Fisik 3 Warna**: Pin 32 (Hijau/Aman), Pin 33 (Kuning/Standby-Waspada), Pin 27 (Merah/Darurat Panas-Putus).
+7. **Penyedia Wi-Fi Mandiri & Web SCADA**: Memancarkan SSID `SmartFarm_ESP32` dan menyajikan dashboard SCADA ke HP Anda.
+
+---
+
+### 15.1. Cara Otomatis Meracik Tampilan Web (build_web.py)
+Sebelum meng-upload kode program C++ di bawah ke papan ESP32, seluruh tampilan web di folder `src_web/` dikemas menjadi satu file header `index.h`. Anda **tidak perlu** mengedit kode HTML/CSS secara manual. Cukup jalankan perintah otomatis ini di terminal komputer:
+```bash
+python3 esp32_server_receiver/build_web.py
+```
+Dalam waktu 1 detik, script akan otomatis menghasilkan file `index.h` yang memuat seluruh antarmuka web, CSS modern, dan JavaScript.
+
+---
+
+### 15.2. KODE SUMBER LENGKAP: esp32_server_receiver.ino
+Berikut adalah seluruh isi kode program lengkap stasiun utama ESP32 yang bisa langsung disalin (*copy-paste*) ke Arduino IDE:
+
+```cpp
 #include "index.h"
 #include <DHT.h>
 #include <LittleFS.h>
@@ -1393,3 +1974,55 @@ void loop() {
     }
   }
 }
+
+```
+
+---
+
+### 15.3. Penjelasan 3 Bagian Kunci Kode ESP32 untuk Pemula:
+1. **Bagian Konfigurasi Pin & Variabel NVS (Baris Awal)**:
+   * Menentukan kaki pin hardware: DHT11 di Pin 4, I2C LCD di Pin 21 & 22, RTC di Pin 14/12/13, Pompa di Pin 26, Lampu di Pin 25, dan LED tiang di Pin 32/33/27.
+   * Variabel `sched1_h = 6` dan `sched2_h = 17` adalah jadwal jam siram pagi (06:00) dan sore (17:00).
+2. **Bagian Web Server & Jalur Data JSON (Fungsi handleData, handleControl, dll)**:
+   * Mengirimkan data sensor ke HP dalam bentuk JSON setiap kali HP meminta pembaruan data secara real-time.
+   * Menerima perintah sentuh dari tombol di HP saat Anda ingin menyalakan pompa atau mengubah jadwal jam.
+3. **Bagian setup() dan loop() (Jantung Otomatisasi Kebun)**:
+   * `setup()`: Menginisialisasi sensor DHT11, LCD 16x2, jam RTC, radio ESP-NOW, dan server web.
+   * `loop()`: Berputar tanpa henti memeriksa apakah tanah kebun sudah kering di bawah ambang batas (otomatis hidupkan pompa), mengecek apakah sudah jam 6 pagi / jam 5 sore (otomatis siram jadwal), dan memeriksa apakah sensor terputus lebih dari 60 detik (*Watchdog Failsafe* otomatis matikan pompa).
+
+---
+
+## BAB 16: PANDUAN MENGUBAH NAMA WIFI, SANDI, & JAM SIRAM SESUAI KEINGINAN
+
+Anda ingin mengubah nama WiFi dari `SmartFarm_ESP32` menjadi `Kebun_Pak_Haji`? Atau ingin mengganti kata sandinya? Sangat mudah!
+
+### 16.1. Mengubah Nama Wi-Fi & Kata Sandi:
+1. Buka file [esp32_server_receiver.ino](file:///media/budgei/Development2/arduino/Sketchbook/esp32_server_receiver/esp32_server_receiver.ino) di Arduino IDE.
+2. Cari baris kode berikut (gunakan `Ctrl + F` dan ketik `WiFi.softAP`):
+   ```cpp
+   WiFi.softAP("SmartFarm-ESP32", "12345678", 1);
+   ```
+3. Ubah teks di dalam tanda petik sesuai nama kebun dan sandi yang Anda inginkan, misalnya:
+   ```cpp
+   WiFi.softAP("Kebun_Berkah_Cabai", "kebun12345", 1);
+   ```
+   > ⚠️ **PENTING**: Angka `, 1);` di bagian ujung **JANGAN DIUBAH!** Itu adalah nomor Kanal Radio 1 agar tetap nyambung dengan kotak pengirim di kebun.
+4. Tekan tombol **Upload (➔)**. Selesai! Sekarang nama Wi-Fi di HP Anda sudah berubah.
+
+### 16.2. Mengubah Jadwal Jam Siram Otomatis:
+Anda punya dua pilihan yang sangat fleksibel:
+* **Pilihan 1 (Paling Gampang, Lewat Layar HP)**: Buka tab **[⚙️ Kontrol]** di HP Anda, ubah jam siram pagi/sore pada kolom yang tersedia, lalu klik tombol **Simpan**. Jadwal otomatis tersimpan permanen di memori alat tanpa perlu colok kabel ke laptop!
+* **Pilihan 2 (Lewat Kode Program)**: Di dalam [esp32_server_receiver.ino](file:///media/budgei/Development2/arduino/Sketchbook/esp32_server_receiver/esp32_server_receiver.ino), cari baris konfigurasi default:
+  ```cpp
+  uint8_t sched1_h = 6;  // Pukul 06 pagi
+  uint8_t sched1_m = 0;  // Menit 00
+  uint8_t sched1_dur = 15; // Siram selama 15 menit
+  ```
+  Ubah angka tersebut sesuai kebiasaan berkebun Anda, lalu tekan tombol Upload.
+
+---
+
+## 🌻 PESAN PENUTUP
+Teknologi kebun modern ini dibuat bukan untuk membuat petani bingung dengan rumus rumit, melainkan untuk menjadi **sahabat setia di lahan**: menjaga tanaman tetap subur, menghemat pemakaian air dan listrik pompa, serta melipatgandakan hasil panen bapak dan ibu petani sekalian.
+
+*Selamat berkebun pintar, semoga panduan ini bermanfaat & panen Anda berlimpah ruah!*

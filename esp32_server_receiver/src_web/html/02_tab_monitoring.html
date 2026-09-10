@@ -1,0 +1,640 @@
+    <!-- TAB 1: MONITORING & KPI -->
+    <div id="tab-overview" class="tab-content active">
+      <!-- TELEMETRY KPI METRICS -->
+      <div class="grid-kpi">
+        <!-- Soil Moisture Card -->
+        <div class="kpi-card soil-card">
+          <div class="kpi-card-header">
+            <div class="kpi-meta">
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 10a6 6 0 0 0-6-6H3v2a6 6 0 0 0 6 6h3"/>
+                  <path d="M12 14a6 6 0 0 1 6-6h3v2a6 6 0 0 1-6 6h-3"/>
+                  <path d="M12 22V10"/>
+                </svg>
+              </div>
+              <div>
+                <span class="kpi-title">Kelembapan Tanah</span>
+                <span class="kpi-subtitle">Sensor Volumetrik VWC</span>
+              </div>
+            </div>
+            <span class="kpi-status-badge" id="kpi-soil-category">Membaca...</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-value" id="kpi-soil">--%</div>
+          </div>
+          <div class="kpi-card-footer">
+            <span class="kpi-footer-dot"></span>
+            <span class="kpi-footer-text" id="kpi-soil-depletion">Prediksi Penguapan: -</span>
+          </div>
+        </div>
+
+        <!-- Temperature Card -->
+        <div class="kpi-card temp-card">
+          <div class="kpi-card-header">
+            <div class="kpi-meta">
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+              </div>
+              <div>
+                <span class="kpi-title">Suhu Lingkungan</span>
+                <span class="kpi-subtitle">DHT11 Telemetri</span>
+              </div>
+            </div>
+            <span class="kpi-status-badge">Iklim Mikro</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-value" id="kpi-temp">--°C</div>
+          </div>
+          <div class="kpi-card-footer">
+            <span class="kpi-footer-dot"></span>
+            <span class="kpi-footer-text" id="kpi-heat-index">Terasa seperti: --°C</span>
+          </div>
+        </div>
+
+        <!-- Humidity Card -->
+        <div class="kpi-card hum-card">
+          <div class="kpi-card-header">
+            <div class="kpi-meta">
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+              </div>
+              <div>
+                <span class="kpi-title">Kelembapan Udara</span>
+                <span class="kpi-subtitle">Relative Humidity</span>
+              </div>
+            </div>
+            <span class="kpi-status-badge">Sensor RH</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-value" id="kpi-hum">--%</div>
+          </div>
+          <div class="kpi-card-footer">
+            <span class="kpi-footer-dot"></span>
+            <span class="kpi-footer-text" id="kpi-dew-point">Titik Embun: --°C</span>
+          </div>
+        </div>
+
+        <!-- ESP-NOW Radio Link & Node Transducer Card -->
+        <div class="kpi-card signal-card">
+          <div class="kpi-card-header">
+            <div class="kpi-meta">
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                  <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                </svg>
+              </div>
+              <div>
+                <span class="kpi-title">Sinyal ESP-NOW</span>
+                <span class="kpi-subtitle">Node Kebun (5V)</span>
+              </div>
+            </div>
+            <span class="kpi-status-badge" id="kpi-node-status">Node</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-value" id="kpi-signal">-- dBm</div>
+          </div>
+          <div class="kpi-card-footer">
+            <span class="kpi-footer-dot"></span>
+            <span class="kpi-footer-text" id="kpi-raw-adc">ADC A0: --</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRAFFIC LIGHT INDICATOR CARD (REAL-TIME ESP32 HARDWARE STATUS) -->
+      <div class="card traffic-indicator-card" id="card-traffic-light" style="display:none;">
+        <div class="card-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="kpi-icon-box" style="width:32px; height:32px; background:rgba(16,185,129,0.12); color:var(--primary);" id="traffic-card-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3"></rect>
+                <circle cx="12" cy="7" r="2"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+                <circle cx="12" cy="17" r="2"></circle>
+              </svg>
+            </div>
+            <div>
+              <span style="font-size:13px; font-weight:700; color:var(--text-main);">Indikator Status Lahan</span>
+              <span style="display:block; font-size:11px; color:var(--text-sub); margin-top:1px;">Traffic Light Fisik ESP32 (Pin 27 Merah · Pin 33 Kuning · Pin 32 Hijau)</span>
+            </div>
+          </div>
+          <span id="traffic-card-label" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">SENSOR TERPUTUS / OFFLINE</span>
+        </div>
+
+        <!-- BIG TRAFFIC LIGHT DISPLAY -->
+        <div id="traffic-card-body" style="display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px 10px 8px; flex-wrap:wrap;">
+
+          <!-- Left: Big Physical Light Column -->
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="traffic-pole-housing" id="traffic-pole">
+              <!-- RED bulb -->
+              <div class="traffic-pole-bulb pole-red lit blink" id="pole-bulb-red" title="Pin 27 · Bahaya / Sensor Terputus">
+                <div class="pole-bulb-inner"></div>
+              </div>
+              <!-- YELLOW bulb -->
+              <div class="traffic-pole-bulb pole-yellow" id="pole-bulb-yellow" title="Pin 33 · Peringatan / Jadwal RTC">
+                <div class="pole-bulb-inner"></div>
+              </div>
+              <!-- GREEN bulb -->
+              <div class="traffic-pole-bulb pole-green" id="pole-bulb-green" title="Pin 32 · Kondisi Normal">
+                <div class="pole-bulb-inner"></div>
+              </div>
+            </div>
+            <span id="traffic-pole-label" style="font-size:10px; font-weight:700; color:var(--text-sub); letter-spacing:0.05em; text-transform:uppercase; text-align:center;">LAHAN</span>
+          </div>
+
+          <!-- Right: Status Details -->
+          <div style="flex:1; min-width:180px; display:flex; flex-direction:column; gap:12px;">
+            <!-- Status rows -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;">
+              <div class="traffic-status-cell" id="traffic-cell-red" style="border-radius:10px; padding:10px 6px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.15);">
+                <div style="font-size:9px; color:#ef4444; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">MERAH</div>
+                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Bahaya Suhu<br/>Sensor Terputus</div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#ef4444; margin:6px auto 0; opacity:1; box-shadow:0 0 8px #ef4444;" id="traffic-dot-red"></div>
+              </div>
+              <div class="traffic-status-cell" id="traffic-cell-yellow" style="border-radius:10px; padding:10px 6px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.15);">
+                <div style="font-size:9px; color:#f59e0b; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">KUNING</div>
+                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Perlu Irigasi<br/>Jadwal RTC Aktif</div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin:6px auto 0; opacity:0.3;" id="traffic-dot-yellow"></div>
+              </div>
+              <div class="traffic-status-cell" id="traffic-cell-green" style="border-radius:10px; padding:10px 6px; background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.15);">
+                <div style="font-size:9px; color:#10b981; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">HIJAU</div>
+                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Kondisi Aman<br/>Tanah Cukup</div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#10b981; margin:6px auto 0; opacity:0.3;" id="traffic-dot-green"></div>
+              </div>
+            </div>
+
+            <!-- Current reading bar -->
+            <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px 12px; border:1px solid var(--card-border);">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <span style="font-size:11px; color:var(--text-sub);">Status Aktif Lahan Saat Ini</span>
+                <span id="traffic-rtc-badge" style="font-size:10px; font-weight:600; color:var(--text-sub); display:none;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Jadwal RTC Berjalan
+                </span>
+              </div>
+              <div id="traffic-current-status" style="font-size:13px; font-weight:700; color:#ef4444; margin-top:6px;">ESP8266 Terputus / Sensor Offline</div>
+              <div id="traffic-current-detail" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe sistem.</div>
+            </div>
+
+            <!-- DIAGNOSTIK HARDWARE LED (GPIO Sinyal vs Fisik) -->
+            <div id="traffic-hw-diag" style="background:rgba(255,255,255,0.02); border-radius:8px; padding:10px 12px; border:1px solid var(--card-border);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:10px; font-weight:700; color:var(--text-sub); letter-spacing:0.04em; text-transform:uppercase;">Diagnostik GPIO Hardware</span>
+                <span style="font-size:9px; color:var(--text-sub);">Sinyal Firmware → Pin Fisik</span>
+              </div>
+              <!-- GPIO rows -->
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="width:10px; height:10px; border-radius:50%; background:#ef4444; flex-shrink:0; box-shadow:0 0 6px #ef4444;" id="hw-dot-red"></div>
+                    <span style="font-size:10px; color:var(--text-sub);">Pin 27 · LED Merah</span>
+                  </div>
+                  <span id="hw-state-red" style="font-size:10px; font-weight:700; color:#ef4444; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.08);">BLINK (ON) ●</span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="width:10px; height:10px; border-radius:50%; background:#f59e0b; flex-shrink:0;" id="hw-dot-yellow"></div>
+                    <span style="font-size:10px; color:var(--text-sub);">Pin 33 · LED Kuning</span>
+                  </div>
+                  <span id="hw-state-yellow" style="font-size:10px; font-weight:700; color:var(--text-sub); padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.04);">LOW (OFF)</span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="width:10px; height:10px; border-radius:50%; background:#10b981; flex-shrink:0;" id="hw-dot-green"></div>
+                    <span style="font-size:10px; color:var(--text-sub);">Pin 32 · LED Hijau</span>
+                  </div>
+                  <span id="hw-state-green" style="font-size:10px; font-weight:700; color:var(--text-sub); padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.04);">LOW (OFF)</span>
+                </div>
+              </div>
+
+              <!-- Mismatch warning (hidden by default, shown if user reports issue) -->
+              <div id="traffic-mismatch-alert" style="display:none; margin-top:10px; padding:8px 10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; font-size:10px; color:#ef4444; line-height:1.5;">
+                <b>⚠ Potensi Kerusakan Hardware LED!</b><br/>
+                Firmware memerintahkan lampu menyala, namun tidak ada konfirmasi. Periksa:<br/>
+                • Kabel/jumper dari ESP32 ke LED<br/>
+                • Resistor pembatas arus (220Ω – 470Ω)<br/>
+                • LED terbakar / polaritas terbalik (Anoda & Katoda)
+              </div>
+              <div style="margin-top:8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="font-size:9px; color:var(--text-sub);">Jika lampu fisik tidak cocok dengan status di atas, klik:</span>
+                <button type="button" onclick="reportLedMismatch()" style="font-size:9px; padding:3px 8px; border-radius:6px; background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3); cursor:pointer; font-weight:700;">Laporkan Mismatch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- SECTOR & ZONATION SELECTOR STRIP (LOCALSTORAGE DYNAMIC) -->
+      <div class="sector-strip">
+        <div class="sector-strip-header">
+          <div class="sector-strip-title-wrap">
+            <div class="sector-strip-title">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+              </svg>
+              <span>Zonasi Lahan &amp; Kalibrasi Profil Tanaman</span>
+            </div>
+            <span class="sector-strip-desc">Pilih sektor aktif untuk kalibrasi kebutuhan air &amp; evapotranspirasi presisi</span>
+          </div>
+          <div class="sector-strip-actions">
+            <button type="button" class="btn btn-secondary" onclick="openSectorManagerModal()" style="padding: 7px 13px; font-size: 11.5px; border-radius: 10px;">
+              ⚙️ Kelola Sektor (Storage)
+            </button>
+            <button type="button" class="btn btn-primary" onclick="openAddSectorForm()" style="padding: 7px 13px; font-size: 11.5px; border-radius: 10px;">
+              ➕ Tambah Sektor
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Sector Grid (Rendered via LocalStorage) -->
+        <div class="sector-grid" id="sector-grid-container">
+          <!-- Populated dynamically by renderSectorGrid() -->
+        </div>
+      </div>
+
+      <!-- PREDIKSI FENOLOGI & LAJU PERTUMBUHAN TANAMAN -->
+      <div class="phenology-card" id="card-phenology">
+        <div class="pheno-header">
+          <div class="pheno-title-wrap">
+            <div class="pheno-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"></path>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+              <span>PREDIKSI FENOLOGI &amp; LAJU PERTUMBUHAN TANAMAN</span>
+            </div>
+            <div class="pheno-subtitle" id="pheno-crop-tag">Belum Ada Sektor Kebun Dikonfigurasi</div>
+          </div>
+          <span class="badge-pill" id="pheno-health-badge" style="color:var(--text-sub); font-weight:700;">Standby (Menunggu Sektor)</span>
+        </div>
+
+        <!-- 4-Stage Phenological Milestones -->
+        <div class="pheno-milestones-container">
+          <div class="pheno-timeline-bar">
+            <div class="pheno-timeline-fill" id="pheno-timeline-fill" style="width: 0%;"></div>
+          </div>
+          <div class="pheno-stages-grid" id="pheno-stages-grid">
+            <!-- Stage 1 -->
+            <div class="pheno-stage-item" id="stage-step-1">
+              <div class="pheno-step-bubble" id="stage-bubble-1">1</div>
+              <div class="pheno-step-label" id="stage-label-1">Tahap 1</div>
+              <div class="pheno-step-sub" id="stage-sub-1">--</div>
+            </div>
+            <!-- Stage 2 -->
+            <div class="pheno-stage-item" id="stage-step-2">
+              <div class="pheno-step-bubble" id="stage-bubble-2">2</div>
+              <div class="pheno-step-label" id="stage-label-2">Tahap 2</div>
+              <div class="pheno-step-sub" id="stage-sub-2">--</div>
+            </div>
+            <!-- Stage 3 -->
+            <div class="pheno-stage-item" id="stage-step-3">
+              <div class="pheno-step-bubble" id="stage-bubble-3">3</div>
+              <div class="pheno-step-label" id="stage-label-3">Tahap 3</div>
+              <div class="pheno-step-sub" id="stage-sub-3">--</div>
+            </div>
+            <!-- Stage 4 -->
+            <div class="pheno-stage-item" id="stage-step-4">
+              <div class="pheno-step-bubble" id="stage-bubble-4">4</div>
+              <div class="pheno-step-label" id="stage-label-4">Tahap 4</div>
+              <div class="pheno-step-sub" id="stage-sub-4">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Bio-Climatic Sensor Evaluation Pillars -->
+        <div class="pheno-grid-pillars">
+          <!-- Pillar 1: Thermal Time / GDD -->
+          <div class="pheno-pillar-card">
+            <div class="pheno-pillar-head">
+              <span class="pheno-pillar-tag">GDD MODEL</span>
+              <span class="pheno-dot dot-cyan"></span>
+            </div>
+            <div class="pheno-pillar-val" id="pheno-gdd-val">-- GDD/hari</div>
+            <div class="pheno-pillar-note" id="pheno-gdd-note">Pilih atau tambahkan sektor lahan</div>
+          </div>
+          <!-- Pillar 2: VPD (Transpiration Pressure) -->
+          <div class="pheno-pillar-card">
+            <div class="pheno-pillar-head">
+              <span class="pheno-pillar-tag">VPD KUTIKULA</span>
+              <span class="pheno-dot dot-blue"></span>
+            </div>
+            <div class="pheno-pillar-val" id="pheno-vpd-val">-- kPa</div>
+            <div class="pheno-pillar-note" id="pheno-vpd-note">Menunggu konfigurasi tanaman</div>
+          </div>
+          <!-- Pillar 3: Soil Moisture VWC -->
+          <div class="pheno-pillar-card">
+            <div class="pheno-pillar-head">
+              <span class="pheno-pillar-tag">VWC &amp; AERASI AKAR</span>
+              <span class="pheno-dot dot-green"></span>
+            </div>
+            <div class="pheno-pillar-val" id="pheno-vwc-val">--% VWC</div>
+            <div class="pheno-pillar-note" id="pheno-vwc-note">Menunggu telemetri sektor</div>
+          </div>
+        </div>
+
+        <!-- Actionable AI Advice Box -->
+        <div class="pheno-advice-box">
+          <div style="display:flex; align-items:flex-start; gap:12px; flex:1; min-width:240px;">
+            <div class="kpi-icon-box" style="width:32px; height:32px; font-size:14px; background:rgba(16,185,129,0.12); color:var(--primary); border:1px solid rgba(16,185,129,0.25); flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9 2.5 0 4.7-1 6.3-2.7"></path>
+                <path d="M12 12V6"></path>
+                <path d="M12 12l4-4"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--primary); margin-bottom:2px;">Rekomendasi Agronomi Presisi Hari Ini</div>
+              <div id="pheno-ai-advice" style="font-size:12px; color:var(--text-main); line-height:1.5;">Belum ada sektor kebun yang aktif. Daftarkan petak lahan Anda melalui tombol <b>[+ Tambah Sektor]</b> di panel Zonasi Lahan untuk mengaktifkan pemodelan fenologi &amp; agronomis presisi.</div>
+            </div>
+          </div>
+          <div id="pheno-target-eta" class="badge-pill" style="border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); color:var(--text-sub); font-weight:700; font-size:12px; white-space:nowrap;">
+            Estimasi: Menunggu Sektor...
+          </div>
+        </div>
+      </div>
+
+      <!-- SCADA PATHOGEN & PEST OUTBREAK SURVEILLANCE -->
+      <div class="outbreak-card" id="card-outbreak">
+        <div class="outbreak-header">
+          <div class="outbreak-title-wrap">
+            <div class="outbreak-icon-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="M12 8v4"></path>
+                <path d="M12 16h.01"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="outbreak-title">Evaluasi Risiko Patogen &amp; Hama Tanaman</div>
+              <div class="outbreak-subtitle">Surveilans Real-Time Sensor Iklim DHT11 &amp; ESP-NOW Tanah</div>
+            </div>
+          </div>
+          <span class="badge-pill" id="outbreak-risk-level">Menunggu Sensor Telemetri</span>
+        </div>
+
+        <div class="outbreak-grid" id="outbreak-warning-box">
+          <!-- Item 1: Jamur Bercak Daun / Buah -->
+          <div class="outbreak-item" id="box-disease-1">
+            <div class="outbreak-item-head">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="kpi-icon-box" style="width:30px; height:30px; font-size:13px; background:rgba(6,182,212,0.1); color:var(--accent-cyan); border:1px solid rgba(6,182,212,0.25);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                  </svg>
+                </div>
+                <div class="outbreak-target-info">
+                  <div class="outbreak-target-name" id="disease-1-title">Phytophthora &amp; Antraknosa</div>
+                  <div class="outbreak-target-vector">Bercak Daun &amp; Busuk Buah</div>
+                </div>
+              </div>
+              <span class="outbreak-tag tag-low" id="disease-1-badge">STANDBY</span>
+            </div>
+            <div class="outbreak-condition-chip">
+              <span>Ambang Inkubasi:</span>
+              <code>RH &gt; 82% &amp; 20–27°C</code>
+            </div>
+            <div class="outbreak-desc-box" id="disease-1-desc">
+              Data iklim belum terbaca. Menunggu telemetri suhu &amp; kelembapan DHT11...
+            </div>
+          </div>
+
+          <!-- Item 2: Hama Thrips & Vektor Virus -->
+          <div class="outbreak-item" id="box-disease-2">
+            <div class="outbreak-item-head">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="kpi-icon-box" style="width:30px; height:30px; font-size:13px; background:rgba(245,158,11,0.1); color:var(--accent-amber); border:1px solid rgba(245,158,11,0.25);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2v4a4 4 0 0 0 8 0v-4h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"></path>
+                  </svg>
+                </div>
+                <div class="outbreak-target-info">
+                  <div class="outbreak-target-name" id="disease-2-title">Thrips, Kutu Daun &amp; Mites</div>
+                  <div class="outbreak-target-vector">Vektor Gemini Virus &amp; Daun Keriting</div>
+                </div>
+              </div>
+              <span class="outbreak-tag tag-low" id="disease-2-badge">STANDBY</span>
+            </div>
+            <div class="outbreak-condition-chip">
+              <span>Ambang Populasi:</span>
+              <code>Suhu &gt; 32°C &amp; RH &lt; 55%</code>
+            </div>
+            <div class="outbreak-desc-box" id="disease-2-desc">
+              Data iklim belum terbaca. Menunggu telemetri suhu &amp; kelembapan DHT11...
+            </div>
+          </div>
+
+          <!-- Item 3: Layu Bakteri Perakaran -->
+          <div class="outbreak-item" id="box-disease-3">
+            <div class="outbreak-item-head">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="kpi-icon-box" style="width:30px; height:30px; font-size:13px; background:rgba(59,130,246,0.1); color:var(--accent-blue); border:1px solid rgba(59,130,246,0.25);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22V8"></path>
+                    <path d="m5 12 7-4 7 4"></path>
+                    <path d="M5 16l7-4 7 4"></path>
+                  </svg>
+                </div>
+                <div class="outbreak-target-info">
+                  <div class="outbreak-target-name" id="disease-3-title">Layu Bakteri (Ralstonia)</div>
+                  <div class="outbreak-target-vector">Anoksia Media &amp; Busuk Perakaran</div>
+                </div>
+              </div>
+              <span class="outbreak-tag tag-low" id="disease-3-badge">STANDBY</span>
+            </div>
+            <div class="outbreak-condition-chip">
+              <span>Ambang Anaerob:</span>
+              <code>VWC &gt; 80% &amp; Suhu &gt; 30°C</code>
+            </div>
+            <div class="outbreak-desc-box" id="disease-3-desc">
+              Data kelembapan tanah belum terbaca. Menunggu sinyal ESP-NOW kebun...
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <!-- DIAGNOSTIK VISUAL PATOLOGI & HARA TANAMAN -->
+        <div class="monitor-card vision-card" style="margin-top:20px;">
+          <div class="card-header" style="justify-content: space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="kpi-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+              <div>
+                <span class="card-title" style="display:block; font-size:14px; font-weight:700; color:var(--text-main);">Inspeksi Citra Patologi & Daun</span>
+                <span style="font-size:11px; color:var(--text-sub);">Analisis Morfologi & Defisiensi Nutrisi Lapangan</span>
+              </div>
+            </div>
+            <span class="badge-pill" style="background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 11px; padding: 3px 10px;">
+              Optical Vision
+            </span>
+          </div>
+          
+          <div class="card-body" style="padding: 16px;">
+            <p style="font-size:12px; color:var(--text-sub); margin-bottom:14px; line-height:1.6;">
+              Ambil sampel daun tanaman melalui kamera langsung, unggah file, tempel dari clipboard (Ctrl+V), atau tautan web untuk mendeteksi patologi & defisiensi nutrisi.
+            </p>
+
+            <!-- SOURCE SELECTION TABS -->
+            <div class="vision-source-tabs">
+              <button type="button" class="vision-tab-btn active" id="vtab-btn-file" onclick="setVisionMode('file')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Unggah / File
+              </button>
+              <button type="button" class="vision-tab-btn" id="vtab-btn-camera" onclick="setVisionMode('camera')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Kamera Langsung
+              </button>
+              <button type="button" class="vision-tab-btn" id="vtab-btn-paste" onclick="setVisionMode('paste')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                Tempel (Ctrl+V)
+              </button>
+              <button type="button" class="vision-tab-btn" id="vtab-btn-url" onclick="setVisionMode('url')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Tautan URL
+              </button>
+            </div>
+
+            <!-- MODE 1: FILE / UPLOAD -->
+            <input type="file" id="ai-vision-upload" accept="image/*" capture="environment" style="display:none;" onchange="handleAIVisionUpload(event)">
+            <div id="vpanel-file" class="vision-dropzone" onclick="document.getElementById('ai-vision-upload').click()">
+              <div class="vision-icon-ring">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                  <circle cx="9" cy="9" r="2"/>
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+              </div>
+              <div style="text-align:center;">
+                <span style="font-size:13px; font-weight:600; color:var(--text-main); display:block; margin-bottom:3px;">Pilih File Foto atau Jepret Kamera HP</span>
+                <span style="font-size:11px; color:var(--text-sub);">Format JPG, PNG, WEBP (Otomatis Kompresi)</span>
+              </div>
+            </div>
+
+            <!-- MODE 2: LIVE WEBRTC CAMERA STREAM -->
+            <div id="vpanel-camera" style="display:none;">
+              <div class="vision-camera-box">
+                <video id="vision-camera-video" playsinline autoplay muted></video>
+                <div class="vision-shutter-bar">
+                  <button type="button" class="btn btn-primary" onclick="captureLiveCamera()" style="display:flex; align-items:center; gap:6px; background:linear-gradient(135deg, #a855f7, #6366f1); border:none; padding:8px 18px; font-size:12px; font-weight:600; border-radius:8px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                    Bidik & Analisis
+                  </button>
+                  <button type="button" class="btn" onclick="stopLiveCamera()" style="padding:8px 14px; font-size:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:8px;">
+                    Tutup Kamera
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODE 3: CLIPBOARD PASTE -->
+            <div id="vpanel-paste" class="vision-dropzone" style="display:none;" tabindex="0" onpaste="handleVisionPaste(event)" onclick="this.focus()">
+              <div class="vision-icon-ring" style="background:rgba(99, 102, 241, 0.15); color:#818cf8; border-color:rgba(99, 102, 241, 0.3);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              </div>
+              <div style="text-align:center;">
+                <span style="font-size:13px; font-weight:600; color:var(--text-main); display:block; margin-bottom:3px;">Klik di sini lalu tekan Ctrl + V (Tempel Citra)</span>
+                <span style="font-size:11px; color:var(--text-sub);">Menangkap gambar langsung dari screenshot / clipboard</span>
+              </div>
+            </div>
+
+            <!-- MODE 4: URL LINK -->
+            <div id="vpanel-url" style="display:none; padding:12px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+              <span style="font-size:12px; color:var(--text-sub); display:block; margin-bottom:6px;">Masukkan URL Gambar Daun (HTTP/HTTPS):</span>
+              <div class="vision-url-bar">
+                <input type="url" id="vision-url-input" class="vision-url-input" placeholder="https://example.com/foto_daun.jpg">
+                <button type="button" class="btn btn-primary" onclick="loadVisionFromUrl()" style="background:#a855f7; border:none; padding:0 14px; font-size:12px; font-weight:600; border-radius:8px;">
+                  Muat Citra
+                </button>
+              </div>
+            </div>
+
+            <!-- PREVIEW CONTAINER -->
+            <div id="vision-preview-container" style="display:none; margin-top:14px;">
+              <div style="position:relative; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); background:#000;">
+                <img id="ai-vision-preview" style="display:block; width:100%; max-height:280px; object-fit:contain;">
+                <button class="btn" onclick="resetVisionInput()" style="position:absolute; bottom:10px; right:10px; padding:6px 12px; font-size:11px; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; cursor:pointer;">
+                  Ganti / Ulangi
+                </button>
+              </div>
+            </div>
+
+            <!-- LOADING BOX -->
+            <div id="vision-loading-box" style="display:none; margin-top:14px; padding:16px; background:rgba(168,85,247,0.06); border:1px solid rgba(168,85,247,0.25); border-radius:10px; text-align:center;">
+              <div class="pulse-loader" style="margin:0 auto 10px;"></div>
+              <span style="font-size:12.5px; font-weight:600; color:#c084fc; display:block;">Menganalisis Morfologi Citra Daun...</span>
+              <span style="font-size:11px; color:var(--text-sub);">Menghubungkan visual patologi dengan telemetri iklim mikro kebun</span>
+            </div>
+
+            <!-- RESULT CONTAINER -->
+            <div id="ai-vision-result" style="display:none; margin-top:14px;"></div>
+          </div>
+        </div>
+
+        <!-- PERMANENT INTERACTIVE AGRONOMIST CHATBOT -->
+        <div class="monitor-card" style="margin-top:20px;">
+          <div class="card-header" style="justify-content: space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <div>
+                <span class="card-title" style="display:block; font-size:14px; font-weight:700; color:var(--text-main);">Tanya Jawab Pakar Agronom (Chatbot)</span>
+                <span style="font-size:11px; color:var(--text-sub);">Konsultasi Obat, Takaran & Hama Terhubung Sensor Kebun</span>
+              </div>
+            </div>
+            <button type="button" id="btn-toggle-speech" onclick="toggleChatSpeech()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-sub); border-radius:6px; cursor:pointer; padding:4px 8px; font-size:11px; display:flex; align-items:center; gap:4px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <span id="speech-status-label">Suara Aktif</span>
+            </button>
+          </div>
+
+          <div class="card-body" style="padding: 16px;">
+            <div class="agri-chat-messages" id="agri-chat-messages">
+              <div class="chat-bubble bot">
+                Halo Petani! Ada kendala pada tanaman atau takaran obat semprot di kebun Anda? Tanyakan langsung di sini atau ketuk pertanyaan cepat di bawah.
+              </div>
+            </div>
+
+            <!-- QUICK QUESTION PROMPT CHIPS -->
+            <div class="chat-chips-row" style="margin-top:10px; border-radius:8px;">
+              <button type="button" class="chip-btn" onclick="askChatChip('Sebutkan contoh nama merek obat fungisida bercak daun yang bagus di toko pertanian?')">
+                Contoh Merek Toko
+              </button>
+              <button type="button" class="chip-btn" onclick="askChatChip('Bolehkah fungisida dicampur pupuk daun Gandasil atau perekat?')">
+                Bisa Campur Pupuk Daun?
+              </button>
+              <button type="button" class="chip-btn" onclick="askChatChip('Kapan waktu semprot terbaik (pagi/sore) dan berapa hari sekali?')">
+                Jam Semprot Terbaik
+              </button>
+              <button type="button" class="chip-btn" onclick="askChatChip('Bagaimana cara mencegah agar hama/jamur tidak menyebar ke bedengan lain?')">
+                Cegah Penularan
+              </button>
+            </div>
+
+            <div class="agri-chat-input-bar" style="margin-top:10px; border-radius:8px;">
+              <input type="text" id="agri-chat-input" class="agri-chat-input" placeholder="Ketik pertanyaan untuk Pakar Agronom..." onkeydown="if(event.key==='Enter') submitAgronomyChat()">
+              <button type="button" class="btn btn-primary" id="btn-send-agri-chat" onclick="submitAgronomyChat()" style="background:#a855f7; border:none; padding:0 16px; font-size:12px; font-weight:600; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+    </div>
