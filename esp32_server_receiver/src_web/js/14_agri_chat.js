@@ -18,7 +18,11 @@ window.renderAgronomyChatbot = function(containerId) {
           <div style="width:8px; height:8px; border-radius:50%; background:#a855f7; box-shadow:0 0 8px #a855f7;"></div>
           <span style="font-weight:700; font-size:12.5px; color:#c084fc;">Sobat Tani (Teman Curhat & Ngobrol Kebun)</span>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" id="btn-reset-chat" onclick="resetAgronomyChat()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:var(--text-sub); cursor:pointer; padding:3px 8px; font-size:11px; display:flex; align-items:center; gap:4px; transition:all 0.2s;" title="Mulai Obrolan Baru / Bersihkan Chat">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            <span>Mulai Baru</span>
+          </button>
           <button type="button" id="btn-toggle-speech" onclick="toggleChatSpeech()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:${speechColor}; cursor:pointer; padding:3px 8px; font-size:11px; display:flex; align-items:center; gap:5px; transition:all 0.2s;" title="Aktifkan / Matikan Suara Pembacaan">
             <svg id="speech-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               ${isSpeechOn 
@@ -60,6 +64,18 @@ window.renderAgronomyChatbot = function(containerId) {
       </div>
     </div>
   `;
+};
+
+window.resetAgronomyChat = function() {
+  window.agronomyChatHistory = [];
+  var msgBox = document.getElementById('agri-chat-messages');
+  if (msgBox) {
+    msgBox.innerHTML = `
+      <div class="chat-bubble bot">
+        Halo Mas/Pak! Obrolan sudah di-reset. Mau tanya racikan obat, takaran pupuk, atau kendala lahan apa sekarang? Silakan tanyakan santai ya!
+      </div>
+    `;
+  }
 };
 
 window.toggleChatSpeech = function() {
@@ -164,14 +180,14 @@ Contoh Jawaban yang Baik:
 
   window.agronomyChatHistory.push({
     role: "user",
-    parts: [{ text: userText + sensorContext + "\n(Jawab sebagai Sobat Tani: ramah, jelas, lengkap dengan alasannya dalam 1 paragraf santai agar petani paham. Jangan terlalu singkat cuek dan jangan kepanjangan. Tuntaskan kalimat sampai selesai.)" }]
+    parts: [{ text: userText + sensorContext + "\n(Jawab sebagai Sobat Tani: ramah, santai, sebutkan nama merek obat yang jelas dan takarannya, lengkap dengan alasan kenapa obat itu bagus agar petani paham. Tulis dalam 1-2 paragraf mengalir dan tuntaskan seluruh nama obat serta kalimatnya sampai selesai tanpa terpotong!)" }]
   });
 
   try {
     const result = await window.fetchGeminiWithFallback(apiKey, {
       contents: window.agronomyChatHistory,
       generationConfig: {
-        maxOutputTokens: 400,
+        maxOutputTokens: 800,
         temperature: 0.65
       }
     });
