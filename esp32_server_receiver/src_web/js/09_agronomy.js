@@ -294,13 +294,13 @@ function speakAgronomyVoiceReport() {
   var temp = tempElem ? tempElem.innerText : "--";
 
   if (!name || !age) {
-    var notSet = new SpeechSynthesisUtterance("Perhatian. Data varietas dan umur tanaman belum diatur di sistem.");
+    var notSet = new SpeechSynthesisUtterance("Halo Mas, data tanaman sama umurnya diisi dulu ya biar infonya pas.");
     notSet.lang = 'id-ID';
     window.speechSynthesis.speak(notSet);
     return;
   }
 
-  var textToSpeak = "Panduan petani cerdas. Tanaman " + name + ", umur " + age + " hari. " + statusTitle + ". Suhu udara saat ini " + temp + ". Pastikan jadwal penyiraman ditaati.";
+  var textToSpeak = "Halo Mas, ini kabar kebun hari ini. Tanaman " + name + " sekarang umurnya " + age + " hari. " + statusTitle + ". Suhu di kebun " + temp + " derajat. Dijaga terus ya biar tanamannya makin subur!";
 
   var utterance = new SpeechSynthesisUtterance(textToSpeak);
   utterance.lang = 'id-ID';

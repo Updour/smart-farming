@@ -16,7 +16,7 @@ window.renderAgronomyChatbot = function(containerId) {
       <div class="agri-chat-header">
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="width:8px; height:8px; border-radius:50%; background:#a855f7; box-shadow:0 0 8px #a855f7;"></div>
-          <span style="font-weight:700; font-size:12.5px; color:#c084fc;">Tanya Lanjutan ke Pakar Agronom (Chatbot)</span>
+          <span style="font-weight:700; font-size:12.5px; color:#c084fc;">Sobat Tani (Teman Curhat & Ngobrol Kebun)</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <button type="button" id="btn-toggle-speech" onclick="toggleChatSpeech()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:${speechColor}; cursor:pointer; padding:3px 8px; font-size:11px; display:flex; align-items:center; gap:5px; transition:all 0.2s;" title="Aktifkan / Matikan Suara Pembacaan">
@@ -32,7 +32,7 @@ window.renderAgronomyChatbot = function(containerId) {
 
       <div class="agri-chat-messages" id="agri-chat-messages">
         <div class="chat-bubble bot">
-          Halo Petani! Ada yang ingin ditanyakan lebih lanjut tentang diagnosis tanaman atau takaran pupuk/obat? Silakan ketik atau pilih pertanyaan di bawah.
+          Halo Mas/Pak! Ada yang lagi bikin bingung di kebun? Mau tanya racikan pupuk, obat semprot, atau curhat soal tanaman yang kurang seger, tanyain aja santai di sini ya!
         </div>
       </div>
 
@@ -125,17 +125,40 @@ window.submitAgronomyChat = async function() {
   var typingId = 'typing-' + Date.now();
   msgBox.innerHTML += `
     <div class="chat-bubble bot" id="${typingId}" style="opacity:0.7; font-style:italic;">
-      Mengetik jawaban agronomis...
+      Sobat Tani sedang mikir jawaban...
     </div>
   `;
   msgBox.scrollTop = msgBox.scrollHeight;
   if (sendBtn) sendBtn.disabled = true;
 
-  // Append to chat history
+  // Append to chat history with Sobat Tani Persona
   window.agronomyChatHistory = window.agronomyChatHistory || [];
+  
+  if (window.agronomyChatHistory.length === 0) {
+    window.agronomyChatHistory.push({
+      role: "user",
+      parts: [{ text: `Instruksi Karakter Permanen:
+Kamu adalah 'Sobat Tani' — sahabat karib, teman ngobrol, dan teman curhat petani di kebun. Bukan bot AI, bukan robot kaku, bukan pejabat dinas.
+Aturan gaya bicaramu:
+1. Panggilan dan sapaan: Gunakan bahasa yang hangat, membumi, dan akrab seperti sesama teman petani lagi ngopi bareng di gubuk kebun (misalnya: "Bisa banget, Mas/Pak!", "Wah, aman banget itu...", "Santai, begini triknya..."). DILARANG KERAS menyapa dengan gaya kaku robot seperti "Halo Pak/Bu Tani" atau salam formal bertele-tele.
+2. Gaya bahasa: Santai, to-the-point, sangat gampang dicerna orang awam/pemula, penuh empati dan perhatian tulus ke tanamannya.
+3. Takaran & Urutan: Jangan berikan teori berbelit. Langsung kasih urutan kerja 1, 2, 3 yang praktis dan takaran alat dapur/kebun nyata (sendok makan, gelas aqua, ember cor, tutup botol, tangki semprot 16 Liter).
+4. Buat jawaban ringkas, solutif, dan ramah (maksimal 2-3 paragraf pendek).` }]
+    }, {
+      role: "model",
+      parts: [{ text: "Siap, saya paham! Saya sekarang adalah Sobat Tani — teman ngobrol dan curhat setia petani di lahan. Gaya bicara saya selalu santai, akrab, praktis, to-the-point, dan tanpa basa-basi robot!" }]
+    });
+  }
+
+  var tData = window.lastTelemetryData || {};
+  var sensorContext = "";
+  if (tData.temp !== undefined && tData.temp > 0) {
+    sensorContext = ` (Kondisi kebun aktual: Suhu ${tData.temp}°C, Kelembapan Udara ${tData.hum}%, Tanah ${tData.soil}%)`;
+  }
+
   window.agronomyChatHistory.push({
     role: "user",
-    parts: [{ text: userText + "\n(Jawab dengan bahasa Indonesia santun, ramah petani, praktis, dan singkat maksimal 3-4 kalimat.)" }]
+    parts: [{ text: userText + sensorContext + "\n(Jawab sebagai Sobat Tani: teman curhat petani yang akrab, santai, membumi, solutif, to-the-point, dan mudah dipahami tanpa bahasa robot.)" }]
   });
 
   try {
