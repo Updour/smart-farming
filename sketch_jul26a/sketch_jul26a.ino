@@ -1,8 +1,6 @@
 #include <DHT.h>
 
-#define DHTPIN 4 //pin suhu
-#define DHTTYPE DHT11 
-#define RELAY1 25
+#define RELAY1 27
 
 
 #define LED_HIJAU  32

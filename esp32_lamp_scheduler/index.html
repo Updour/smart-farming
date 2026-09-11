@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Lamp Controller 4-Channel</title>
+  <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(24, 32, 51, 0.85);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.3);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-amber: #f59e0b;
+      --accent-amber-glow: rgba(245, 158, 11, 0.25);
+      --accent-emerald: #10b981;
+      --accent-cyan: #06b6d4;
+      --accent-rose: #f43f5e;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 20px 14px 60px;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.05));
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-amber);
+    }
+
+    .brand-icon svg { width: 26px; height: 26px; }
+
+    .brand-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* CLOCK & ACTION SECTION */
+    .clock-badge-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+    }
+
+    .clock-text {
+      text-align: right;
+    }
+
+    .clock-time {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.05em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clock-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .btn-icon-sync {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .btn-icon-sync:hover {
+      background: #38bdf8;
+      color: #0b0f19;
+      transform: translateY(-1px);
+    }
+
+    .btn-icon-sync svg { width: 15px; height: 15px; }
+
+    /* GLOBAL BAR */
+    .global-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+    }
+
+    .global-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+    }
+
+    .global-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .btn-action.btn-on:hover {
+      background: var(--accent-amber);
+      color: #0b0f19;
+      border-color: var(--accent-amber);
+    }
+
+    .btn-action.btn-off:hover {
+      background: var(--accent-rose);
+      color: #fff;
+      border-color: var(--accent-rose);
+    }
+
+    .btn-action.btn-auto:hover {
+      background: var(--accent-cyan);
+      color: #0b0f19;
+      border-color: var(--accent-cyan);
+    }
+
+    /* GRID CARDS */
+    .lamp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    /* LAMP CARD */
+    .lamp-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.4);
+    }
+
+    .lamp-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: transparent;
+      transition: var(--transition);
+    }
+
+    .lamp-card.is-on {
+      background: var(--bg-card-hover);
+      border-color: rgba(245, 158, 11, 0.35);
+      box-shadow: 0 12px 32px -8px var(--accent-amber-glow);
+    }
+
+    .lamp-card.is-on::before {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .lamp-bulb-indicator {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .lamp-card.is-on .lamp-bulb-indicator {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.1));
+      border-color: var(--accent-amber);
+      color: #fef08a;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .lamp-bulb-indicator svg { width: 26px; height: 26px; }
+
+    .card-title-box {
+      flex: 1;
+    }
+
+    .card-title-box .channel-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .card-title-box input.lamp-name-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--text-main);
+      font-size: 1.05rem;
+      font-weight: 700;
+      width: 100%;
+      padding: 2px 4px;
+      margin-left: -4px;
+      transition: var(--transition);
+    }
+
+    .card-title-box input.lamp-name-input:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title-box input.lamp-name-input:focus {
+      outline: none;
+      border-color: #38bdf8;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    /* STATUS BADGE */
+    .status-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-card);
+      margin-top: 6px;
+    }
+
+    .lamp-card.is-on .status-pill {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fef08a;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    /* TOGGLE SWITCH */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: 0.3s;
+      border-radius: 30px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #94a3b8;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-amber);
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 12px var(--accent-amber-glow);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+      background-color: #0b0f19;
+    }
+
+    /* MODE SELECTOR */
+    .mode-selector {
+      display: flex;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .mode-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .mode-btn.active.mode-auto {
+      background: rgba(6, 182, 212, 0.2);
+      color: #67e8f9;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    /* SCHEDULE BOX */
+    .schedule-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .schedule-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .schedule-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .schedule-label svg { width: 14px; height: 14px; }
+
+    .schedule-time-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 5px 8px;
+      color-scheme: dark;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .schedule-time-input:focus {
+      border-color: #38bdf8;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-save-sched {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: var(--transition);
+      margin-top: 4px;
+    }
+
+    .btn-save-sched:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    /* FOOTER & MODAL */
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: var(--transition);
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- HEADER -->
+    <header>
+      <div class="brand-section">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+            <circle cx="12" cy="12" r="4"></circle>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <h1>Smart Lamp Controller</h1>
+          <p>ESP32 &bull; RTC DS1302 &bull; 8-Channel Active HIGH</p>
+        </div>
+      </div>
+
+      <div class="clock-badge-box">
+        <div class="clock-text">
+          <div class="clock-time" id="rtcClock">--:--:--</div>
+          <div class="clock-date" id="rtcDate">Memuat waktu...</div>
+        </div>
+        <button class="btn-icon-sync" id="btnSyncTime" onclick="syncRtcWithBrowser()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          Sync Jam HP
+        </button>
+      </div>
+    </header>
+
+    <!-- GLOBAL CONTROLS -->
+    <div class="global-toolbar">
+      <div class="global-info">
+        <span class="status-dot"></span>
+        <span id="sysStatus">Semua 8 channel aktif terhubung</span>
+      </div>
+      <div class="global-btn-group">
+        <button class="btn-action btn-on" onclick="setAllRelays('on')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Semua ON
+        </button>
+        <button class="btn-action btn-off" onclick="setAllRelays('off')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+          Semua OFF
+        </button>
+        <button class="btn-action btn-auto" onclick="setAllRelays('auto')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Semua AUTO
+        </button>
+      </div>
+    </div>
+
+    <!-- LAMP GRID -->
+    <div class="lamp-grid" id="lampGrid">
+      <!-- 8 Channels rendered dynamically via JS -->
+    </div>
+
+    <footer>
+      <p>Smart Lamp Controller ESP32 &bull; Active HIGH Relay 8CH &bull; RTC DS1302 Presisi</p>
+    </footer>
+  </div>
+
+  <div id="toast">Notifikasi</div>
+
+  <script>
+    let systemData = null;
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) throw new Error("HTTP error " + res.status);
+        const data = await res.json();
+        systemData = data;
+        renderUI(data);
+      } catch (err) {
+        if (!systemData) {
+          // Mode Demo / Preview saat dibuka langsung di browser (file:///)
+          const now = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          const mockData = {
+            time: `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+            date: `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} (Preview)`,
+            relays: [
+              { pin: 25, name: "Lampu Teras", mode: 1, state: 1, on_h: 18, on_m: 0, off_h: 6, off_m: 0 },
+              { pin: 26, name: "Lampu Taman", mode: 1, state: 0, on_h: 18, on_m: 30, off_h: 5, off_m: 30 },
+              { pin: 32, name: "Lampu Garasi", mode: 0, state: 1, on_h: 17, on_m: 45, off_h: 6, off_m: 15 },
+              { pin: 33, name: "Lampu Balkon", mode: 1, state: 0, on_h: 18, on_m: 0, off_h: 6, off_m: 0 },
+              { pin: 27, name: "Lampu Ruang Tamu", mode: 1, state: 1, on_h: 17, on_m: 30, off_h: 22, off_m: 30 },
+              { pin: 18, name: "Lampu Dapur", mode: 0, state: 0, on_h: 18, on_m: 0, off_h: 23, off_m: 0 },
+              { pin: 19, name: "Lampu Koridor", mode: 1, state: 1, on_h: 18, on_m: 0, off_h: 6, off_m: 0 },
+              { pin: 23, name: "Lampu Belakang", mode: 1, state: 0, on_h: 18, on_m: 15, off_h: 5, off_m: 45 }
+            ]
+          };
+          systemData = mockData;
+          renderUI(mockData);
+          document.getElementById('sysStatus').innerText = "Mode Demo / Offline Preview (8 Channel)";
+        }
+      }
+    }
+
+    function renderUI(data) {
+      // Clock
+      document.getElementById('rtcClock').innerText = data.time || "--:--:--";
+      document.getElementById('rtcDate').innerText = data.date || "Offline";
+
+      const grid = document.getElementById('lampGrid');
+      grid.innerHTML = '';
+
+      data.relays.forEach((r, idx) => {
+        const isOn = r.state === 1;
+        const isAuto = r.mode === 1;
+
+        const card = document.createElement('div');
+        card.className = `lamp-card ${isOn ? 'is-on' : ''}`;
+        
+        let statusText = "";
+        if (isAuto) {
+          statusText = isOn ? "Nyala (Jadwal Auto)" : "Mati (Jadwal Auto)";
+        } else {
+          statusText = isOn ? "Nyala (Manual)" : "Mati (Manual)";
+        }
+
+        const bulbIconSvg = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6"></path>
+            <path d="M10 22h4"></path>
+            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path>
+          </svg>
+        `;
+
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="lamp-bulb-indicator">
+              ${bulbIconSvg}
+            </div>
+            <div class="card-title-box">
+              <div class="channel-tag">Channel ${idx + 1} (Pin ${r.pin})</div>
+              <input type="text" class="lamp-name-input" value="${r.name}" 
+                     id="name_${idx}" onchange="saveSchedule(${idx})" title="Klik untuk ubah nama">
+              <div class="status-pill">${statusText}</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" ${isOn ? 'checked' : ''} onchange="toggleRelay(${idx}, this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- MODE SELECTOR -->
+          <div class="mode-selector">
+            <button class="mode-btn ${isAuto ? 'active mode-auto' : ''}" onclick="setMode(${idx}, 1)">
+              ⏱️ Otomatis
+            </button>
+            <button class="mode-btn ${!isAuto ? 'active' : ''}" onclick="setMode(${idx}, 0)">
+              🖐️ Manual
+            </button>
+          </div>
+
+          <!-- SCHEDULE CONFIG -->
+          <div class="schedule-box">
+            <div class="schedule-row">
+              <span class="schedule-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Jam Nyala:
+              </span>
+              <input type="time" class="schedule-time-input" id="on_${idx}" value="${formatTime(r.on_h, r.on_m)}">
+            </div>
+
+            <div class="schedule-row">
+              <span class="schedule-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                Jam Padam:
+              </span>
+              <input type="time" class="schedule-time-input" id="off_${idx}" value="${formatTime(r.off_h, r.off_m)}">
+            </div>
+
+            <button class="btn-save-sched" onclick="saveSchedule(${idx})">
+              Simpan Jadwal & Nama
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function formatTime(h, m) {
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    async function toggleRelay(ch, state) {
+      try {
+        await fetch('/api/relay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ch: ch, state: state ? 1 : 0 })
+        });
+        showToast(`Lampu ${ch + 1} ${state ? 'Menyala' : 'Mati'}`);
+        fetchStatus();
+      } catch (err) {
+        if (systemData) {
+          systemData.relays[ch].state = state ? 1 : 0;
+          systemData.relays[ch].mode = 0;
+          renderUI(systemData);
+          showToast(`[Demo] Lampu ${ch + 1} ${state ? 'Menyala' : 'Mati'}`);
+        } else {
+          showToast("Gagal mengubah status relay!");
+        }
+      }
+    }
+
+    async function setMode(ch, mode) {
+      try {
+        await fetch('/api/relay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ch: ch, mode: mode })
+        });
+        showToast(`Mode Lampu ${ch + 1}: ${mode === 1 ? 'Otomatis (Jadwal)' : 'Manual'}`);
+        fetchStatus();
+      } catch (err) {
+        if (systemData) {
+          systemData.relays[ch].mode = mode;
+          renderUI(systemData);
+          showToast(`[Demo] Mode Lampu ${ch + 1}: ${mode === 1 ? 'Otomatis' : 'Manual'}`);
+        } else {
+          showToast("Gagal mengubah mode!");
+        }
+      }
+    }
+
+    async function saveSchedule(ch) {
+      const name = document.getElementById(`name_${ch}`).value.trim();
+      const onVal = document.getElementById(`on_${ch}`).value;
+      const offVal = document.getElementById(`off_${ch}`).value;
+
+      const [onH, onM] = onVal.split(':').map(Number);
+      const [offH, offM] = offVal.split(':').map(Number);
+
+      try {
+        await fetch('/api/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ch: ch,
+            name: name,
+            on_h: onH,
+            on_m: onM,
+            off_h: offH,
+            off_m: offM
+          })
+        });
+        showToast(`Jadwal Lampu ${ch + 1} berhasil disimpan!`);
+        fetchStatus();
+      } catch (err) {
+        if (systemData) {
+          systemData.relays[ch].name = name;
+          systemData.relays[ch].on_h = onH;
+          systemData.relays[ch].on_m = onM;
+          systemData.relays[ch].off_h = offH;
+          systemData.relays[ch].off_m = offM;
+          renderUI(systemData);
+          showToast(`[Demo] Jadwal Lampu ${ch + 1} tersimpan!`);
+        } else {
+          showToast("Gagal menyimpan jadwal!");
+        }
+      }
+    }
+
+    async function setAllRelays(action) {
+      try {
+        await fetch('/api/all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action })
+        });
+        showToast(`Perintah: ${action.toUpperCase()} berhasil diterapkan`);
+        fetchStatus();
+      } catch (err) {
+        if (systemData) {
+          if (action === 'on') {
+            systemData.relays.forEach(r => { r.state = 1; r.mode = 0; });
+          } else if (action === 'off') {
+            systemData.relays.forEach(r => { r.state = 0; r.mode = 0; });
+          } else if (action === 'auto') {
+            systemData.relays.forEach(r => { r.mode = 1; });
+          }
+          renderUI(systemData);
+          showToast(`[Demo] Aksi ${action.toUpperCase()} diterapkan!`);
+        } else {
+          showToast("Gagal memproses aksi massal");
+        }
+      }
+    }
+
+    async function syncRtcWithBrowser() {
+      const now = new Date();
+      const payload = {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+        hour: now.getHours(),
+        min: now.getMinutes(),
+        sec: now.getSeconds()
+      };
+
+      try {
+        const res = await fetch('/api/sync_time', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const resJson = await res.json();
+        showToast("Waktu RTC DS1302 Berhasil Disinkronkan!");
+        fetchStatus();
+      } catch (err) {
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('rtcClock').innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        document.getElementById('rtcDate').innerText = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} (Tersinkron)`;
+        showToast("[Demo] Waktu RTC Disinkronkan dengan Browser!");
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // Auto-refresh interval 1.5 detik
+    setInterval(fetchStatus, 1500);
+    fetchStatus();
+  </script>
+</body>
+</html>
