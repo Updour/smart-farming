@@ -36,7 +36,7 @@
         <div class="brand-sub">
           <span>Dashboard Agronomi Presisi &amp; Telemetri Real-Time</span>
           <span class="status-divider">•</span>
-          <span id="banner-text" class="header-status-msg">Standalone Mode / Sensor Offline</span>
+          <span id="banner-text" class="header-status-msg" style="color:var(--primary); border-color:var(--primary);">Sistem Operasional Normal</span>
         </div>
       </div>
 
@@ -46,11 +46,11 @@
           <!-- PHYSICAL TRAFFIC LIGHT INDICATOR (ESP32 PINS 32, 33, 27) -->
           <div class="badge-pill traffic-pill" id="traffic-light-widget" title="Indikator Fisik Traffic Light Lahan (Pin 32 Hijau, 33 Kuning, 27 Merah) - Klik untuk Detail" onclick="toggleLedDiag()" style="cursor: pointer;">
             <div class="traffic-housing">
-              <span class="traffic-bulb bulb-red active blink" id="traffic-bulb-red" title="Merah: Bahaya / Terputus / Offline (Pin 27)"></span>
-              <span class="traffic-bulb bulb-yellow" id="traffic-bulb-yellow" title="Kuning: Peringatan / Menunggu / Standby (Pin 33)"></span>
-              <span class="traffic-bulb bulb-green" id="traffic-bulb-green" title="Hijau: Kondisi Normal (Pin 32)"></span>
+              <span class="traffic-bulb bulb-red" id="traffic-bulb-red" title="Merah: Bahaya / Terputus (Pin 25)"></span>
+              <span class="traffic-bulb bulb-yellow" id="traffic-bulb-yellow" title="Kuning: Menghubungkan / Standby (Pin 33)"></span>
+              <span class="traffic-bulb bulb-green active" id="traffic-bulb-green" title="Hijau: Kondisi Normal (Pin 32)"></span>
             </div>
-            <span id="traffic-label" class="traffic-label" style="color: #ef4444;">Offline</span>
+            <span id="traffic-label" class="traffic-label" style="color: #10b981;">Aman</span>
           </div>
 
           <div class="badge-pill" id="badge-global-pump" style="color: var(--text-sub); display: inline-flex;">

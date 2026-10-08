@@ -82,6 +82,14 @@ function updatePhenologyAI(sec, tVal, hVal, sVal, vpdVal) {
     tBase = 8;
     nurseryDays = 35;
     harvestDays = 65;
+  } else if (nameLow.indexOf('melon') !== -1) {
+    tBase = 13;
+    nurseryDays = 14;
+    harvestDays = 70;
+  } else if (nameLow.indexOf('semangka') !== -1 || nameLow.indexOf('watermelon') !== -1) {
+    tBase = 13;
+    nurseryDays = 14;
+    harvestDays = 70;
   } else if (nameLow.indexOf('padi') !== -1 || nameLow.indexOf('rice') !== -1) {
     tBase = 10;
     nurseryDays = 20;

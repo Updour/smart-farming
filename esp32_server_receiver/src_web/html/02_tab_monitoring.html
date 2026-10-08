@@ -20,12 +20,16 @@
             </div>
             <span class="kpi-status-badge" id="kpi-soil-category">Membaca...</span>
           </div>
-          <div class="kpi-card-body">
+          <div class="kpi-card-body" style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <div class="kpi-value" id="kpi-soil">--%</div>
+            <div class="badge-pill" id="kpi-soil-raw-badge" style="font-family: monospace; font-size: 11.5px; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); padding: 3px 8px; border-radius: 6px;" title="Nilai mentah ADC Pin A0 dari Node ESP8266">Raw: --</div>
           </div>
-          <div class="kpi-card-footer">
-            <span class="kpi-footer-dot"></span>
-            <span class="kpi-footer-text" id="kpi-soil-depletion">Prediksi Penguapan: -</span>
+          <div class="kpi-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="kpi-footer-dot"></span>
+              <span class="kpi-footer-text" id="kpi-soil-depletion">Prediksi Penguapan: -</span>
+            </div>
+            <span class="kpi-footer-text" id="kpi-soil-raw-adc" style="font-family: monospace; color: #38bdf8; font-weight: 600;">ADC A0: --</span>
           </div>
         </div>
 
@@ -98,12 +102,16 @@
             </div>
             <span class="kpi-status-badge" id="kpi-node-status">Node</span>
           </div>
-          <div class="kpi-card-body">
+          <div class="kpi-card-body" style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <div class="kpi-value" id="kpi-signal">-- dBm</div>
+            <div class="badge-pill" id="kpi-node-battery-badge" style="font-family: monospace; font-size: 11.5px; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); padding: 3px 8px; border-radius: 6px;" title="Estimasi Baterai Node ESP8266 Kebun">🔋 --%</div>
           </div>
-          <div class="kpi-card-footer">
-            <span class="kpi-footer-dot"></span>
-            <span class="kpi-footer-text" id="kpi-raw-adc">ADC A0: --</span>
+          <div class="kpi-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="kpi-footer-dot"></span>
+              <span class="kpi-footer-text" id="kpi-packet-timer">Paket: -- lalu</span>
+            </div>
+            <span class="kpi-footer-text" id="kpi-raw-adc" style="font-family: monospace; color: #38bdf8; font-weight: 600;">ADC A0: --</span>
           </div>
         </div>
       </div>
@@ -122,10 +130,10 @@
             </div>
             <div>
               <span style="font-size:13px; font-weight:700; color:var(--text-main);">Indikator Status Lahan</span>
-              <span style="display:block; font-size:11px; color:var(--text-sub); margin-top:1px;">Traffic Light Fisik ESP32 (Pin 27 Merah · Pin 33 Kuning · Pin 32 Hijau)</span>
+              <span style="display:block; font-size:11px; color:var(--text-sub); margin-top:1px;">Traffic Light Fisik ESP32 (Pin 25 Merah · Pin 33 Kuning · Pin 32 Hijau)</span>
             </div>
           </div>
-          <span id="traffic-card-label" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">SENSOR TERPUTUS / OFFLINE</span>
+          <span id="traffic-card-label" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">KONDISI AMAN</span>
         </div>
 
         <!-- BIG TRAFFIC LIGHT DISPLAY -->
@@ -135,15 +143,15 @@
           <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
             <div class="traffic-pole-housing" id="traffic-pole">
               <!-- RED bulb -->
-              <div class="traffic-pole-bulb pole-red lit blink" id="pole-bulb-red" title="Pin 27 · Bahaya / Sensor Terputus">
+              <div class="traffic-pole-bulb pole-red" id="pole-bulb-red" title="Pin 25 · Bahaya / Sensor Terputus">
                 <div class="pole-bulb-inner"></div>
               </div>
               <!-- YELLOW bulb -->
-              <div class="traffic-pole-bulb pole-yellow" id="pole-bulb-yellow" title="Pin 33 · Peringatan / Jadwal RTC">
+              <div class="traffic-pole-bulb pole-yellow" id="pole-bulb-yellow" title="Pin 33 · Peringatan / Inisialisasi">
                 <div class="pole-bulb-inner"></div>
               </div>
               <!-- GREEN bulb -->
-              <div class="traffic-pole-bulb pole-green" id="pole-bulb-green" title="Pin 32 · Kondisi Normal">
+              <div class="traffic-pole-bulb pole-green lit" id="pole-bulb-green" title="Pin 32 · Kondisi Normal">
                 <div class="pole-bulb-inner"></div>
               </div>
             </div>
@@ -157,17 +165,17 @@
               <div class="traffic-status-cell" id="traffic-cell-red" style="border-radius:10px; padding:10px 6px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.15);">
                 <div style="font-size:9px; color:#ef4444; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">MERAH</div>
                 <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Bahaya Suhu<br/>Sensor Terputus</div>
-                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#ef4444; margin:6px auto 0; opacity:1; box-shadow:0 0 8px #ef4444;" id="traffic-dot-red"></div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#ef4444; margin:6px auto 0; opacity:0.3;" id="traffic-dot-red"></div>
               </div>
               <div class="traffic-status-cell" id="traffic-cell-yellow" style="border-radius:10px; padding:10px 6px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.15);">
                 <div style="font-size:9px; color:#f59e0b; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">KUNING</div>
-                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Perlu Irigasi<br/>Jadwal RTC Aktif</div>
+                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Perlu Irigasi<br/>Inisialisasi Radio</div>
                 <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin:6px auto 0; opacity:0.3;" id="traffic-dot-yellow"></div>
               </div>
               <div class="traffic-status-cell" id="traffic-cell-green" style="border-radius:10px; padding:10px 6px; background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.15);">
                 <div style="font-size:9px; color:#10b981; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">HIJAU</div>
                 <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Kondisi Aman<br/>Tanah Cukup</div>
-                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#10b981; margin:6px auto 0; opacity:0.3;" id="traffic-dot-green"></div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#10b981; margin:6px auto 0; opacity:1; box-shadow:0 0 8px #10b981;" id="traffic-dot-green"></div>
               </div>
             </div>
 
@@ -180,8 +188,8 @@
                   Jadwal RTC Berjalan
                 </span>
               </div>
-              <div id="traffic-current-status" style="font-size:13px; font-weight:700; color:#ef4444; margin-top:6px;">ESP8266 Terputus / Sensor Offline</div>
-              <div id="traffic-current-detail" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe sistem.</div>
+              <div id="traffic-current-status" style="font-size:13px; font-weight:700; color:#10b981; margin-top:6px;">Sistem Aman — Kondisi Optimal</div>
+              <div id="traffic-current-detail" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Lampu Hijau (Pin 32). Seluruh sensor terhubung stabil.</div>
             </div>
 
             <!-- DIAGNOSTIK HARDWARE LED (GPIO Sinyal vs Fisik) -->
@@ -195,7 +203,7 @@
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                   <div style="display:flex; align-items:center; gap:6px;">
                     <div style="width:10px; height:10px; border-radius:50%; background:#ef4444; flex-shrink:0; box-shadow:0 0 6px #ef4444;" id="hw-dot-red"></div>
-                    <span style="font-size:10px; color:var(--text-sub);">Pin 27 · LED Merah</span>
+                    <span style="font-size:10px; color:var(--text-sub);">Pin 25 · LED Merah</span>
                   </div>
                   <span id="hw-state-red" style="font-size:10px; font-weight:700; color:#ef4444; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.08);">BLINK (ON) ●</span>
                 </div>

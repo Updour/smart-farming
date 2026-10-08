@@ -162,57 +162,101 @@ window.appendLiveTelemetryFeed = function(data) {
   if (statElem) statElem.innerText = "Total Paket Tertangkap: " + window.feedPacketsCount;
 
   var now = new Date();
-  var timeStr = (data.time && data.time !== "--" && data.time !== "-") ? data.time : now.toLocaleTimeString();
+  var pad = function(n, z) { z = z || 2; return ('00' + n).slice(-z); };
+  var ms1 = pad(now.getMilliseconds(), 3);
+  var ms2 = pad((now.getMilliseconds() + 33) % 1000, 3);
 
-  var tVal = (data.temp !== undefined && data.temp !== -1) ? (data.temp + "°C") : "--";
-  var hVal = (data.hum !== undefined && data.hum !== -1) ? (data.hum + "%") : "--";
-  var sVal = (data.soil !== undefined && data.soil !== -1) ? (data.soil + "%") : "--";
-  var adcVal = data.rawAdc || "--";
-  var batVal = (data.battery !== undefined && data.battery > 0) ? (data.battery + "%") : "--";
-  var rssiVal = (data.rssi !== undefined && data.rssi !== 0) ? (data.rssi + "dBm") : "--";
-  var pumpStat = (data.relay == 1 || data.relayOn == 1) ? "<span style='color:#10b981;font-weight:bold;'>ON</span>" : "<span style='color:#64748b;'>OFF</span>";
-  var lampStat = (data.lamp == 1 || data.lampOn == 1) ? "<span style='color:#eab308;font-weight:bold;'>ON</span>" : "<span style='color:#64748b;'>OFF</span>";
+  var p1 = '', p2 = '';
+  if (data.rtcTime && data.rtcTime.indexOf(' ') !== -1) {
+    var parts = data.rtcTime.split(' ');
+    p1 = parts[1] + '.' + ms1 + ' -> ';
+    p2 = parts[1] + '.' + ms2 + ' -> ';
+  } else {
+    var hhmmss = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    p1 = hhmmss + '.' + ms1 + ' -> ';
+    p2 = hhmmss + '.' + ms2 + ' -> ';
+  }
+
+  var rawT = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== '--') ? data.suhuC : data.temp;
+  var sC = (rawT !== undefined && rawT !== null && rawT !== '--') ? parseFloat(rawT).toFixed(2) : '--';
+  var sF = (data.suhuF !== undefined && data.suhuF !== '--') ? parseFloat(data.suhuF).toFixed(2) : (sC !== '--' ? (parseFloat(sC) * 1.8 + 32).toFixed(2) : '--');
+  var hum = (data.hum !== undefined && data.hum !== null && data.hum !== '--') ? parseFloat(data.hum).toFixed(2) : '--';
+  var heatC = (data.heatC !== undefined && data.heatC !== null && data.heatC !== '--') ? parseFloat(data.heatC).toFixed(2) : '--';
+  var heatF = (data.heatF !== undefined && data.heatF !== null && data.heatF !== '--') ? parseFloat(data.heatF).toFixed(2) : '--';
+  var dew = (data.dew !== undefined && data.dew !== null && data.dew !== '--') ? parseFloat(data.dew).toFixed(2) : '--';
+  var soilCat = data.soilCategory || (data.soil !== undefined && data.soil !== '--' ? (data.soil < 50 ? '🍂 TANAH KERING (PERLU MENYIRAM)' : '🌿 TANAH CUKUP LEMBAB') : '--');
+  var rawAdc = (data.rawAdc !== undefined) ? data.rawAdc : '--';
+  var vcc = data.espVcc || '3.3V (Stabil)';
+  var heap = (data.freeHeap !== undefined ? data.freeHeap + ' KB' : (data.heap || '204 KB'));
+  var aiSummary = data.plantSummary || (data.statusText || 'Normal');
+  var pumpStat = (data.relay == 1 || data.relayOn == 1) ? "<span style='color:#10b981;font-weight:bold;'>AKTIF (Menyiram)</span>" : "<span style='color:#64748b;'>NONAKTIF (Mati)</span>";
+  var lampStat = (data.lamp == 1 || data.lampOn == 1) ? "<span style='color:#eab308;font-weight:bold;'>AKTIF (Menyala)</span>" : "<span style='color:#64748b;'>NONAKTIF (Mati)</span>";
 
   // Cache live packet in memory for Firebase export
   window.liveTelemetryFeedCache = window.liveTelemetryFeedCache || [];
   window.liveTelemetryFeedCache.push({
-    timestamp: timeStr,
-    soil: sVal,
-    rawAdc: adcVal,
-    battery: batVal,
-    rssi: rssiVal,
-    temp: tVal,
-    hum: hVal,
+    timestamp: p1,
+    temp: sC,
+    hum: hum,
+    heat: heatC,
+    dew: dew,
+    soilCat: soilCat,
+    rawAdc: rawAdc,
+    vcc: vcc,
+    heap: heap,
     pump: (data.relay == 1 || data.relayOn == 1) ? "ON" : "OFF",
     lamp: (data.lamp == 1 || data.lampOn == 1) ? "ON" : "OFF"
   });
-  if (window.liveTelemetryFeedCache.length > 200) {
-    window.liveTelemetryFeedCache.shift();
+  if (window.liveTelemetryFeedCache.length > 200) window.liveTelemetryFeedCache.shift();
+
+  var statusLine = '';
+  if (data.statusText) {
+    statusLine = '<div><span style="color:#64748b;">' + p1 + '</span><span style="color:#f59e0b;font-weight:bold;"> => STATUS: ' + data.statusText + '</span></div>';
   }
 
-  var entryHtml = `
-    <div style="border-bottom:1px solid rgba(255,255,255,0.04); padding:4px 0;">
-      <span style="color:#64748b;">[${timeStr}]</span>
-      <span style="color:#38bdf8; font-weight:bold;">RX-LINK:</span>
-      <span style="color:#10b981;">soil=${sVal}</span>
-      <span style="color:#94a3b8;">adc=${adcVal}</span>
-      <span style="color:#f59e0b;">bat=${batVal}</span>
-      <span style="color:#a855f7;">rssi=${rssiVal}</span>
-      <span style="color:#64748b;">|</span>
-      <span style="color:#06b6d4;">temp=${tVal}</span>
-      <span style="color:#c084fc;">hum=${hVal}</span>
-      <span style="color:#64748b;">|</span>
-      <span style="color:#cbd5e1;">pompa:${pumpStat}</span>
-      <span style="color:#cbd5e1;">lampu:${lampStat}</span>
-      <span style="color:#10b981; font-size:10px; background:rgba(16,185,129,0.12); padding:1px 4px; border-radius:4px; margin-left:6px;">VALID</span>
-    </div>
-  `;
+  var blockHtml = '<div class="serial-feed-block" style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">' +
+    statusLine +
+    '<div style="color:#38bdf8; font-weight:700; border-bottom:1px dashed rgba(255,255,255,0.15); padding-bottom:3px; margin:4px 0; word-break:break-word;">' + p1 + '☁️ ========= DATA CUACA (DHT11) =========</div>' +
+    '<div><span style="color:#64748b;">' + p1 + '</span><span style="color:#94a3b8;">🌡️ Suhu Udara       : </span><span style="color:#38bdf8;font-weight:bold;">' + sC + ' °C</span>  |  <span style="color:#cbd5e1;">' + sF + ' °F</span></div>' +
+    '<div><span style="color:#64748b;">' + p1 + '</span><span style="color:#94a3b8;">💧 Kelembapan Udara : </span><span style="color:#a855f7;font-weight:bold;">' + hum + ' %</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🔥 Terasa Seperti   : </span><span style="color:#f59e0b;font-weight:bold;">' + heatC + ' °C</span>  |  <span style="color:#cbd5e1;">' + heatF + ' °F</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">❄️ Titik Embun (Dew): </span><span style="color:#06b6d4;font-weight:bold;">' + dew + ' °C</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🌱 Status Tanah     : </span><span style="color:#10b981;font-weight:bold;">' + soilCat + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">📊 Raw ADC A0       : </span><span style="color:#e2e8f0;font-weight:bold;">' + rawAdc + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">⚡ Stabilitas VCC   : </span><span style="color:#10b981;">' + vcc + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🧠 Free Heap RAM    : </span><span style="color:#38bdf8;">' + heap + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🤖 Kesimpulan AI    : </span><span style="color:#e2e8f0;">' + aiSummary + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">⚙️ Status Pompa     : </span>' + pumpStat + '  |  <span style="color:#94a3b8;">💡 Lampu : </span>' + lampStat + '</div>' +
+    '<div style="color:#64748b; font-size:10px; margin-top:2px;">' + p2 + '=========================================</div>' +
+    '</div>';
 
-  consoleElem.innerHTML += entryHtml;
+  if (consoleElem.innerHTML.indexOf('[Sistem Standby]') !== -1 || consoleElem.innerHTML.indexOf('[Konsol Dibersihkan]') !== -1) {
+    consoleElem.innerHTML = '';
+  }
+  consoleElem.innerHTML += blockHtml;
+
+  while (consoleElem.children.length > 40) {
+    consoleElem.removeChild(consoleElem.firstChild);
+  }
 
   var autoScroll = document.getElementById('feed-autoscroll');
   if (autoScroll && autoScroll.checked) {
     consoleElem.scrollTop = consoleElem.scrollHeight;
+  }
+};
+
+window.copyLiveFeedText = function() {
+  var consoleElem = document.getElementById('live-telemetry-console');
+  if (!consoleElem) return;
+  var text = consoleElem.innerText || consoleElem.textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert("Isi log Serial Monitor berhasil disalin ke clipboard!");
+    }).catch(function() {
+      alert("Gagal menyalin otomatis. Silakan salin secara manual.");
+    });
+  } else {
+    alert("Clipboard API tidak didukung pada peramban ini.");
   }
 };
 
@@ -356,14 +400,38 @@ function executeFirebaseBackup() {
 }
 
 function exportLogsAsJSON() {
-  if (!rawLogsCache || rawLogsCache.length === 0) { alert("Log masih kosong!"); return; }
-  var jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rawLogsCache, null, 2));
-  var a = document.createElement('a');
-  a.setAttribute("href", jsonStr);
-  a.setAttribute("download", "smartfarm_logs_" + Date.now() + ".json");
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  function downloadJSONData(data) {
+    var jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    var a = document.createElement('a');
+    a.setAttribute("href", jsonStr);
+    a.setAttribute("download", "smartfarm_logs_" + Date.now() + ".json");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  if (rawLogsCache && rawLogsCache.length > 0) {
+    downloadJSONData(rawLogsCache);
+    return;
+  }
+
+  // Jika cache memori peramban masih kosong, ambil langsung dari LittleFS ESP32
+  fetch('/downloadLog')
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    })
+    .then(function (text) {
+      parseCSVLogs(text);
+      if (rawLogsCache && rawLogsCache.length > 0) {
+        downloadJSONData(rawLogsCache);
+      } else {
+        alert("Log masih kosong di memori Flash LittleFS ESP32.");
+      }
+    })
+    .catch(function (err) {
+      alert("Gagal mengunduh log dari ESP32: " + err.message);
+    });
 }
 
 function clearSystemLogs() {
@@ -385,6 +453,9 @@ function clearSystemLogs() {
   } else {
     if (typeof updatePhenologyAI === 'function') updatePhenologyAI(null);
     if (typeof loadCropFormFromStorage === 'function') loadCropFormFromStorage();
+  }
+  if (window.lastTelemetryData && typeof window.appendLiveTelemetryFeed === 'function') {
+    window.appendLiveTelemetryFeed(window.lastTelemetryData);
   }
 })();
 

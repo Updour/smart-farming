@@ -19,31 +19,74 @@ var hourlyCrosshairIdx = -1;
 
 function initScadaCanvas() {
   scadaCanvas = document.getElementById('scadaChart');
+  
+  // Hydrate buffer dari sessionStorage agar saat pindah tab atau refresh tidak reset ke 0
+  try {
+    var cachedBuf = sessionStorage.getItem('smartfarm_osc_buf');
+    if (cachedBuf) {
+      var parsed = JSON.parse(cachedBuf);
+      if (parsed && parsed.soil && parsed.soil.length > 0) {
+        scadaHistory = parsed;
+        scadaFiltered = { soil: [], temp: [], hum: [] };
+        var a = 0.35;
+        for (var i = 0; i < scadaHistory.soil.length; i++) {
+          if (i === 0) {
+            scadaFiltered.soil.push(scadaHistory.soil[0]);
+            scadaFiltered.temp.push(scadaHistory.temp[0]);
+            scadaFiltered.hum.push(scadaHistory.hum[0]);
+          } else {
+            scadaFiltered.soil.push(a * scadaHistory.soil[i] + (1 - a) * scadaFiltered.soil[i - 1]);
+            scadaFiltered.temp.push(a * scadaHistory.temp[i] + (1 - a) * scadaFiltered.temp[i - 1]);
+            scadaFiltered.hum.push(a * scadaHistory.hum[i] + (1 - a) * scadaFiltered.hum[i - 1]);
+          }
+        }
+        var st = document.getElementById('osc-status-text');
+        if (st) st.innerText = "Buffer: " + scadaHistory.soil.length + " Titik (" + (oscFilterMode === 'ema' ? 'EMA Filter' : 'Raw Data') + ")";
+      }
+    }
+  } catch (e) {}
+
   if (scadaCanvas) {
     attachScadaCrosshair();
     resizeCanvas();
   }
   var hCanvas = document.getElementById('hourlyChart');
   if (hCanvas) attachHourlyCrosshair();
+
+  // Otomatis preload log LittleFS untuk chart 24 jam
+  if (typeof fetchAndParseLogs === 'function') {
+    fetchAndParseLogs();
+  }
 }
 
 function resizeCanvas() {
   if (!scadaCanvas) scadaCanvas = document.getElementById('scadaChart');
   if (scadaCanvas && scadaCanvas.parentElement) {
-    scadaCanvas.width = scadaCanvas.parentElement.clientWidth;
-    scadaCanvas.height = scadaCanvas.parentElement.clientHeight;
-    drawChart();
+    var pW = scadaCanvas.parentElement.clientWidth;
+    var pH = scadaCanvas.parentElement.clientHeight || 230;
+    if (pW > 0) {
+      scadaCanvas.width = pW;
+      scadaCanvas.height = pH;
+      drawChart();
+    }
   }
   var hCanvas = document.getElementById('hourlyChart');
   if (hCanvas && hCanvas.parentElement) {
-    hCanvas.width = hCanvas.parentElement.clientWidth;
-    hCanvas.height = hCanvas.parentElement.clientHeight;
-    renderHourlyChart();
+    var hpW = hCanvas.parentElement.clientWidth;
+    var hpH = hCanvas.parentElement.clientHeight || 250;
+    if (hpW > 0) {
+      hCanvas.width = hpW;
+      hCanvas.height = hpH;
+      renderHourlyChart();
+    }
   }
   if (typeof resizeCropCanvas === 'function') resizeCropCanvas();
 }
 
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('DOMContentLoaded', function () {
+  setTimeout(initScadaCanvas, 200);
+});
 
 // --- TOGGLE CHIP HELPER ---
 function setChipUI(id, active) {
@@ -124,22 +167,49 @@ function refreshHourlyData() {
 
 // --- DATA INGESTION & EMA FILTER ---
 function updateHistory(soil, temp, hum) {
-  if (soil === null || temp === null || isNaN(soil) || isNaN(temp)) return;
-  var hVal = (hum !== null && !isNaN(hum)) ? hum : (scadaHistory.hum.length > 0 ? scadaHistory.hum[scadaHistory.hum.length - 1] : 60);
-  if (soil < 0 || soil > 100 || temp < -10 || temp > 65 || hVal < 0 || hVal > 100) return;
+  var tData = window.lastTelemetryData || {};
 
-  scadaHistory.time.push(new Date().toLocaleTimeString());
-  scadaHistory.soil.push(soil);
-  scadaHistory.temp.push(temp);
+  // Ekstraksi suhu cerdas (mendukung suhuC dan temp)
+  if (temp === null || isNaN(temp)) {
+    var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+    if (rawT !== undefined && rawT !== null && !isNaN(parseFloat(rawT))) temp = parseFloat(rawT);
+  }
+
+  // Ekstraksi kelembapan tanah
+  if (soil === null || isNaN(soil)) {
+    var rawS = (tData.soil !== undefined && tData.soil !== "--") ? tData.soil : null;
+    if (rawS !== null && !isNaN(parseFloat(rawS)) && parseFloat(rawS) >= 0) soil = parseFloat(rawS);
+  }
+
+  // Ekstraksi kelembapan udara (RH)
+  if (hum === null || isNaN(hum)) {
+    var rawH = (tData.hum !== undefined && tData.hum !== "--") ? tData.hum : null;
+    if (rawH !== null && !isNaN(parseFloat(rawH))) hum = parseFloat(rawH);
+  }
+
+  // Jika kedua sensor tanah dan suhu sama sekali belum siap, abaikan pencatatan
+  if ((soil === null || isNaN(soil)) && (temp === null || isNaN(temp))) return;
+
+  // Pertahankan nilai terakhir jika salah satu sensor offline sesaat
+  var sVal = (soil !== null && !isNaN(soil)) ? soil : (scadaHistory.soil.length > 0 ? scadaHistory.soil[scadaHistory.soil.length - 1] : 0);
+  var tVal = (temp !== null && !isNaN(temp)) ? temp : (scadaHistory.temp.length > 0 ? scadaHistory.temp[scadaHistory.temp.length - 1] : 28);
+  var hVal = (hum !== null && !isNaN(hum)) ? hum : (scadaHistory.hum.length > 0 ? scadaHistory.hum[scadaHistory.hum.length - 1] : 65);
+
+  if (sVal < 0 || sVal > 100 || tVal < -10 || tVal > 65 || hVal < 0 || hVal > 100) return;
+
+  var nowStr = new Date().toLocaleTimeString('id-ID');
+  scadaHistory.time.push(nowStr);
+  scadaHistory.soil.push(sVal);
+  scadaHistory.temp.push(tVal);
   scadaHistory.hum.push(hVal);
 
   var a = 0.35, len = scadaHistory.soil.length;
   if (len === 1) {
-    scadaFiltered.soil.push(soil); scadaFiltered.temp.push(temp); scadaFiltered.hum.push(hVal);
+    scadaFiltered.soil.push(sVal); scadaFiltered.temp.push(tVal); scadaFiltered.hum.push(hVal);
   } else {
     var pS = scadaFiltered.soil[len - 2], pT = scadaFiltered.temp[len - 2], pH = scadaFiltered.hum[len - 2];
-    scadaFiltered.soil.push(a * soil + (1 - a) * pS);
-    scadaFiltered.temp.push(a * temp + (1 - a) * pT);
+    scadaFiltered.soil.push(a * sVal + (1 - a) * pS);
+    scadaFiltered.temp.push(a * tVal + (1 - a) * pT);
     scadaFiltered.hum.push(a * hVal + (1 - a) * pH);
   }
 
@@ -148,9 +218,13 @@ function updateHistory(soil, temp, hum) {
     scadaFiltered.soil.shift(); scadaFiltered.temp.shift(); scadaFiltered.hum.shift();
   }
 
+  try {
+    sessionStorage.setItem('smartfarm_osc_buf', JSON.stringify(scadaHistory));
+  } catch (e) {}
+
   var vS = document.getElementById('osc-val-soil'), vT = document.getElementById('osc-val-temp'), vH = document.getElementById('osc-val-hum');
-  if (vS) vS.innerText = Math.round(soil) + "%";
-  if (vT) vT.innerText = temp.toFixed(1) + "°C";
+  if (vS) vS.innerText = Math.round(sVal) + "%";
+  if (vT) vT.innerText = tVal.toFixed(1) + "°C";
   if (vH && hVal !== null) vH.innerText = Math.round(hVal) + "%";
   var st = document.getElementById('osc-status-text');
   if (st) st.innerText = "Buffer: " + scadaHistory.soil.length + " Titik (" + (oscFilterMode === 'ema' ? 'EMA Filter' : 'Raw Data') + ")";
@@ -161,7 +235,21 @@ function updateHistory(soil, temp, hum) {
 function drawLiveCurve(ctx, pts, scaleMax, padL, padT, chartW, chartH, maxSlots, color, doArea, glow) {
   var count = pts.length;
   if (count === 0) return;
+
   var stepX = chartW / Math.max(maxSlots - 1, 1);
+
+  // Jika baru 1 titik, langsung render lingkaran/titik penanda agar tidak kosong
+  if (count === 1) {
+    var pY = padT + chartH - (pts[0] / scaleMax * chartH);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(padL, pY, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    return;
+  }
 
   if (doArea) {
     var grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
@@ -191,7 +279,10 @@ function drawLiveCurve(ctx, pts, scaleMax, padL, padT, chartW, chartH, maxSlots,
   if (glow) {
     var tipX = padL + (count - 1) * stepX, tipY = padT + chartH - (pts[count - 1] / scaleMax * chartH);
     ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tipX, tipY, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
 }
 
@@ -273,11 +364,12 @@ function attachHourlyCrosshair() {
         var aT = (stats.tempSum / stats.count).toFixed(1);
         var aH = (stats.humSum / stats.count).toFixed(0);
         var pS = stats.pumpSecsMax || 0;
+        var pStr = pS >= 60 ? Math.floor(pS / 60) + "m " + (pS % 60) + "s" : pS + "s";
         tooltip.innerHTML = '<span style="color:#94a3b8;">Jam ' + (hr < 10 ? '0' : '') + hr + ':00</span> &bull; ' +
           '<span style="color:#10b981;font-weight:700;">Tanah: ' + aS + '%</span> &bull; ' +
           '<span style="color:#06b6d4;font-weight:700;">Suhu: ' + aT + '°C</span> &bull; ' +
           '<span style="color:#a855f7;font-weight:700;">RH: ' + aH + '%</span> &bull; ' +
-          '<span style="color:#f59e0b;font-weight:700;">Pompa: ' + pS + 's</span>';
+          '<span style="color:#f59e0b;font-weight:700;">Pompa: ' + pStr + '</span>';
         tooltip.style.display = 'block';
       }
       renderHourlyChart();
@@ -311,7 +403,14 @@ function getActiveHoursList() {
 // --- RENDER OSCILLOSCOPE ---
 function drawChart() {
   if (!scadaCanvas) scadaCanvas = document.getElementById('scadaChart');
-  if (!scadaCanvas) return;
+  if (!scadaCanvas || !scadaCanvas.parentElement) return;
+  var pW = scadaCanvas.parentElement.clientWidth;
+  var pH = scadaCanvas.parentElement.clientHeight || 230;
+  if (pW <= 0) return; // Tab charts sedang tersembunyi
+  if (scadaCanvas.width !== pW || scadaCanvas.height !== pH) {
+    scadaCanvas.width = pW;
+    scadaCanvas.height = pH;
+  }
   var ctx = scadaCanvas.getContext('2d'), w = scadaCanvas.width, h = scadaCanvas.height;
   ctx.clearRect(0, 0, w, h);
 
@@ -418,7 +517,14 @@ function drawChart() {
 function renderHourlyChart() {
   var canvas = document.getElementById('hourlyChart');
   if (!canvas || !canvas.parentElement) return;
-  var ctx = canvas.getContext('2d'), w = canvas.width = canvas.parentElement.clientWidth, h = canvas.height = canvas.parentElement.clientHeight;
+  var pW = canvas.parentElement.clientWidth;
+  var pH = canvas.parentElement.clientHeight || 250;
+  if (pW <= 0) return; // Tab charts sedang tersembunyi
+  if (canvas.width !== pW || canvas.height !== pH) {
+    canvas.width = pW;
+    canvas.height = pH;
+  }
+  var ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
 
   var padL = 36, padR = 36, padT = 16, padB = 24;
@@ -440,36 +546,69 @@ function renderHourlyChart() {
   }
 
   var logs = (typeof rawLogsCache !== 'undefined') ? rawLogsCache : [];
-  if (!logs || logs.length === 0) {
+  var hourlyMap = {};
+  for (var hr = 0; hr < 24; hr++) {
+    hourlyMap[hr] = { tempSum: 0, humSum: 0, soilSum: 0, pumpSecsMax: 0, lampActive: 0, count: 0 };
+  }
+
+  // 1. Agregasi dari rekaman CSV LittleFS
+  if (logs && logs.length > 0) {
+    for (var i = 0; i < logs.length; i++) {
+      var item = logs[i], hIdx = -1;
+      if (item.time && item.time.indexOf(":") !== -1) {
+        var tP = item.time.split(" ");
+        var timePart = tP[tP.length - 1];
+        hIdx = parseInt(timePart.split(":")[0], 10);
+      }
+      if (hIdx >= 0 && hIdx < 24) {
+        hourlyMap[hIdx].tempSum += item.temp;
+        hourlyMap[hIdx].humSum += item.hum;
+        hourlyMap[hIdx].soilSum += item.soil;
+        hourlyMap[hIdx].pumpSecsMax = Math.max(hourlyMap[hIdx].pumpSecsMax, item.pumpSecs || 0);
+        if (item.lamp === "1" || item.lamp === 1 || item.lamp === true || item.lamp === "ON") {
+          hourlyMap[hIdx].lampActive += 1;
+        }
+        hourlyMap[hIdx].count += 1;
+      }
+    }
+  }
+
+  // 2. Gabungkan data telemetri live terkini ke slot jam saat ini
+  var tData = window.lastTelemetryData;
+  if (tData) {
+    var nowHour = new Date().getHours();
+    var curT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? parseFloat(tData.suhuC) : (tData.temp !== undefined && tData.temp !== "--" ? parseFloat(tData.temp) : null);
+    var curS = (tData.soil !== undefined && tData.soil !== "--" && !isNaN(parseFloat(tData.soil))) ? parseFloat(tData.soil) : null;
+    var curH = (tData.hum !== undefined && tData.hum !== "--") ? parseFloat(tData.hum) : null;
+
+    if (curT !== null && curS !== null) {
+      hourlyMap[nowHour].tempSum += curT;
+      hourlyMap[nowHour].soilSum += curS;
+      hourlyMap[nowHour].humSum += (curH !== null ? curH : 65);
+      if (tData.hourlySecs !== undefined) {
+        hourlyMap[nowHour].pumpSecsMax = Math.max(hourlyMap[nowHour].pumpSecsMax, parseInt(tData.hourlySecs, 10));
+      }
+      if (tData.lampOn == 1 || tData.lamp == 1) hourlyMap[nowHour].lampActive += 1;
+      hourlyMap[nowHour].count += 1;
+    }
+  }
+
+  window.lastHourlyStatsMap = hourlyMap;
+
+  // Hitung total titik yang valid
+  var totalValidPoints = 0;
+  for (var c = 0; c < 24; c++) {
+    if (hourlyMap[c].count > 0) totalValidPoints++;
+  }
+
+  if (totalValidPoints === 0) {
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.font = "12px Inter, sans-serif";
-    ctx.fillText("Belum Ada Data Log Per Jam (ESP32 Sedang Mengumpulkan Rekaman)", padL + 10, h / 2);
-    var st = document.getElementById('hourly-summary-text');
-    if (st) st.innerText = "Deteksi Evaporasi: Menunggu Rekaman Log LittleFS";
+    ctx.fillText("Sedang Menyelaraskan Log LittleFS Flash Memory...", padL + 10, h / 2);
+    var stPrompt = document.getElementById('hourly-summary-text');
+    if (stPrompt) stPrompt.innerText = "Deteksi Evaporasi: Menunggu Rekaman Log LittleFS";
     return;
   }
-
-  var hourlyMap = {};
-  for (var hr = 0; hr < 24; hr++) hourlyMap[hr] = { tempSum: 0, humSum: 0, soilSum: 0, pumpSecsMax: 0, lampActive: 0, count: 0 };
-
-  for (var i = 0; i < logs.length; i++) {
-    var item = logs[i], hIdx = -1;
-    if (item.time && item.time.indexOf(":") !== -1) {
-      var tP = item.time.split(" ");
-      hIdx = parseInt(tP[tP.length - 1].split(":")[0], 10);
-    }
-    if (hIdx >= 0 && hIdx < 24) {
-      hourlyMap[hIdx].tempSum += item.temp;
-      hourlyMap[hIdx].humSum += item.hum;
-      hourlyMap[hIdx].soilSum += item.soil;
-      hourlyMap[hIdx].pumpSecsMax = Math.max(hourlyMap[hIdx].pumpSecsMax, item.pumpSecs || 0);
-      if (item.lamp === "1" || item.lamp === 1 || item.lamp === true || item.lamp === "ON") {
-        hourlyMap[hIdx].lampActive += 1;
-      }
-      hourlyMap[hIdx].count += 1;
-    }
-  }
-  window.lastHourlyStatsMap = hourlyMap;
 
   // Compute 24-Hour Quick Statistics
   var minTemp24 = 999, maxTemp24 = -999, totalSoilSum = 0, totalSoilCount = 0, totalPumpSecs = 0, pumpActivations = 0, lampHours = 0;
@@ -496,7 +635,10 @@ function renderHourlyChart() {
 
   if (statTempEl && minTemp24 !== 999) statTempEl.innerText = minTemp24.toFixed(1) + "°C / " + maxTemp24.toFixed(1) + "°C";
   if (statSoilEl && totalSoilCount > 0) statSoilEl.innerText = Math.round(totalSoilSum / totalSoilCount) + "%";
-  if (statPumpEl) statPumpEl.innerText = pumpActivations + " Kali (" + totalPumpSecs + "s)";
+  if (statPumpEl) {
+    var pDurStr = totalPumpSecs >= 60 ? Math.floor(totalPumpSecs / 60) + "m " + (totalPumpSecs % 60) + "s" : totalPumpSecs + "s";
+    statPumpEl.innerText = pumpActivations + " Kali (" + pDurStr + ")";
+  }
   if (statLampEl) statLampEl.innerText = lampHours + " Jam";
 
   var hoursList = getActiveHoursList();
@@ -529,7 +671,7 @@ function renderHourlyChart() {
   if (hourlySeries.pump) {
     for (var b = 0; b < numSlots; b++) {
       var pHour = hoursList[b], pSecs = hourlyMap[pHour].pumpSecsMax;
-      var barH = Math.min((pSecs / 1800) * chartH, chartH);
+      var barH = Math.min((pSecs / 300) * chartH, chartH); // 300s (5 menit) skala penuh
       if (barH > 0) {
         var bx = padL + b * step + step * 0.2;
         ctx.fillStyle = "rgba(245, 158, 11, 0.4)";
@@ -540,22 +682,37 @@ function renderHourlyChart() {
     }
   }
 
+  // Draw Connected Hourly Lines & Guaranteed Visible Points
   function drawHourlyLine(key, scale, color) {
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.4;
     var first = true;
+    var validPts = [];
+
     for (var s = 0; s < numSlots; s++) {
       var hr = hoursList[s];
       if (hourlyMap[hr].count > 0) {
         var avg = hourlyMap[hr][key] / hourlyMap[hr].count;
         var sx = padL + s * step + step / 2;
         var sy = padT + chartH - (avg / scale * chartH);
+        validPts.push({ x: sx, y: sy, avg: avg, hr: hr });
         if (first) { ctx.moveTo(sx, sy); first = false; } else ctx.lineTo(sx, sy);
         if (key === 'tempSum' && avg > maxTemp) { maxTemp = avg; maxHour = hr; }
       }
     }
     if (!first) ctx.stroke();
+
+    // Render lingkaran untuk setiap titik agar titik tunggal/jarang tetap 100% terlihat
+    ctx.fillStyle = color;
+    for (var p = 0; p < validPts.length; p++) {
+      ctx.beginPath();
+      ctx.arc(validPts[p].x, validPts[p].y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
   }
 
   if (hourlySeries.soil) drawHourlyLine('soilSum', 100, '#10b981');
@@ -588,6 +745,20 @@ function renderHourlyChart() {
   if (sumText) {
     sumText.innerText = (maxHour >= 0)
       ? "Deteksi Evaporasi: Puncak Suhu (" + maxTemp.toFixed(1) + "°C) Jam " + (maxHour < 10 ? '0' : '') + maxHour + ":00 WIB"
-      : "Deteksi Evaporasi: Menunggu Rekam Log Per Jam";
+      : "Deteksi Evaporasi: Siklus Diurnal Terpantau Normal";
   }
 }
+
+// Window Globals Binding untuk inline HTML onclick
+window.initScadaCanvas = initScadaCanvas;
+window.resizeCanvas = resizeCanvas;
+window.drawChart = drawChart;
+window.renderHourlyChart = renderHourlyChart;
+window.updateHistory = updateHistory;
+window.toggleOscSeries = toggleOscSeries;
+window.toggleOscThreshold = toggleOscThreshold;
+window.setOscFilterMode = setOscFilterMode;
+window.setOscBufferSize = setOscBufferSize;
+window.toggleHourlySeries = toggleHourlySeries;
+window.setHourlyRange = setHourlyRange;
+window.refreshHourlyData = refreshHourlyData;

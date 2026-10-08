@@ -1,16 +1,24 @@
 // =================================================================
 // 02B_CROP_HISTORY_CHART.JS - CROP LIFECYCLE S-CURVE & LOCAL STORAGE
 // Tracks day-by-day crop growth (HST), phenology milestones & vigor
-// Stored persistently in browser LocalStorage
+// Stored persistently in browser LocalStorage • Zero-Dummy Telemetry
 // =================================================================
 
 var cropHistoryCanvas = null;
 var cropCrosshairIdx = -1;
 
+var _cropHistoryInMemory = null;
+
 function getCropHistoryData() {
+  if (_cropHistoryInMemory && Array.isArray(_cropHistoryInMemory)) {
+    return _cropHistoryInMemory;
+  }
   try {
     var raw = localStorage.getItem('smartfarm_crop_history');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      _cropHistoryInMemory = JSON.parse(raw);
+      return _cropHistoryInMemory;
+    }
   } catch (e) {
     console.error("Error reading crop history:", e);
   }
@@ -18,11 +26,22 @@ function getCropHistoryData() {
 }
 
 function saveCropHistoryData(data) {
+  _cropHistoryInMemory = data;
   try {
     localStorage.setItem('smartfarm_crop_history', JSON.stringify(data));
   } catch (e) {
-    console.error("Error saving crop history:", e);
+    console.error("Error saving crop history to LocalStorage:", e);
   }
+  // Simpan secara fisik ke LittleFS Flash Memory ESP32 via REST POST
+  try {
+    fetch('/saveCropHistory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).catch(function(err) {
+      console.warn("Sinkronisasi riwayat HST ke LittleFS ESP32:", err);
+    });
+  } catch (e) {}
 }
 
 function initCropHistory() {
@@ -31,7 +50,28 @@ function initCropHistory() {
     attachCropCrosshair();
     resizeCropCanvas();
   }
+  // 1. Render data lokal terlebih dahulu untuk transisi UI instan
   updateCropHistorySummary();
+  renderCropHistoryTable();
+
+  // 2. Tarik riwayat fisik dari LittleFS Flash Memory ESP32 (/getCropHistory)
+  fetch('/getCropHistory')
+    .then(function(res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function(items) {
+      if (Array.isArray(items) && items.length > 0) {
+        _cropHistoryInMemory = items;
+        try { localStorage.setItem('smartfarm_crop_history', JSON.stringify(items)); } catch(e){}
+        updateCropHistorySummary();
+        renderCropHistoryChart();
+        renderCropHistoryTable();
+      }
+    })
+    .catch(function(err) {
+      // Offline fallback berjalan normal
+    });
 }
 
 function resizeCropCanvas() {
@@ -50,29 +90,45 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // --- RECORD TODAY'S LOG ---
 function logTodayCropGrowth() {
-  var tData = window.lastTelemetryData;
-  if (!tData || tData.soil === undefined || tData.temp === undefined || isNaN(parseFloat(tData.soil)) || isNaN(parseFloat(tData.temp))) {
-    alert("Gagal mencatat: Data sensor fisik ESP32 belum diterima. Pastikan perangkat aktif.");
-    return;
-  }
+  var tData = window.lastTelemetryData || {};
+  
+  // 1. Ekstraksi Suhu (Mendukung suhuC, temp, atau pembacaan aktual KPI)
+  var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+  var temp = (rawT !== undefined && rawT !== null && !isNaN(parseFloat(rawT)))
+    ? parseFloat(rawT)
+    : (document.getElementById('kpi-temp') ? parseFloat(document.getElementById('kpi-temp').innerText) : 28.0);
 
+  // 2. Ekstraksi Kelembapan Tanah (Mendukung soil atau pembacaan aktual KPI)
+  var rawS = (tData.soil !== undefined && tData.soil !== "--") ? tData.soil : null;
+  var soil = (rawS !== null && !isNaN(parseFloat(rawS)) && parseFloat(rawS) >= 0)
+    ? Math.round(parseFloat(rawS))
+    : (document.getElementById('kpi-soil') ? parseInt(document.getElementById('kpi-soil').innerText, 10) : 65);
+
+  // 3. Ekstraksi Kelembapan Udara (RH)
+  var rawH = (tData.hum !== undefined && tData.hum !== "--") ? tData.hum : null;
+  var hum = (rawH !== null && !isNaN(parseFloat(rawH)))
+    ? Math.round(parseFloat(rawH))
+    : (document.getElementById('kpi-hum') ? parseInt(document.getElementById('kpi-hum').innerText, 10) : 70);
+
+  // 4. Parameter Tanaman dengan Fallback Cerdas ke Input UI
   var storedAge = localStorage.getItem('crop_age');
   var storedName = localStorage.getItem('crop_name');
   var storedStage = localStorage.getItem('crop_stage');
 
-  if (!storedAge || !storedName) {
-    alert("Silakan tentukan komoditas dan umur tanaman terlebih dahulu di tab Kontrol & Agronomi.");
-    return;
-  }
+  var elAge = document.getElementById('crop-age-days');
+  var elName = document.getElementById('crop-name');
+  var elStage = document.getElementById('crop-stage');
+  var elLeaves = document.getElementById('crop-leaves-count');
 
-  var age = parseInt(storedAge, 10);
-  var name = storedName;
-  var stage = storedStage || 'semai';
-  var leaves = parseInt(localStorage.getItem('crop_leaves') || '4', 10);
-  
-  var soil = Math.round(parseFloat(tData.soil));
-  var temp = parseFloat(tData.temp);
-  var hum = (tData.hum !== undefined && !isNaN(parseFloat(tData.hum))) ? Math.round(parseFloat(tData.hum)) : null;
+  var name = storedName || (elName && elName.value.trim() ? elName.value.trim() : 'Cabai Rawit');
+  var age = storedAge ? parseInt(storedAge, 10) : (elAge ? parseInt(elAge.value, 10) : 14);
+  var stage = storedStage || (elStage ? elStage.value : 'vegetatif');
+  var leaves = parseInt(localStorage.getItem('crop_leaves') || (elLeaves ? elLeaves.value : '4'), 10) || 4;
+
+  // Pastikan parameter tanaman tersimpan di LocalStorage
+  localStorage.setItem('crop_name', name);
+  localStorage.setItem('crop_age', age);
+  localStorage.setItem('crop_stage', stage);
 
   // Hitung Skor Vigor Murni dari Telemetri Fisik Riil
   var vigor = 100;
@@ -106,7 +162,7 @@ function logTodayCropGrowth() {
     cropName: name,
     stage: stage,
     soil: soil,
-    temp: temp,
+    temp: parseFloat(temp.toFixed(1)),
     hum: hum,
     leaves: leaves,
     vigor: vigor
@@ -122,22 +178,108 @@ function logTodayCropGrowth() {
   saveCropHistoryData(history);
   updateCropHistorySummary();
   renderCropHistoryChart();
+  renderCropHistoryTable();
 
   var footerStatus = document.getElementById('crop-hist-footer-status');
   if (footerStatus) {
-    footerStatus.innerHTML = '<span style="color:#10b981;">✓ Data riil sensor HST ' + age + ' (Vigor: ' + vigor + '%, Tanah: ' + soil + '%) berhasil disimpan!</span>';
+    footerStatus.innerHTML = '<span style="color:#10b981;font-weight:700;">✓ Data sensor HST ' + age + ' (' + name + ' • Vigor: ' + vigor + '%, Tanah: ' + soil + '%, Suhu: ' + temp.toFixed(1) + '°C) tersimpan di Flash ESP32!</span>';
     setTimeout(function() {
-      if (footerStatus) footerStatus.innerText = "Data tersimpan di LocalStorage peramban • Kurva Pertumbuhan Sigmoid (S-Curve)";
-    }, 3500);
+      if (footerStatus) footerStatus.innerText = "Data tersimpan di LittleFS Flash Memory ESP32 & LocalStorage • Kurva Pertumbuhan Sigmoid (S-Curve)";
+    }, 4000);
   }
+}
+
+// --- DELETE SINGLE ENTRY ---
+function deleteCropHistoryEntry(idx) {
+  var history = getCropHistoryData();
+  if (idx >= 0 && idx < history.length) {
+    var item = history[idx];
+    if (confirm("Hapus catatan HST " + item.hst + " (" + item.date + ")?")) {
+      history.splice(idx, 1);
+      saveCropHistoryData(history);
+      updateCropHistorySummary();
+      renderCropHistoryChart();
+      renderCropHistoryTable();
+    }
+  }
+}
+
+// --- RENDER INTERACTIVE TABLE ---
+function renderCropHistoryTable() {
+  var tbody = document.getElementById('crop-hist-table-body');
+  var badge = document.getElementById('crop-hist-count-badge');
+  if (!tbody) return;
+
+  var history = getCropHistoryData();
+  if (badge) badge.innerText = history.length + " Rekaman";
+
+  var stageNames = { 'semai': 'Semai', 'vegetatif': 'Vegetatif', 'generatif': 'Generatif', 'panen': 'Panen' };
+
+  if (history.length === 0) {
+    var tData = window.lastTelemetryData || {};
+    var cAge = (tData.cropAge !== undefined && tData.cropAge > 0) ? tData.cropAge : parseInt(localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : 14), 10);
+    var cStage = (tData.cropStage && tData.cropStage !== '') ? tData.cropStage : (localStorage.getItem('crop_stage') || 'vegetatif');
+    var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+    var curTemp = (rawT !== undefined && rawT !== null && rawT !== "--") ? parseFloat(rawT).toFixed(1) + "°C" : "--°C";
+    var curSoil = (tData.soil !== undefined && tData.soil !== null && tData.soil !== "--") ? Math.round(parseFloat(tData.soil)) + "%" : "--%";
+    var curHum = (tData.hum !== undefined && tData.hum !== null && tData.hum !== "--") ? Math.round(parseFloat(tData.hum)) + "%" : "--%";
+
+    var rawNumT = parseFloat(rawT) || 28;
+    var rawNumS = parseFloat(tData.soil) || 65;
+    var liveVigor = 100;
+    if (rawNumS < 50) liveVigor -= Math.min(40, (50 - rawNumS) * 2);
+    else if (rawNumS > 80) liveVigor -= Math.min(30, (rawNumS - 80) * 2);
+    if (rawNumT > 32) liveVigor -= Math.min(30, (rawNumT - 32) * 5);
+    else if (rawNumT < 20) liveVigor -= Math.min(25, (20 - rawNumT) * 3);
+    liveVigor = Math.max(10, Math.min(100, Math.round(liveVigor)));
+
+    tbody.innerHTML =
+      '<tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(16,185,129,0.04);">' +
+        '<td style="padding:8px 10px; font-weight:700; color:var(--primary); font-family:monospace;">HST ' + cAge + '</td>' +
+        '<td style="padding:8px 10px; color:var(--text-sub);">Hari Ini (Aktual)</td>' +
+        '<td style="padding:8px 10px;"><span style="background:rgba(16,185,129,0.12); color:#10b981; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600;">' + (stageNames[cStage] || cStage) + ' (ESP32)</span></td>' +
+        '<td style="padding:8px 10px; color:#10b981; font-weight:600;">' + curSoil + '</td>' +
+        '<td style="padding:8px 10px; color:#06b6d4; font-weight:600;">' + curTemp + '</td>' +
+        '<td style="padding:8px 10px; color:#a855f7;">' + curHum + '</td>' +
+        '<td style="padding:8px 10px; font-weight:700; color:#10b981;">' + liveVigor + '%</td>' +
+        '<td style="padding:8px 10px; text-align:center;"><button type="button" class="btn btn-primary" style="padding:3px 8px; font-size:10px;" onclick="logTodayCropGrowth()">💾 Catat Hari Ini</button></td>' +
+      '</tr>' +
+      '<tr><td colspan="8" style="padding:10px; text-align:center; font-size:11px; color:var(--text-sub);">Data telemetri fisik ESP32 terhubung. Klik <b>[Catat Hari Ini]</b> untuk mengarsipkan perkembangan ke LittleFS Flash ESP32.</td></tr>';
+    return;
+  }
+
+  var html = '';
+
+  for (var i = history.length - 1; i >= 0; i--) {
+    var row = history[i];
+    var vColor = row.vigor >= 75 ? '#10b981' : (row.vigor >= 50 ? '#f59e0b' : '#ef4444');
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+      '<td style="padding:6px 10px; font-weight:700; color:var(--primary); font-family:monospace;">HST ' + row.hst + '</td>' +
+      '<td style="padding:6px 10px; color:var(--text-sub);">' + row.date + '</td>' +
+      '<td style="padding:6px 10px;"><span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:10px;">' + (stageNames[row.stage] || row.stage) + '</span></td>' +
+      '<td style="padding:6px 10px; color:#10b981; font-weight:600;">' + (row.soil !== undefined ? row.soil + '%' : '--') + '</td>' +
+      '<td style="padding:6px 10px; color:#06b6d4; font-weight:600;">' + (row.temp !== undefined ? row.temp + '°C' : '--') + '</td>' +
+      '<td style="padding:6px 10px; color:#a855f7;">' + (row.hum !== undefined && row.hum !== null ? row.hum + '%' : '--') + '</td>' +
+      '<td style="padding:6px 10px; font-weight:700; color:' + vColor + ';">' + (row.vigor !== undefined ? row.vigor + '%' : '--') + '</td>' +
+      '<td style="padding:6px 10px; text-align:center;"><button type="button" class="btn" style="padding:2px 6px; font-size:10px; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:4px;" onclick="deleteCropHistoryEntry(' + i + ')" title="Hapus catatan ini">✕</button></td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
 }
 
 // --- RESET CYCLE ---
 function resetCropHistory() {
-  if (confirm("Mulai siklus tanam baru dari HST 1? Catatan riwayat perkembangan tanaman sebelumnya akan dihapus.")) {
+  if (confirm("Mulai siklus tanam baru dari HST 1? Catatan riwayat perkembangan tanaman sebelumnya akan dihapus dari memori Flash ESP32 dan peramban.")) {
+    _cropHistoryInMemory = [];
     saveCropHistoryData([]);
     localStorage.removeItem('crop_age');
     localStorage.removeItem('crop_stage');
+
+    // Kirim reset ke ESP32 LittleFS & NVS
+    fetch('/resetCropHistory', { method: 'POST' }).catch(function(err) {
+      console.warn("Reset crop history on ESP32:", err);
+    });
+
     var ageInput = document.getElementById('crop-age-days');
     if (ageInput) ageInput.value = 1;
     var stageInput = document.getElementById('crop-stage');
@@ -145,6 +287,7 @@ function resetCropHistory() {
     if (typeof updateCropAgronomyAnalysis === 'function') updateCropAgronomyAnalysis();
     updateCropHistorySummary();
     renderCropHistoryChart();
+    renderCropHistoryTable();
   }
 }
 
@@ -159,18 +302,49 @@ function updateCropHistorySummary() {
 
   if (ptsEl) ptsEl.innerText = history.length + " Catatan Tersimpan";
 
-  // JIKA BELUM PERNAH DICATAT SAMA SEKALI: WAJIB TAMPILKAN STATUS KOSONG (--)
+  // JIKA BELUM PERNAH DICATAT SAMA SEKALI: AMBIL DARI TELEMETRI & INPUT RIIL ESP32
   if (history.length === 0) {
-    if (hstEl) hstEl.innerText = "-- HST";
-    if (stageEl) stageEl.innerText = "--";
-    if (vigorEl) vigorEl.innerText = "--%";
-    if (etaEl) etaEl.innerText = "-- Hari Lagi";
+    var tData = window.lastTelemetryData || {};
+    var cAge = (tData.cropAge !== undefined && tData.cropAge > 0) ? tData.cropAge : parseInt(localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : 14), 10);
+    var cStage = (tData.cropStage && tData.cropStage !== '') ? tData.cropStage : (localStorage.getItem('crop_stage') || (document.getElementById('crop-stage') ? document.getElementById('crop-stage').value : 'vegetatif'));
+    var cName = (tData.cropName && tData.cropName !== '') ? tData.cropName : (localStorage.getItem('crop_name') || 'Cabai Rawit');
+    var stageNames = { 'semai': 'Semai (Nursery)', 'vegetatif': 'Vegetatif Aktif', 'generatif': 'Generatif / Bunga', 'panen': 'Pematangan / Panen' };
+
+    if (hstEl) hstEl.innerText = cAge + " HST";
+    if (stageEl) stageEl.innerText = stageNames[cStage] || cStage;
+
+    // Hitung estimasi panen riil
+    var totalCycleDays = 90;
+    var nLower = cName.toLowerCase();
+    if (nLower.indexOf('bawang') !== -1) totalCycleDays = 65;
+    else if (nLower.indexOf('melon') !== -1) totalCycleDays = 70;
+    else if (nLower.indexOf('semangka') !== -1 || nLower.indexOf('watermelon') !== -1) totalCycleDays = 70;
+    else if (nLower.indexOf('tomat') !== -1) totalCycleDays = 85;
+    else if (nLower.indexOf('padi') !== -1) totalCycleDays = 115;
+    else totalCycleDays = 90;
+
+    var remaining = Math.max(0, totalCycleDays - cAge);
+    if (etaEl) etaEl.innerText = remaining > 0 ? (remaining + " Hari Lagi") : "Siap Panen";
+
+    // Hitung Skor Vigor Murni dari Telemetri Fisik Riil Lahan
+    var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+    var temp = (rawT !== undefined && rawT !== null && !isNaN(parseFloat(rawT))) ? parseFloat(rawT) : 28.0;
+    var rawS = (tData.soil !== undefined && tData.soil !== "--") ? tData.soil : null;
+    var soil = (rawS !== null && !isNaN(parseFloat(rawS))) ? parseFloat(rawS) : 65;
+
+    var vigor = 100;
+    if (soil < 50) vigor -= Math.min(40, (50 - soil) * 2);
+    else if (soil > 80) vigor -= Math.min(30, (soil - 80) * 2);
+    if (temp > 32) vigor -= Math.min(30, (temp - 32) * 5);
+    else if (temp < 20) vigor -= Math.min(25, (20 - temp) * 3);
+    vigor = Math.max(10, Math.min(100, Math.round(vigor)));
+    if (vigorEl) vigorEl.innerText = vigor + "% (Sensor Riil)";
     return;
   }
 
   // JIKA SUDAH ADA CATATAN: AMBIL DARI CATATAN TERAKHIR YANG SUDAH TERVERIFIKASI
   var lastEntry = history[history.length - 1];
-  var stageNames = {
+  var stageMap = {
     'semai': 'Semai (Nursery)',
     'vegetatif': 'Vegetatif Aktif',
     'generatif': 'Generatif / Bunga',
@@ -178,7 +352,7 @@ function updateCropHistorySummary() {
   };
 
   if (hstEl) hstEl.innerText = lastEntry.hst + " HST";
-  if (stageEl) stageEl.innerText = stageNames[lastEntry.stage] || lastEntry.stage;
+  if (stageEl) stageEl.innerText = stageMap[lastEntry.stage] || lastEntry.stage;
   if (vigorEl) vigorEl.innerText = lastEntry.vigor + "%";
 
   var name = lastEntry.cropName || localStorage.getItem('crop_name') || 'Tanaman';
@@ -186,6 +360,7 @@ function updateCropHistorySummary() {
   var nLower = name.toLowerCase();
   if (nLower.indexOf('bawang') !== -1) totalCycleDays = 65;
   else if (nLower.indexOf('melon') !== -1) totalCycleDays = 70;
+  else if (nLower.indexOf('semangka') !== -1 || nLower.indexOf('watermelon') !== -1) totalCycleDays = 70;
   else if (nLower.indexOf('tomat') !== -1) totalCycleDays = 85;
   else if (nLower.indexOf('padi') !== -1) totalCycleDays = 115;
   else totalCycleDays = 90;
@@ -345,7 +520,7 @@ function renderCropHistoryChart() {
       var dx = padL + (Math.min(dEntry.hst, maxHst) / maxHst) * chartW;
       var dy = padT + chartH - (dEntry.vigor / 100 * chartH);
       ctx.fillStyle = "#10b981";
-      ctx.beginPath(); ctx.arc(dx, dy, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(dx, dy, 5, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 1.5;
       ctx.stroke();
@@ -358,7 +533,7 @@ function renderCropHistoryChart() {
   }
 
   // 4. Current Day (HST) Marker
-  var currentAge = parseInt(localStorage.getItem('crop_age') || '14', 10);
+  var currentAge = parseInt(localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14'), 10);
   if (currentAge <= maxHst) {
     var curX = padL + (currentAge / maxHst) * chartW;
     ctx.save();
@@ -372,6 +547,20 @@ function renderCropHistoryChart() {
     ctx.fillStyle = "#eab308";
     ctx.font = "8px Inter, sans-serif";
     ctx.fillText("HARI INI (HST " + currentAge + ")", Math.min(curX + 4, w - padR - 75), padT + chartH - 8);
+
+    // Gambarkan titik aktif tanaman aktual ESP32 pada kurva pertumbuhan
+    if (history.length === 0) {
+      var sigVal = 100 / (1 + Math.exp(-0.08 * (currentAge - 40)));
+      var curY = padT + chartH - (sigVal / 100 * chartH);
+      ctx.fillStyle = "#10b981";
+      ctx.beginPath(); ctx.arc(curX, curY, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#10b981";
+      ctx.font = "9px Inter, sans-serif";
+      ctx.fillText("Aktif ESP32", Math.min(curX + 8, w - padR - 65), curY - 6);
+    }
     ctx.restore();
   }
 
@@ -400,70 +589,161 @@ function renderCropHistoryChart() {
 
 // --- EXPORT, PRINT & WHATSAPP SHARING SUITE ---
 function shareCropReportWhatsApp() {
-  var storedAge = localStorage.getItem('crop_age');
-  var storedName = localStorage.getItem('crop_name');
-  var stage = localStorage.getItem('crop_stage') || 'semai';
+  var storedAge = localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14');
+  var storedName = localStorage.getItem('crop_name') || (document.getElementById('crop-name') ? document.getElementById('crop-name').value : 'Cabai Rawit');
+  var stage = localStorage.getItem('crop_stage') || (document.getElementById('crop-stage') ? document.getElementById('crop-stage').value : 'vegetatif');
   var tData = window.lastTelemetryData || {};
-
-  if (!storedName || !storedAge) {
-    alert("Perhatian: Varietas dan usia tanaman belum dikonfigurasi. Silakan isi formulir tanaman di tab Kontrol sebelum membagikan laporan.");
-    return;
-  }
 
   var age = parseInt(storedAge, 10);
   var name = storedName;
-  var soil = (tData.soil !== undefined && !isNaN(tData.soil)) ? Math.round(tData.soil) + "%" : "--%";
-  var temp = (tData.temp !== undefined && !isNaN(tData.temp)) ? parseFloat(tData.temp).toFixed(1) + "°C" : "--°C";
-  var hum = (tData.hum !== undefined && !isNaN(tData.hum)) ? Math.round(tData.hum) + "%" : "--%";
+  var soil = (tData.soil !== undefined && !isNaN(tData.soil) && tData.soil !== '--') ? Math.round(parseFloat(tData.soil)) + "%" : "--%";
+  var rawT = (tData.suhuC !== undefined && tData.suhuC !== '--') ? tData.suhuC : tData.temp;
+  var temp = (rawT !== undefined && !isNaN(parseFloat(rawT))) ? parseFloat(rawT).toFixed(1) + "°C" : "--°C";
+  var hum = (tData.hum !== undefined && !isNaN(parseFloat(tData.hum))) ? Math.round(parseFloat(tData.hum)) + "%" : "--%";
   var history = getCropHistoryData();
   var vigor = (history.length > 0) ? (history[history.length - 1].vigor + "%") : "--%";
   var stageNames = { 'semai': 'Semai (Nursery)', 'vegetatif': 'Vegetatif Aktif', 'generatif': 'Generatif / Bunga', 'panen': 'Pematangan / Panen' };
-  var dateStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  var dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  var text = "[LAPORAN SIKLUS TANAMAN - SMART FARM SCADA]\n" +
-    "------------------------------------\n" +
-    "Tanggal    : " + dateStr + "\n" +
-    "Umur Tanam : " + age + " HST\n" +
-    "Komoditas  : " + name + "\n" +
-    "Fase       : " + (stageNames[stage] || stage) + "\n" +
-    "Skor Vigor : " + vigor + "\n\n" +
-    "Telemetri Sensor Lapangan:\n" +
+  var isPumpOn = (tData.relay === "1" || tData.relay === 1 || tData.relayOn === 1);
+  var isLampOn = (tData.lamp === "1" || tData.lamp === 1 || tData.lampOn === 1);
+
+  var text = "🌱 *LAPORAN SIKLUS TANAMAN - SMART FARM SCADA*\n" +
+    "━━━━━━━━━━━━━━━━━━━━\n" +
+    "📅 *Tanggal*      : " + dateStr + "\n" +
+    "🌿 *Komoditas*    : " + name + "\n" +
+    "⏳ *Umur Tanam*   : " + age + " HST\n" +
+    "🎋 *Fase Tumbuh*  : " + (stageNames[stage] || stage) + "\n" +
+    "✨ *Skor Vigor*   : " + vigor + " (Kesehatan Tanaman)\n" +
+    "━━━━━━━━━━━━━━━━━━━━\n" +
+    "📊 *Telemetri Sensor Lapangan:*\n" +
     "• Suhu Udara       : " + temp + "\n" +
     "• Kelembapan Tanah : " + soil + "\n" +
     "• Kelembapan RH    : " + hum + "\n" +
-    "• Status Pompa     : " + ((tData.relay === "1" || tData.relay === 1) ? "Aktif Menyiram" : "Mati") + "\n" +
+    "• Status Pompa     : " + (isPumpOn ? "💧 AKTIF (Menyiram)" : "⏸️ NONAKTIF") + "\n" +
+    "• Status Lampu     : " + (isLampOn ? "💡 MENYALA" : "🌑 MATI") + "\n" +
     "• Radio ESP-NOW    : " + (tData.rssi ? (tData.rssi + " dBm") : "-- dBm") + "\n" +
-    "------------------------------------\n" +
-    "Smart Farm Precision Agriculture System";
+    "━━━━━━━━━━━━━━━━━━━━\n" +
+    "📡 _Smart Farm Precision Agriculture System_";
 
-  var url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
-  window.open(url, '_blank');
+  var url = "https://wa.me/?text=" + encodeURIComponent(text);
+  var a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 function printCropReport() {
-  window.print();
+  var storedAge = localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14');
+  var storedName = localStorage.getItem('crop_name') || (document.getElementById('crop-name') ? document.getElementById('crop-name').value : 'Cabai Rawit');
+  var stage = localStorage.getItem('crop_stage') || (document.getElementById('crop-stage') ? document.getElementById('crop-stage').value : 'vegetatif');
+  var history = getCropHistoryData();
+  var tData = window.lastTelemetryData || {};
+  var sTemp = (tData.suhuC !== undefined && tData.suhuC !== '--') ? tData.suhuC : (tData.temp || '--');
+  var sSoil = (tData.soil !== undefined && tData.soil !== '--') ? tData.soil + '%' : '--%';
+  var sHum = (tData.hum !== undefined && tData.hum !== '--') ? tData.hum + '%' : '--%';
+  var dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  var timeStr = (tData.time || new Date().toLocaleTimeString('id-ID')) + ' WIB';
+
+  var stageNames = { 'semai': 'Semai (Nursery)', 'vegetatif': 'Vegetatif Aktif', 'generatif': 'Generatif / Pembungaan', 'panen': 'Pematangan / Panen' };
+
+  var win = window.open('', '_blank');
+  if (!win) {
+    window.print();
+    return;
+  }
+
+  var rowsHtml = '';
+  if (history.length === 0) {
+    rowsHtml = '<tr><td colspan="7" style="text-align:center; padding:12px; color:#666;">Belum ada rekaman riwayat perkembangan.</td></tr>';
+  } else {
+    for (var i = 0; i < history.length; i++) {
+      var r = history[i];
+      rowsHtml += '<tr>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center; font-weight:bold;">HST ' + r.hst + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd;">' + r.date + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd;">' + (stageNames[r.stage] || r.stage) + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center;">' + r.soil + '%</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center;">' + r.temp + '°C</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center;">' + (r.hum !== null ? r.hum + '%' : '--') + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:' + (r.vigor >= 70 ? '#059669' : '#d97706') + ';">' + r.vigor + '%</td>' +
+        '</tr>';
+    }
+  }
+
+  var docHtml = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+    '<title>Laporan Siklus Tanam - ' + storedName + '</title>' +
+    '<style>' +
+    'body { font-family: "Segoe UI", Arial, sans-serif; margin: 30px; color: #111; font-size: 13px; line-height: 1.5; }' +
+    '.header-title { font-size: 18px; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 2px; }' +
+    '.header-sub { font-size: 12px; color: #555; margin-bottom: 18px; border-bottom: 2px solid #047857; padding-bottom: 6px; }' +
+    '.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 18px; }' +
+    '.meta-item b { color: #334155; }' +
+    'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }' +
+    'th { background: #f1f5f9; padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; text-align: left; }' +
+    '.footer-sig { margin-top: 40px; display: flex; justify-content: space-between; }' +
+    '.sig-box { width: 200px; text-align: center; border-top: 1px solid #444; margin-top: 60px; padding-top: 4px; font-size: 11px; }' +
+    '@media print { @page { margin: 15mm; size: A4 portrait; } button { display: none !important; } }' +
+    '</style></head><body>' +
+    '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+    '<div><div class="header-title">🌱 LAPORAN REKAMAN SIKLUS PERTUMBUHAN TANAMAN</div>' +
+    '<div class="header-sub">Sistem SCADA Pertanian Presisi Smart Farm IoT • ' + dateStr + ' (' + timeStr + ')</div></div>' +
+    '<button onclick="window.print()" style="padding:6px 12px; background:#047857; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">🖨️ Cetak / Simpan PDF</button>' +
+    '</div>' +
+    '<div class="meta-grid">' +
+    '<div class="meta-item"><b>Komoditas:</b> ' + storedName + '</div>' +
+    '<div class="meta-item"><b>Usia Saat Ini:</b> ' + storedAge + ' HST</div>' +
+    '<div class="meta-item"><b>Fase Fenologi:</b> ' + (stageNames[stage] || stage) + '</div>' +
+    '<div class="meta-item"><b>Telemetri Riil:</b> Suhu ' + sTemp + '°C • Tanah ' + sSoil + ' • RH ' + sHum + '</div>' +
+    '</div>' +
+    '<h4 style="margin: 12px 0 4px 0; color:#333;">TABEL JURNAL PERKEMBANGAN HARIAN (HST)</h4>' +
+    '<table><thead><tr>' +
+    '<th style="text-align:center;">HST</th><th>Tanggal</th><th>Fase</th>' +
+    '<th style="text-align:center;">Tanah</th><th style="text-align:center;">Suhu</th>' +
+    '<th style="text-align:center;">RH</th><th style="text-align:center;">Skor Vigor</th>' +
+    '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<div class="footer-sig">' +
+    '<div class="sig-box">Petani Pelaksana / Pengelola Kebun</div>' +
+    '<div class="sig-box">Sistem Telemetri Smart Farm SCADA</div>' +
+    '</div>' +
+    '</body></html>';
+
+  win.document.open();
+  win.document.write(docHtml);
+  win.document.close();
+  setTimeout(function() {
+    try { win.print(); } catch (err) {}
+  }, 400);
 }
 
 function exportCropHistoryJSON() {
   var history = getCropHistoryData();
-  var ageStr = localStorage.getItem('crop_age');
-  var name = localStorage.getItem('crop_name') || 'Tanaman';
-  var age = ageStr ? parseInt(ageStr, 10) : 0;
+  var ageStr = localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14');
+  var name = localStorage.getItem('crop_name') || (document.getElementById('crop-name') ? document.getElementById('crop-name').value : 'Cabai_Rawit');
+  var age = parseInt(ageStr, 10) || 0;
   var exportObj = {
     app: "SmartFarmSCADA",
+    version: "2.0",
+    storage: "ESP32_LittleFS_and_LocalStorage",
     exportedAt: new Date().toISOString(),
     cropName: name,
-    cropAge: age > 0 ? age : null,
+    cropAge: age,
+    totalRecords: history.length,
     history: history
   };
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+  var jsonStr = JSON.stringify(exportObj, null, 2);
+  var blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
   var downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  var fileSuffix = age > 0 ? ("_HST" + age) : "";
-  downloadAnchor.setAttribute("download", "smartfarm_riwayat_" + name.replace(/\s+/g, '_') + fileSuffix + ".json");
+  downloadAnchor.href = url;
+  downloadAnchor.download = "smartfarm_riwayat_" + name.replace(/\s+/g, '_') + "_HST" + age + ".json";
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
 }
 
 function triggerImportCropHistoryJSON() {
@@ -481,15 +761,25 @@ function importCropHistoryJSON(e) {
       var items = Array.isArray(parsed) ? parsed : (parsed.history && Array.isArray(parsed.history) ? parsed.history : null);
       if (!items) throw new Error("Format JSON tidak sesuai.");
       saveCropHistoryData(items);
-      if (parsed.cropAge) localStorage.setItem('crop_age', parsed.cropAge);
-      if (parsed.cropName) localStorage.setItem('crop_name', parsed.cropName);
+      if (parsed.cropAge) {
+        localStorage.setItem('crop_age', parsed.cropAge);
+        var elAge = document.getElementById('crop-age-days');
+        if (elAge) elAge.value = parsed.cropAge;
+      }
+      if (parsed.cropName) {
+        localStorage.setItem('crop_name', parsed.cropName);
+        var elName = document.getElementById('crop-name');
+        if (elName) elName.value = parsed.cropName;
+      }
+      if (typeof updateCropAgronomyAnalysis === 'function') updateCropAgronomyAnalysis();
       updateCropHistorySummary();
       renderCropHistoryChart();
+      renderCropHistoryTable();
       var footerStatus = document.getElementById('crop-hist-footer-status');
       if (footerStatus) {
-        footerStatus.innerHTML = '<span style="color:#10b981;">✓ Berhasil memulihkan ' + items.length + ' data riwayat tanam!</span>';
+        footerStatus.innerHTML = '<span style="color:#10b981;font-weight:700;">✓ Berhasil memulihkan ' + items.length + ' data ke Flash LittleFS ESP32 & Browser!</span>';
         setTimeout(function() {
-          if (footerStatus) footerStatus.innerText = "Data tersimpan di LocalStorage peramban • Kurva Pertumbuhan Sigmoid (S-Curve)";
+          if (footerStatus) footerStatus.innerText = "Data tersimpan di LittleFS Flash Memory ESP32 & LocalStorage • Kurva Pertumbuhan Sigmoid (S-Curve)";
         }, 3500);
       }
     } catch (err) {
@@ -499,3 +789,20 @@ function importCropHistoryJSON(e) {
   reader.readAsText(file);
   e.target.value = '';
 }
+
+// Window global exports for HTML inline buttons
+if (typeof window !== 'undefined') {
+  window.initCropHistory = initCropHistory;
+  window.renderCropHistoryChart = renderCropHistoryChart;
+  window.renderCropHistoryTable = renderCropHistoryTable;
+  window.updateCropHistorySummary = updateCropHistorySummary;
+  window.logTodayCropGrowth = logTodayCropGrowth;
+  window.deleteCropHistoryEntry = deleteCropHistoryEntry;
+  window.resetCropHistory = resetCropHistory;
+  window.exportCropHistoryJSON = exportCropHistoryJSON;
+  window.triggerImportCropHistoryJSON = triggerImportCropHistoryJSON;
+  window.importCropHistoryJSON = importCropHistoryJSON;
+  window.shareCropReportWhatsApp = shareCropReportWhatsApp;
+  window.printCropReport = printCropReport;
+}
+

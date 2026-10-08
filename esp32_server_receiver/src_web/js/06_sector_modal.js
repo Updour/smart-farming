@@ -183,26 +183,11 @@ function deleteSector(id) {
 }
 
 function clearAllSectors() {
-  if (!confirm("Kosongkan semua data sektor kebun dari LocalStorage?\n\nTampilan zonasi lahan dan kalibrasi akan dikembalikan ke kondisi awal bersih.")) return;
-  saveStoredSectors([]);
+  if (!confirm("Kosongkan semua data sektor kebun dari LocalStorage?\n\nTampilan zonasi lahan dan kalibrasi akan disinkronkan ulang ke profil riil ESP32.")) return;
+  localStorage.removeItem('smartfarm_sectors');
   localStorage.removeItem('smartfarm_active_sector_id');
-  localStorage.removeItem('crop_name');
-  localStorage.removeItem('crop_stage');
-  localStorage.removeItem('crop_age');
-  localStorage.removeItem('crop_area');
   renderSectorGrid();
   renderSectorManagerList();
-  if (typeof clearCropFormUI === 'function') clearCropFormUI();
-  if (typeof updatePhenologyAI === 'function') updatePhenologyAI(null);
-}
-
-function loadSamplePresetSectors() {
-  if (!confirm("Muat 4 contoh template sektor pertanian presisi (Cabai, Tomat GH, Bawang, Padi)?")) return;
-  saveStoredSectors(SAMPLE_PRESET_SECTORS);
-  localStorage.setItem('smartfarm_active_sector_id', SAMPLE_PRESET_SECTORS[0].id);
-  renderSectorGrid();
-  renderSectorManagerList();
-  selectSector(SAMPLE_PRESET_SECTORS[0].id);
 }
 
 function resetSectorsToDefault() {

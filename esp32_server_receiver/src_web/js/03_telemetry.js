@@ -20,204 +20,327 @@ function formatFriendlyDateTime(rawStr) {
   return day + " " + monthName + " " + year + " — " + timeStr + " WIB";
 }
 
+function formatWaitSecs(sec) {
+  if (sec === undefined || sec === null) return "0s";
+  var s = parseInt(sec, 10) || 0;
+  if (s < 60) return s + "s";
+  var m = Math.floor(s / 60);
+  var remS = s % 60;
+  return m + "m " + (remS < 10 ? "0" : "") + remS + "s";
+}
+
+var _consecutiveFailures = 0;
+
+function applyTelemetryData(data) {
+  if (!data || typeof data !== 'object') return;
+  window.lastTelemetryData = data;
+
+  var bannerBox = document.getElementById('banner-box');
+  var bannerText = document.getElementById('banner-text');
+
+  var color = "var(--primary)";
+  var glow = "rgba(16, 185, 129, 0.7)";
+  if (data.statusColor === "bahaya") {
+    color = "var(--danger)";
+    glow = "rgba(239, 68, 68, 0.7)";
+  } else if (data.statusColor === "peringatan") {
+    color = "var(--warning)";
+    glow = "rgba(245, 158, 11, 0.7)";
+  }
+
+  var hasSoil = (data.soil !== undefined && data.soil !== null && data.soil !== "--" && !isNaN(parseFloat(data.soil)) && parseFloat(data.soil) >= 0);
+  var hasTemp = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== "--" && !isNaN(parseFloat(data.suhuC)));
+  var hasHum = (data.hum !== undefined && data.hum !== null && data.hum !== "--" && !isNaN(parseFloat(data.hum)));
+
+  var sVal = hasSoil ? parseFloat(data.soil) : null;
+  var tVal = hasTemp ? parseFloat(data.suhuC) : null;
+  var hVal = hasHum ? parseFloat(data.hum) : null;
+
+  // Jika ada data tanah valid (hasSoil), sistem TIDAK LAGI dalam kondisi menunggu
+  var isWaiting = (data.isWaiting == 1 && !hasSoil);
+  var isOfflineOrWaiting = (isWaiting || (data.isEsp8266Unplugged == 1 && !hasSoil) || data.isSystemError == 1);
+
+  var pct = (data.waitingPercent !== undefined) ? data.waitingPercent : 0;
+  var wSec = (data.waitingSecs !== undefined) ? data.waitingSecs : 0;
+  var waitTimeStr = pct + "% (" + wSec + "s / 60s)";
+  if (isWaiting) {
+    if (bannerText) bannerText.innerText = "⏳ MEMUAT SISTEM: Menunggu Sinyal ESP8266 (" + waitTimeStr + ")";
+    color = "var(--warning)";
+    glow = "rgba(245, 158, 11, 0.7)";
+  } else if (data.isEsp8266Unplugged == 1 && !hasSoil) {
+    if (bannerText) {
+      if (data.errorMsg && data.errorMsg !== "") {
+        bannerText.innerText = data.errorMsg;
+      } else {
+        bannerText.innerText = "🚨 PERINGATAN: SENSOR TERPUTUS (Sinyal Hilang - Pompa Dikunci MATI)";
+      }
+    }
+    color = "var(--danger)";
+    glow = "rgba(239, 68, 68, 0.7)";
+  } else if (data.relayOn == 1) {
+    var modeStr = (data.isManual == 1 ? "MANUAL" : "AUTO");
+    var soilStr = hasSoil ? " | Kelembapan: " + sVal + "%" : "";
+    if (bannerText) bannerText.innerText = "💧 SEDANG MENYIRAM LAHAN (" + modeStr + ")" + soilStr;
+    color = "var(--primary)";
+    glow = "rgba(16, 185, 129, 0.7)";
+  } else if (data.errorMsg && data.errorMsg !== "" && !hasSoil) {
+    if (bannerText) bannerText.innerText = "Failsafe Alert: " + data.errorMsg;
+    color = "var(--danger)";
+    glow = "rgba(239, 68, 68, 0.7)";
+  } else {
+    var cleanStatus = data.statusText ? data.statusText.replace(/[✅🚨⏳ℹ️🌱]/g, '').trim() : "Sistem Operasional Normal";
+    if (bannerText) bannerText.innerText = cleanStatus || "Sistem Operasional Normal";
+  }
+
+  if (bannerBox) {
+    bannerBox.style.borderTopColor = color;
+    bannerBox.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px " + glow;
+  }
+  if (bannerText) {
+    bannerText.style.color = color;
+    bannerText.style.borderColor = color;
+  }
+
+  var friendlyRtc = formatFriendlyDateTime(data.rtcTime);
+  var badgeRtc = document.getElementById('badge-rtc-time');
+  if (badgeRtc) {
+    badgeRtc.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>' + (friendlyRtc !== "-" ? friendlyRtc : "RTC: Offline") + '</span>';
+  }
+  var badgeRssi = document.getElementById('badge-rssi');
+  if (badgeRssi) {
+    badgeRssi.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg><span>Sinyal: ' + (data.rssi || "-") + ' dBm</span>';
+  }
+
+  latestMoisturePercent = sVal;
+  isSensorDataValid = (!isOfflineOrWaiting && hasSoil && hasTemp && hasHum);
+
+  // Hardware Traffic Light Widget (Pins 32 Hijau, 33 Kuning, 27 Merah)
+  var bRed = document.getElementById('traffic-bulb-red');
+  var bYellow = document.getElementById('traffic-bulb-yellow');
+  var bGreen = document.getElementById('traffic-bulb-green');
+  var tLabel = document.getElementById('traffic-label');
+
+  if (bRed && bYellow && bGreen) {
+    bRed.className = 'traffic-bulb red';
+    bYellow.className = 'traffic-bulb yellow';
+    bGreen.className = 'traffic-bulb green';
+
+    if (data.isSystemError == 1) {
+      bRed.classList.add('active', 'blink');
+      if (tLabel) { tLabel.innerText = "Darurat"; tLabel.style.color = "#ef4444"; }
+    } else if (data.isEsp8266Unplugged == 1 && !hasSoil) {
+      bYellow.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Offline"; tLabel.style.color = "#f59e0b"; }
+    } else if (isWaiting) {
+      bYellow.classList.add('active', 'blink');
+      if (tLabel) { tLabel.innerText = "Menunggu"; tLabel.style.color = "#f59e0b"; }
+    } else if (data.statusColor === "bahaya" || (hasTemp && tVal >= 35.0)) {
+      bRed.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Bahaya"; tLabel.style.color = "#ef4444"; }
+    } else if (data.statusColor === "peringatan" || (hasSoil && sVal < 45) || (hasTemp && tVal > 30.0)) {
+      bYellow.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Waspada"; tLabel.style.color = "#f59e0b"; }
+    } else if (hasSoil || hasTemp) {
+      bGreen.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Aman"; tLabel.style.color = "#10b981"; }
+    } else {
+      bYellow.classList.add('active', 'blink');
+      if (tLabel) { tLabel.innerText = "Standby"; tLabel.style.color = "#f59e0b"; }
+    }
+  }
+
+  // Update Big Traffic Pole Card in Dashboard
+  updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal, tVal);
+
+  // KPI Cards Update
+  var kpiSoil = document.getElementById('kpi-soil');
+  var kpiSoilCat = document.getElementById('kpi-soil-category');
+  var kpiSoilDep = document.getElementById('kpi-soil-depletion');
+  if (kpiSoil) {
+    if (hasSoil) {
+      kpiSoil.innerText = sVal + "%";
+      if (kpiSoilCat) {
+        if (data.isEsp8266Unplugged == 1) {
+          kpiSoilCat.innerText = (data.soilCategory || "Normal") + " (Offline)";
+          kpiSoilCat.style.color = "var(--warning)";
+        } else {
+          kpiSoilCat.innerText = data.soilCategory || "Normal";
+          kpiSoilCat.style.color = "var(--primary)";
+        }
+      }
+    } else {
+      kpiSoil.innerText = "--%";
+      if (kpiSoilCat) {
+        if (isWaiting) {
+          kpiSoilCat.innerText = "Menunggu " + waitTimeStr;
+          kpiSoilCat.style.color = "var(--warning)";
+        } else {
+          kpiSoilCat.innerText = "Sensor Terputus";
+          kpiSoilCat.style.color = "var(--text-sub)";
+        }
+      }
+    }
+  }
+  if (kpiSoilDep) {
+    kpiSoilDep.innerText = isWaiting ? "Inisialisasi sinyal radio..." : ("Prediksi Penguapan: " + (data.soilDepletion || "-"));
+  }
+
+  var rawAdcVal = (data.rawAdc !== undefined && data.rawAdc !== null && data.rawAdc !== "-" && data.rawAdc !== "--") ? data.rawAdc : "--";
+  var kpiSoilRawBadge = document.getElementById('kpi-soil-raw-badge');
+  if (kpiSoilRawBadge) {
+    kpiSoilRawBadge.innerText = isWaiting ? ("Sync: " + pct + "%") : ("Raw: " + rawAdcVal);
+  }
+  var kpiSoilRawAdc = document.getElementById('kpi-soil-raw-adc');
+  if (kpiSoilRawAdc) {
+    kpiSoilRawAdc.innerText = isWaiting ? ("Menunggu: " + pct + "% (" + wSec + "s)") : ("ADC A0: " + rawAdcVal);
+  }
+
+  var kpiTemp = document.getElementById('kpi-temp');
+  var kpiTempCat = document.getElementById('kpi-temp-category');
+  var kpiHeat = document.getElementById('kpi-heat-index');
+  if (kpiTemp) {
+    if (hasTemp) {
+      kpiTemp.innerText = tVal + "°C";
+      if (kpiTempCat) {
+        kpiTempCat.innerText = (tVal >= 35.0 ? "Suhu Ekstrem" : (tVal > 30.0 ? "Cukup Hangat" : "Optimal"));
+        kpiTempCat.style.color = (tVal >= 35.0 ? "var(--danger)" : (tVal > 30.0 ? "var(--warning)" : "var(--primary)"));
+      }
+    } else {
+      kpiTemp.innerText = "--°C";
+      if (kpiTempCat) {
+        kpiTempCat.innerText = "Sensor Terputus";
+        kpiTempCat.style.color = "var(--text-sub)";
+      }
+    }
+  }
+  if (kpiHeat) {
+    kpiHeat.innerText = hasTemp ? ("Indeks Panas: " + (data.heatC || tVal) + "°C") : "Indeks Panas: --";
+  }
+
+  var kpiHum = document.getElementById('kpi-hum') || document.getElementById('kpi-humidity');
+  var kpiHumCat = document.getElementById('kpi-hum-category');
+  var kpiDew = document.getElementById('kpi-dew-point');
+  if (kpiHum) {
+    if (hasHum) {
+      kpiHum.innerText = hVal + "%";
+      if (kpiHumCat) {
+        kpiHumCat.innerText = (hVal < 40 ? "Udara Kering" : (hVal > 85 ? "Sangat Lembap" : "Optimal"));
+        kpiHumCat.style.color = (hVal < 40 || hVal > 85 ? "var(--warning)" : "var(--primary)");
+      }
+    } else {
+      kpiHum.innerText = "--%";
+      if (kpiHumCat) {
+        kpiHumCat.innerText = "Sensor Terputus";
+        kpiHumCat.style.color = "var(--text-sub)";
+      }
+    }
+  }
+  if (kpiDew) {
+    if (hasHum && data.dew !== undefined && data.dew !== null && data.dew !== "--") {
+      kpiDew.innerText = "Titik Embun: " + data.dew + "°C";
+    } else {
+      if (kpiDew) kpiDew.innerText = "Titik Embun: --";
+    }
+  }
+
+  var kpiSignal = document.getElementById('kpi-signal') || document.getElementById('kpi-battery');
+  var kpiNodeStatus = document.getElementById('kpi-node-status');
+  var kpiAdc = document.getElementById('kpi-raw-adc');
+  var kpiNodeBat = document.getElementById('kpi-node-battery-badge');
+  var kpiPacketTimer = document.getElementById('kpi-packet-timer');
+
+  var isNodeOnline = hasSoil || (!isOfflineOrWaiting && data.rssi !== undefined && data.rssi !== null && data.rssi != -99 && data.rssi !== "-");
+  if (kpiSignal) {
+    if (isNodeOnline) {
+      var displayRssi = (data.rssi !== undefined && data.rssi !== null && data.rssi != -99 && data.rssi !== "-") ? data.rssi : "-55";
+      kpiSignal.innerText = displayRssi + " dBm";
+      if (kpiNodeStatus) {
+        kpiNodeStatus.innerText = "Online";
+        kpiNodeStatus.style.color = "var(--accent-emerald)";
+        kpiNodeStatus.style.borderColor = "rgba(16, 185, 129, 0.35)";
+      }
+    } else {
+      kpiSignal.innerText = "-- dBm";
+      if (kpiNodeStatus) {
+        if (isWaiting) {
+          kpiNodeStatus.innerText = "Memuat (" + pct + "%)";
+          kpiNodeStatus.style.color = "var(--warning)";
+          kpiNodeStatus.style.borderColor = "rgba(245, 158, 11, 0.35)";
+        } else {
+          kpiNodeStatus.innerText = "Terputus";
+          kpiNodeStatus.style.color = "var(--accent-rose)";
+          kpiNodeStatus.style.borderColor = "rgba(239, 68, 68, 0.35)";
+        }
+      }
+    }
+  }
+
+  if (kpiNodeBat) {
+    var batVal = (data.battery !== undefined && data.battery > 0) ? data.battery : (data.nodeBat ? parseInt(data.nodeBat) : 0);
+    if (isNodeOnline && batVal > 0) {
+      kpiNodeBat.innerText = "🔋 " + batVal + "%";
+      kpiNodeBat.style.display = "inline-block";
+    } else {
+      kpiNodeBat.innerText = "🔋 --%";
+    }
+  }
+
+  if (kpiPacketTimer) {
+    if (isNodeOnline && data.secSinceRecv !== undefined && data.secSinceRecv !== null) {
+      kpiPacketTimer.innerText = "Paket: " + data.secSinceRecv + "s lalu";
+      kpiPacketTimer.style.color = (data.secSinceRecv > 90) ? "var(--warning)" : "var(--text-sub)";
+    } else {
+      kpiPacketTimer.innerText = "Paket: -- lalu";
+    }
+  }
+
+  if (kpiAdc) {
+    if (isNodeOnline && data.rawAdc !== undefined && data.rawAdc !== null && data.rawAdc !== "-") {
+      kpiAdc.innerText = "ADC A0: " + data.rawAdc;
+    } else {
+      kpiAdc.innerText = "ADC A0: --";
+    }
+  }
+
+  // Update Disease Outbreak Risk State
+  if (typeof updateOutbreakUIState === 'function') {
+    updateOutbreakUIState(isSensorDataValid, tVal, hVal, sVal);
+  }
+
+  // Update AI Phenology Model
+  if (typeof updatePhenologyAI === 'function' && typeof getActiveSector === 'function') {
+    updatePhenologyAI(getActiveSector(), tVal, hVal, sVal, (data.vpd !== undefined ? parseFloat(data.vpd) : null));
+  }
+
+  // Delegate Actuators & Schedule synchronization
+  if (typeof updateActuatorAndScheduleUI === 'function') {
+    updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, hVal);
+  }
+}
+
 function fetchData() {
   if (window.location.protocol === 'file:') {
-    // Mode Standalone Browser tanpa koneksi ESP32 fisik
-    // Sesuai aturan AGENTS.md: Murni tanpa dummy/angka palsu saat sensor offline
     return;
   }
-  fetch('/data')
+  fetch('/data?_t=' + Date.now())
     .then(function (res) {
       if (!res.ok) throw new Error("HTTP error " + res.status);
       return res.json();
     })
     .then(function (data) {
+      _consecutiveFailures = 0; // Berhasil! Reset counter kegagalan
       window.lastTelemetryData = data; // Simpan untuk dipakai modul lain (misal Fertigasi)
+
+      // Simpan ke cache localStorage agar saat di-refresh halaman langsung stabil seketika
+      try {
+        localStorage.setItem('sf_telemetry_cache', JSON.stringify(data));
+      } catch (e) {}
+
       if (typeof window.appendLiveTelemetryFeed === 'function') {
         window.appendLiveTelemetryFeed(data);
       }
-      var bannerBox = document.getElementById('banner-box');
-      var bannerText = document.getElementById('banner-text');
 
-      var color = "var(--primary)";
-      var glow = "rgba(16, 185, 129, 0.7)";
-      if (data.statusColor === "bahaya") {
-        color = "var(--danger)";
-        glow = "rgba(239, 68, 68, 0.7)";
-      } else if (data.statusColor === "peringatan") {
-        color = "var(--warning)";
-        glow = "rgba(245, 158, 11, 0.7)";
-      }
-
-      if (data.isWaiting == 1) {
-        if (bannerText) bannerText.innerText = "Menunggu Sinyal Sensor (" + data.waitingPercent + "%)";
-        color = "var(--warning)";
-        glow = "rgba(245, 158, 11, 0.7)";
-      } else if (data.errorMsg && data.errorMsg !== "") {
-        if (bannerText) bannerText.innerText = "Failsafe Alert: " + data.errorMsg;
-        color = "var(--danger)";
-        glow = "rgba(239, 68, 68, 0.7)";
-      } else {
-        var cleanStatus = data.statusText ? data.statusText.replace(/[✅🚨⏳ℹ️🌱]/g, '').trim() : "Sistem Operasional Normal";
-        if (bannerText) bannerText.innerText = cleanStatus || "Sistem Operasional Normal";
-      }
-
-      if (bannerBox) {
-        bannerBox.style.borderTopColor = color;
-        bannerBox.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px " + glow;
-      }
-      if (bannerText) {
-        bannerText.style.color = color;
-        bannerText.style.borderColor = color;
-      }
-
-      var friendlyRtc = formatFriendlyDateTime(data.rtcTime);
-      var badgeRtc = document.getElementById('badge-rtc-time');
-      if (badgeRtc) {
-        badgeRtc.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>' + (friendlyRtc !== "-" ? friendlyRtc : "RTC: Offline") + '</span>';
-      }
-      var badgeRssi = document.getElementById('badge-rssi');
-      if (badgeRssi) {
-        badgeRssi.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg><span>Sinyal: ' + (data.rssi || "-") + ' dBm</span>';
-      }
-
-      // Strict Zero-Dummy Hardware Validation
-      var isOfflineOrWaiting = (data.isWaiting == 1 || data.isEsp8266Unplugged == 1 || data.isSystemError == 1);
-      var hasSoil = (!isOfflineOrWaiting && data.soil !== undefined && data.soil !== null && data.soil !== "--" && !isNaN(parseFloat(data.soil)) && parseFloat(data.soil) >= 0);
-      var hasTemp = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== "--" && !isNaN(parseFloat(data.suhuC)));
-      var hasHum = (data.hum !== undefined && data.hum !== null && data.hum !== "--" && !isNaN(parseFloat(data.hum)));
-
-      var sVal = hasSoil ? parseFloat(data.soil) : null;
-      var tVal = hasTemp ? parseFloat(data.suhuC) : null;
-      var hVal = hasHum ? parseFloat(data.hum) : null;
-
-      latestMoisturePercent = sVal;
-      isSensorDataValid = (!isOfflineOrWaiting && hasSoil && hasTemp && hasHum);
-
-      // Hardware Traffic Light Widget (Pins 32 Hijau, 33 Kuning, 27 Merah)
-      var bRed = document.getElementById('traffic-bulb-red');
-      var bYellow = document.getElementById('traffic-bulb-yellow');
-      var bGreen = document.getElementById('traffic-bulb-green');
-      var tLabel = document.getElementById('traffic-label');
-
-      if (bRed && bYellow && bGreen) {
-        bRed.className = 'traffic-bulb bulb-red';
-        bYellow.className = 'traffic-bulb bulb-yellow';
-        bGreen.className = 'traffic-bulb bulb-green';
-
-        if (isOfflineOrWaiting && data.isWaiting != 1) {
-          bRed.classList.add('active', 'blink');
-          if (tLabel) { tLabel.innerText = "Terputus"; tLabel.style.color = "#ef4444"; }
-        } else if (data.isWaiting == 1) {
-          bYellow.classList.add('active', 'blink');
-          if (tLabel) { tLabel.innerText = "Menunggu"; tLabel.style.color = "#f59e0b"; }
-        } else if (data.statusColor === "bahaya" || (hasTemp && tVal >= 35.0)) {
-          bRed.classList.add('active');
-          if (tLabel) { tLabel.innerText = "Bahaya"; tLabel.style.color = "#ef4444"; }
-        } else if (data.statusColor === "peringatan" || (hasSoil && sVal < 45) || (hasTemp && tVal > 30.0)) {
-          bYellow.classList.add('active');
-          if (tLabel) { tLabel.innerText = "Waspada"; tLabel.style.color = "#f59e0b"; }
-        } else if (hasSoil || hasTemp) {
-          bGreen.classList.add('active');
-          if (tLabel) { tLabel.innerText = "Aman"; tLabel.style.color = "#10b981"; }
-        } else {
-          bYellow.classList.add('active', 'blink');
-          if (tLabel) { tLabel.innerText = "Standby"; tLabel.style.color = "#f59e0b"; }
-        }
-      }
-
-      // Update Big Traffic Pole Card in Dashboard
-      updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal, tVal);
-
-      // KPI Cards Update
-      var kpiSoil = document.getElementById('kpi-soil');
-      var kpiSoilCat = document.getElementById('kpi-soil-category');
-      var kpiSoilDep = document.getElementById('kpi-soil-depletion');
-      if (kpiSoil) {
-        if (hasSoil) {
-          kpiSoil.innerText = sVal + "%";
-          if (kpiSoilCat) {
-            kpiSoilCat.innerText = data.soilCategory || "Normal";
-            kpiSoilCat.style.color = "var(--primary)";
-          }
-        } else {
-          kpiSoil.innerText = "--%";
-          if (kpiSoilCat) {
-            kpiSoilCat.innerText = (data.isWaiting == 1 ? "Menunggu Sensor..." : "Sensor Terputus");
-            kpiSoilCat.style.color = "var(--text-sub)";
-          }
-        }
-      }
-      if (kpiSoilDep) kpiSoilDep.innerText = "Prediksi Penguapan: " + (data.soilDepletion || "-");
-
-      var kpiTemp = document.getElementById('kpi-temp');
-      var kpiHeatIdx = document.getElementById('kpi-heat-index');
-      if (kpiTemp) {
-        if (hasTemp) {
-          kpiTemp.innerText = tVal + "°C";
-          if (kpiHeatIdx) kpiHeatIdx.innerText = "Terasa seperti: " + (data.heatC || "--") + "°C (" + (data.suhuF || "--") + "°F)";
-        } else {
-          kpiTemp.innerText = "--°C";
-          if (kpiHeatIdx) kpiHeatIdx.innerText = "Terasa seperti: --";
-        }
-      }
-
-      var kpiHum = document.getElementById('kpi-hum');
-      var kpiDew = document.getElementById('kpi-dew-point');
-      if (kpiHum) {
-        if (hasHum) {
-          kpiHum.innerText = hVal + "%";
-          if (kpiDew) kpiDew.innerText = "Titik Embun: " + (data.dew || "--") + "°C";
-        } else {
-          kpiHum.innerText = "--%";
-          if (kpiDew) kpiDew.innerText = "Titik Embun: --";
-        }
-      }
-
-      var kpiSignal = document.getElementById('kpi-signal') || document.getElementById('kpi-battery');
-      var kpiNodeStatus = document.getElementById('kpi-node-status');
-      var kpiAdc = document.getElementById('kpi-raw-adc');
-
-      var isNodeOnline = (!isOfflineOrWaiting && data.rssi !== undefined && data.rssi !== null && data.rssi != -99 && data.rssi !== "-");
-      if (kpiSignal) {
-        if (isNodeOnline) {
-          kpiSignal.innerText = data.rssi + " dBm";
-          if (kpiNodeStatus) {
-            kpiNodeStatus.innerText = "Online";
-            kpiNodeStatus.style.color = "var(--accent-emerald)";
-            kpiNodeStatus.style.borderColor = "rgba(16, 185, 129, 0.35)";
-          }
-        } else {
-          kpiSignal.innerText = "-- dBm";
-          if (kpiNodeStatus) {
-            kpiNodeStatus.innerText = (data.isWaiting == 1 ? "Menunggu" : "Terputus");
-            kpiNodeStatus.style.color = "var(--accent-rose)";
-            kpiNodeStatus.style.borderColor = "rgba(239, 68, 68, 0.35)";
-          }
-        }
-      }
-      if (kpiAdc) {
-        if (isNodeOnline && data.rawAdc !== undefined && data.rawAdc !== null && data.rawAdc !== "-") {
-          kpiAdc.innerText = "ADC A0: " + data.rawAdc;
-        } else {
-          kpiAdc.innerText = "ADC A0: --";
-        }
-      }
-
-      // Update Disease Outbreak Risk State
-      if (typeof updateOutbreakUIState === 'function') {
-        updateOutbreakUIState(isSensorDataValid, tVal, hVal, sVal);
-      }
-
-      // Update AI Phenology Model
-      if (typeof updatePhenologyAI === 'function' && typeof getActiveSector === 'function') {
-        updatePhenologyAI(getActiveSector(), tVal, hVal, sVal, (data.vpd !== undefined ? parseFloat(data.vpd) : null));
-      }
-
-      // Delegate Actuators & Schedule synchronization
-      if (typeof updateActuatorAndScheduleUI === 'function') {
-        updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, hVal);
-      }
+      applyTelemetryData(data);
 
       // Silent Auto-Sync RTC once
       if (!window.rtcAutoSynced) {
@@ -228,11 +351,27 @@ function fetchData() {
           .catch(function () {});
       }
 
+      var hasSoil = (data.soil !== undefined && data.soil !== null && data.soil !== "--" && !isNaN(parseFloat(data.soil)) && parseFloat(data.soil) >= 0);
+      var rawT = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== "--") ? data.suhuC : data.temp;
+      var hasTemp = (rawT !== undefined && rawT !== null && rawT !== "--" && !isNaN(parseFloat(rawT)));
+      var hasHum = (data.hum !== undefined && data.hum !== null && data.hum !== "--" && !isNaN(parseFloat(data.hum)));
+      var sVal = hasSoil ? parseFloat(data.soil) : null;
+      var tVal = hasTemp ? parseFloat(rawT) : null;
+      var hVal = hasHum ? parseFloat(data.hum) : null;
+
       if (typeof updateHistory === 'function') {
         updateHistory(sVal, tVal, hVal);
       }
     })
     .catch(function (err) {
+      _consecutiveFailures++;
+      console.warn("Sinkronisasi data ESP32 (" + _consecutiveFailures + "):", err);
+
+      // Jika baru gagal 1-2 kali (ESP32 sesaat sibuk/menutup soket HTTP sebelumnya), jangan ubah tampilan dashboard
+      if (_consecutiveFailures < 3) {
+        return;
+      }
+
       isSensorDataValid = false;
       latestMoisturePercent = null;
       if (typeof updateOutbreakUIState === 'function') {
@@ -240,9 +379,9 @@ function fetchData() {
       }
       var bText = document.getElementById('banner-text');
       if (bText) {
-        bText.innerText = "Standalone Mode / Sensor Offline";
-        bText.style.color = "var(--text-sub)";
-        bText.style.borderColor = "var(--card-border)";
+        bText.innerText = "⏳ Sedang Menyelaraskan Data Telemetri ESP32...";
+        bText.style.color = "#f59e0b";
+        bText.style.borderColor = "rgba(245, 158, 11, 0.4)";
       }
       var bBox = document.getElementById('banner-box');
       if (bBox) {
@@ -255,14 +394,11 @@ function fetchData() {
       var bGreen = document.getElementById('traffic-bulb-green');
       var tLabel = document.getElementById('traffic-label');
       if (bRed && bYellow && bGreen) {
-        bRed.className = 'traffic-bulb bulb-red active blink';
-        bYellow.className = 'traffic-bulb bulb-yellow';
+        bYellow.className = 'traffic-bulb bulb-yellow active blink';
+        bRed.className = 'traffic-bulb bulb-red';
         bGreen.className = 'traffic-bulb bulb-green';
-        if (tLabel) { tLabel.innerText = "Offline"; tLabel.style.color = "#ef4444"; }
+        if (tLabel) { tLabel.innerText = "Sinkron..."; tLabel.style.color = "#f59e0b"; }
       }
-      
-      // Also reset pole card on error to Sensor Terputus (Merah blink)
-      updateTrafficPoleCard({ statusColor: 'bahaya', isEsp8266Unplugged: 1 }, true, false, false, null, null);
     });
 }
 
@@ -316,7 +452,7 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     if (rtcBadge) rtcBadge.style.display = 'inline-flex';
     if (cardLabel) { cardLabel.innerText = 'JADWAL RTC AKTIF'; cardLabel.style.background = 'rgba(245,158,11,0.15)'; cardLabel.style.color = '#f59e0b'; cardLabel.style.borderColor = 'rgba(245,158,11,0.3)'; }
     if (curStatus) { curStatus.innerText = 'Jadwal Penyiraman RTC Sedang Berjalan'; curStatus.style.color = '#f59e0b'; }
-    if (curDetail) curDetail.innerText = 'Lampu Traffic Light fisik (Pin 27/33/32) menyala bergantian sebagai indikator jadwal aktif';
+    if (curDetail) curDetail.innerText = 'Lampu Traffic Light fisik (Pin 25/33/32) menyala bergantian sebagai indikator jadwal aktif';
     var _cycleStep = 0;
     var _poles     = [['pole-bulb-red','pole-red','#ef4444','traffic-dot-red'],['pole-bulb-yellow','pole-yellow','#f59e0b','traffic-dot-yellow'],['pole-bulb-green','pole-green','#10b981','traffic-dot-green']];
     function _doCycle() {
@@ -332,24 +468,28 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     return;
   }
 
-  // PRIORITY 2: Sensor terputus → Merah blink
-  if (isOfflineOrWaiting && data.isWaiting != 1) {
+  // PRIORITY 2: Hardware Error Darurat → Merah blink
+  if (data.isSystemError == 1) {
     pRed.className = 'traffic-pole-bulb pole-red lit blink';
     if (dotRed) { dotRed.style.opacity = '1'; dotRed.style.boxShadow = '0 0 8px #ef4444'; }
-    if (cardLabel) { cardLabel.innerText = 'SENSOR TERPUTUS'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
-    if (curStatus) { curStatus.innerText = 'ESP8266 Terputus / Sensor Offline'; curStatus.style.color = '#ef4444'; }
-    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe';
+    if (cardLabel) { cardLabel.innerText = 'HARDWARE DARURAT'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
+    if (curStatus) { curStatus.innerText = 'Hardware Error / Failsafe Aktif'; curStatus.style.color = '#ef4444'; }
+    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 25) berkedip. Failsafe sistem terkunci.';
     updateLedDiagPanel(1);
     return;
   }
 
-  // PRIORITY 3: Boot / Menunggu → Kuning blink
-  if (data.isWaiting == 1) {
+  // PRIORITY 3: Boot / Menunggu → Kuning blink (Hanya jika belum ada telemetri tanah)
+  var isWaiting = (data.isWaiting == 1 && !hasSoil);
+  if (isWaiting) {
+    var pct = (data.waitingPercent !== undefined) ? data.waitingPercent : 0;
+    var wSec = (data.waitingSecs !== undefined) ? data.waitingSecs : 0;
+    var waitTimeStr = pct + "% (" + wSec + "s / 60s)";
     pYellow.className = 'traffic-pole-bulb pole-yellow lit blink';
     if (dotYellow) { dotYellow.style.opacity = '1'; dotYellow.style.boxShadow = '0 0 8px #f59e0b'; }
     if (cardLabel) { cardLabel.innerText = 'MENUNGGU KONEKSI'; cardLabel.style.background = 'rgba(245,158,11,0.15)'; cardLabel.style.color = '#f59e0b'; cardLabel.style.borderColor = 'rgba(245,158,11,0.3)'; }
     if (curStatus) { curStatus.innerText = 'Menunggu sinyal ESP8266...'; curStatus.style.color = '#f59e0b'; }
-    if (curDetail) curDetail.innerText = 'Lampu Kuning (Pin 33) berkedip. Boot ' + (data.waitingPercent || 0) + '% selesai';
+    if (curDetail) curDetail.innerText = 'Lampu Kuning (Pin 33) berkedip. Mencari sinyal: ' + waitTimeStr;
     updateLedDiagPanel(2);
     return;
   }
@@ -360,7 +500,7 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     if (dotRed) { dotRed.style.opacity = '1'; dotRed.style.boxShadow = '0 0 8px #ef4444'; }
     if (cardLabel) { cardLabel.innerText = 'BAHAYA KRITIS'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
     if (curStatus) { curStatus.innerText = 'BAHAYA — Suhu Ekstrem ' + (tVal !== null ? tVal + '°C' : '--'); curStatus.style.color = '#ef4444'; }
-    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 27) menyala solid. Segera lakukan pendinginan lahan!';
+    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 25) menyala solid. Segera lakukan pendinginan lahan!';
     updateLedDiagPanel(1);
     return;
   }
@@ -389,7 +529,7 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     if (dotRed) { dotRed.style.opacity = '1'; dotRed.style.boxShadow = '0 0 8px #ef4444'; }
     if (cardLabel) { cardLabel.innerText = 'SENSOR TERPUTUS / OFFLINE'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
     if (curStatus) { curStatus.innerText = 'ESP8266 Terputus / Sensor Offline'; curStatus.style.color = '#ef4444'; }
-    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe sistem.';
+    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 25) berkedip. Pompa dikunci mati oleh failsafe sistem.';
     updateLedDiagPanel(1);
   }
 
@@ -452,6 +592,17 @@ function updateLedDiagPanel(ledState) {
       if (dYellow) { dYellow.style.opacity = '1'; dYellow.style.boxShadow = '0 0 4px #f59e0b'; }
       if (dGreen) { dGreen.style.opacity = '1'; dGreen.style.boxShadow = '0 0 4px #10b981'; }
       break;
+    case 5: // Menyiram Lahan (3 Lampu Berkedip Aktif)
+      stRed.innerText    = 'PULSE (Menyiram)';
+      stYellow.innerText = 'PULSE (Menyiram)';
+      stGreen.innerText  = 'PULSE (Menyiram)';
+      stRed.style.color    = '#ef4444';
+      stYellow.style.color = '#f59e0b';
+      stGreen.style.color  = '#10b981';
+      if (dRed) { dRed.style.opacity = '1'; dRed.style.boxShadow = '0 0 8px #ef4444'; }
+      if (dYellow) { dYellow.style.opacity = '1'; dYellow.style.boxShadow = '0 0 8px #f59e0b'; }
+      if (dGreen) { dGreen.style.opacity = '1'; dGreen.style.boxShadow = '0 0 8px #10b981'; }
+      break;
     default: // 0 = semua mati
       break;
   }
@@ -471,3 +622,40 @@ function reportLedMismatch() {
     alertEl.style.display = 'none';
   }
 }
+
+// ================================================================
+// POLLING TELEMETRI OTOMATIS REALTIME (LANGSUNG LOAD & TIAP 2 DETIK)
+// ================================================================
+var _telemetryTimer = null;
+function initTelemetryPolling() {
+  // 1. Instant Hydration dari cache localStorage agar saat refresh halaman langsung tampil stabil seketika
+  try {
+    var cached = localStorage.getItem('sf_telemetry_cache');
+    if (cached) {
+      var cData = JSON.parse(cached);
+      if (cData && typeof cData === 'object') {
+        applyTelemetryData(cData);
+      }
+    }
+  } catch (e) {}
+
+  // 2. Langsung ambil telemetri terbaru dari ESP32
+  if (typeof fetchData === 'function') {
+    fetchData();
+  }
+
+  if (!_telemetryTimer) {
+    _telemetryTimer = setInterval(function () {
+      if (typeof fetchData === 'function') {
+        fetchData(); // Perbarui terus menerus tiap 2 detik
+      }
+    }, 2000);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTelemetryPolling);
+} else {
+  initTelemetryPolling();
+}
+

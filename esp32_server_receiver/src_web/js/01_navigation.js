@@ -26,11 +26,22 @@ function switchTab(tabId) {
 
   // Auto trigger canvas redraws when switching to charts tab
   if (tabId === 'charts') {
+    if (typeof fetchAndParseLogs === 'function') fetchAndParseLogs();
     setTimeout(function () {
       if (typeof resizeCanvas === 'function') resizeCanvas();
       if (typeof renderHourlyChart === 'function') renderHourlyChart();
       if (typeof resizeCropCanvas === 'function') resizeCropCanvas();
+      if (typeof renderCropHistoryTable === 'function') renderCropHistoryTable();
     }, 60);
+    setTimeout(function () {
+      if (typeof resizeCanvas === 'function') resizeCanvas();
+      if (typeof resizeCropCanvas === 'function') resizeCropCanvas();
+    }, 250);
+  }
+
+  // Auto trigger log fetching when switching to logs tab
+  if (tabId === 'logs') {
+    if (typeof fetchAndParseLogs === 'function') fetchAndParseLogs();
   }
 }
 
@@ -112,48 +123,71 @@ function renderVirtualLcdRows() {
   var isLampOn = (d.lampOn == 1);
 
   // Check emergency states from real hardware
-  if (d.unplugged || d.soil === -1) {
+  if (d.unplugged || (d.soil === -1 && d.isWaiting != 1)) {
     r1.innerText = '!  PERINGATAN  !';
     r2.innerText = 'SENSOR TERPUTUS ';
     return;
   }
-  if (d.temp !== undefined && parseFloat(d.temp) >= 35.0) {
-    r1.innerText = '! BAHAYA  SUHU !';
-    r2.innerText = 'Suhu:' + parseFloat(d.temp).toFixed(1) + 'C PANAS';
+
+  // Check initial startup waiting state
+  if (d.isWaiting == 1) {
+    var pct = (d.waitingPercent !== undefined) ? d.waitingPercent : 0;
+    var wSec = (d.waitingSecs !== undefined) ? d.waitingSecs : 0;
+    r1.innerText = '! MEMUAT SISTEM !';
+    r2.innerText = ('Tunggu:' + (pct < 10 ? ' ' : '') + pct + '% ' + wSec + 's/60s   ').substring(0, 16);
     return;
   }
 
-  // Animation blink for pump: every 500ms when actively irrigating
-  var blinkState = (Math.floor(Date.now() / 500) % 2 === 0);
+  var rawT = (d.suhuC !== undefined && d.suhuC !== null && d.suhuC !== '--') ? d.suhuC : (d.temp || null);
+  var tVal = (rawT !== null && !isNaN(parseFloat(rawT))) ? parseFloat(rawT) : null;
+
+  if (tVal !== null && tVal >= 35.0) {
+    r1.innerText = '! BAHAYA  SUHU !';
+    r2.innerText = 'Suhu:' + tVal.toFixed(1) + 'C PANAS';
+    return;
+  }
 
   if (isRelayOn || virtualLcdPage === 0) {
     // Layar 1: T:28.4C H:74%  AUTO
-    //         S:58%   P:OFF  L:OFF
-    var tVal = (d.temp !== undefined && !isNaN(parseFloat(d.temp))) ? parseFloat(d.temp).toFixed(1) : null;
-    var hVal = (d.hum !== undefined && !isNaN(parseFloat(d.hum))) ? Math.round(d.hum) : null;
-    var sVal = (d.soil !== undefined && d.soil >= 0) ? Math.round(d.soil) : null;
+    //         S: 0%   P:ON   L:ON 
+    var rawH = (d.hum !== undefined && d.hum !== null && d.hum !== '--') ? d.hum : null;
+    var hVal = (rawH !== null && !isNaN(parseFloat(rawH))) ? Math.round(parseFloat(rawH)) : null;
+    var rawS = (d.soil !== undefined && d.soil !== null && d.soil !== '--') ? d.soil : null;
+    var sVal = (rawS !== null && !isNaN(parseFloat(rawS)) && parseFloat(rawS) >= 0) ? Math.round(parseFloat(rawS)) : null;
 
-    var tempFormatted = tVal !== null ? (tVal < 10 ? ' ' : '') + tVal + 'C' : ' --C';
-    var humFormatted = hVal !== null ? (hVal < 10 ? ' ' : '') + hVal + '%' : ' --%';
-    var soilFormatted = sVal !== null ? (sVal < 10 ? ' ' : '') + sVal + '%' : ' --%';
+    var tempFormatted = (tVal !== null) ? ((tVal < 10 ? ' ' : '') + tVal.toFixed(1) + 'C') : '--.-C';
+    var humFormatted = (hVal !== null) ? ((hVal < 10 ? ' ' : '') + hVal + '%') : '--%';
+    var soilFormatted = (sVal !== null) ? ((sVal < 10 ? '  ' : (sVal < 100 ? ' ' : '')) + sVal + '%') : ' --%';
 
-    var pumpStr = isRelayOn ? (blinkState ? 'ON ' : '   ') : (d.cooldown ? 'CLD' : 'OFF');
+    var pumpStr = isRelayOn ? 'ON ' : (d.cooldown ? 'CLD' : 'OFF');
     var lampStr = isLampOn ? 'ON ' : 'OFF';
 
-    r1.innerText = 'T:' + tempFormatted + ' H:' + humFormatted + ' ' + modeStr;
+    var bSuhu = (d.batasSuhu !== undefined && !isNaN(parseFloat(d.batasSuhu))) ? parseFloat(d.batasSuhu) : 30.0;
+    if (tVal !== null && tVal > bSuhu) {
+      r1.innerText = ('T:' + tempFormatted + ' [PANAS] ' + modeStr).substring(0, 16);
+    } else {
+      r1.innerText = ('T:' + tempFormatted + ' H:' + humFormatted + ' ' + modeStr).substring(0, 16);
+    }
     r2.innerText = 'S:' + soilFormatted + ' P:' + pumpStr + ' L:' + lampStr;
   } else {
     // Layar 2: 16:52:30  AUTO
     //         -62dB 192.168.4.1
-    var timeStr = d.time || '--:--:--';
+    var timeStr = d.rtcTime || d.time || '--:--:--';
+    if (timeStr.indexOf(' ') !== -1) {
+      timeStr = timeStr.split(' ')[1] || timeStr;
+    }
     if (timeStr.length > 8) timeStr = timeStr.slice(0, 8);
     while (timeStr.length < 8) timeStr += ' ';
 
-    var rssiStr = (d.rssi !== undefined && d.rssi !== 0) ? (d.rssi + 'dB') : ' --dB';
+    var rawAdcVal = (d.rawAdc !== undefined && d.rawAdc !== '--' && d.rawAdc !== '-') ? d.rawAdc : '---';
+    var adcStr = 'A0:' + rawAdcVal;
+    while (adcStr.length < 7) adcStr += ' ';
+
+    var rssiStr = (d.rssi !== undefined && d.rssi !== 0 && d.rssi !== '--') ? (d.rssi + 'dB') : ' --dB';
     while (rssiStr.length < 5) rssiStr = ' ' + rssiStr;
 
     r1.innerText = timeStr + '  ' + modeStr;
-    r2.innerText = rssiStr + ' 192.168.4.1';
+    r2.innerText = adcStr + ' ' + rssiStr + ' WEB';
   }
 }
 

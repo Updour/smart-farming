@@ -2,45 +2,45 @@
     <div id="tab-logs" class="tab-content">
       
       <!-- SUB-NAV / VIEW SWITCHER -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-        <div style="display:inline-flex; width:auto; background:rgba(15,23,42,0.6); padding:4px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); gap:4px;">
-          <button id="btn-view-logs-table" onclick="switchLogsView('table')" style="padding:7px 16px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:none; cursor:pointer; background:var(--primary); color:#fff; transition:all 0.2s;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            <span>Histori Flash LittleFS (CSV)</span>
-          </button>
-          <button id="btn-view-logs-feed" onclick="switchLogsView('feed')" style="padding:7px 16px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:none; cursor:pointer; background:transparent; color:var(--text-sub); transition:all 0.2s;">
+      <div class="logs-subnav-container">
+        <div class="logs-switcher-wrap">
+          <button id="btn-view-logs-feed" onclick="switchLogsView('feed')" class="logs-switcher-btn" style="background:var(--primary); color:#fff;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            <span>Live Feed Transmisi Sensor (Real-Time)</span>
-            <span id="live-feed-badge-dot" style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+            <span>Live Serial</span>
+            <span id="live-feed-badge-dot" style="width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981;"></span>
+          </button>
+          <button id="btn-view-logs-table" onclick="switchLogsView('table')" class="logs-switcher-btn" style="background:transparent; color:var(--text-sub);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Flash LittleFS</span>
           </button>
         </div>
 
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn btn-secondary" onclick="fetchAndParseLogs()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" title="Muat ulang rekaman CSV LittleFS">
+        <div class="logs-actions-wrap">
+          <button class="btn btn-secondary" onclick="fetchAndParseLogs()" title="Muat ulang rekaman CSV LittleFS">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             <span>Refresh</span>
           </button>
-          <button class="btn btn-accent" onclick="openFirebaseBackupDialog()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #0284c7, #38bdf8); border:none;" title="Pilihan Backup Hemat Kuota atau Arsip Penuh ke Firebase">
+          <button class="btn btn-accent" onclick="openFirebaseBackupDialog()" style="background:linear-gradient(135deg, #0284c7, #38bdf8); border:none;" title="Pilihan Backup Hemat Kuota atau Arsip Penuh ke Firebase">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
-            <span>Backup Firebase</span>
+            <span>Firebase</span>
           </button>
-          <button class="btn btn-secondary" onclick="exportLogsAsJSON()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+          <button class="btn btn-secondary" onclick="exportLogsAsJSON()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span>JSON</span>
           </button>
-          <a class="btn btn-secondary" href="/downloadLog" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" target="_blank">
+          <a class="btn btn-secondary" href="/downloadLog" target="_blank">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
             <span>CSV</span>
           </a>
-          <button class="btn btn-danger" onclick="clearSystemLogs()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+          <button class="btn btn-danger" onclick="clearSystemLogs()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span>Hapus Log</span>
+            <span>Hapus</span>
           </button>
         </div>
       </div>
 
       <!-- VIEW 1: TABEL HISTORI FLASH MEMORY LITTLEFS -->
-      <div id="view-container-table" class="card" style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
+      <div id="view-container-table" class="card" style="display:none; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
         <div class="chart-header-wrap" style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);">
           <div class="chart-title-area">
             <div class="chart-icon-box emerald">
@@ -101,37 +101,38 @@
       </div>
 
       <!-- VIEW 2: LIVE STREAM TELEMETRI REAL-TIME (PACKET SNIFFER) -->
-      <div id="view-container-feed" class="card" style="display:none; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
+      <div id="view-container-feed" class="card" style="display:block; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
         <div class="chart-header-wrap" style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);">
           <div class="chart-title-area">
             <div class="chart-icon-box cyan">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
             </div>
             <div>
-              <span class="chart-title-text" style="font-size:15px;">Live Stream Telemetri Real-Time</span>
-              <span class="chart-subtitle-text">Log Transmisi Data Masuk Dari Sender Node ESP8266 &amp; Sensor Lahan • 100% Data Aktual</span>
+              <span class="chart-title-text" style="font-size:15px;">Live Serial Monitor Telemetri (Real-Time)</span>
+              <span class="chart-subtitle-text">Log Transmisi Data Masuk Dari Sender Node ESP8266 &amp; Sensor Lahan • Format Serial Monitor 115200 Baud</span>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label style="font-size:11px; color:var(--text-sub); display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
               <input type="checkbox" id="feed-autoscroll" checked style="accent-color:#10b981;"> Auto-Scroll
             </label>
             <button class="btn btn-secondary" id="btn-toggle-feed-pause" onclick="toggleFeedPause()" style="padding:4px 10px; font-size:11px;">Pause</button>
-            <button class="btn btn-secondary" onclick="clearLiveFeed()" style="padding:4px 10px; font-size:11px;">Clear Feed</button>
+            <button class="btn btn-secondary" onclick="copyLiveFeedText()" style="padding:4px 10px; font-size:11px;" title="Salin seluruh isi log terminal">Salin Teks</button>
+            <button class="btn btn-secondary" onclick="clearLiveFeed()" style="padding:4px 10px; font-size:11px;">Clear</button>
             <button class="btn btn-accent" onclick="uploadLiveFeedToFirebase()" style="padding:4px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px; background:linear-gradient(135deg, #0284c7, #38bdf8); border:none;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
-              <span>Export Stream ke Firebase</span>
+              <span>Export ke Firebase</span>
             </button>
           </div>
         </div>
 
         <!-- Terminal Output Window -->
-        <div id="live-telemetry-console" style="background:#090d16; border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px; font-family:'Courier New', monospace; font-size:11.5px; height:360px; overflow-y:auto; line-height:1.6; color:#94a3b8;">
+        <div id="live-telemetry-console" class="telemetry-terminal-container">
           <div style="color:#64748b; font-style:italic;">[Sistem Standby] Menunggu aliran paket telemetri baru dari ESP32 &amp; ESP8266...</div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11px; color:var(--text-sub);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11px; color:var(--text-sub); flex-wrap:wrap; gap:6px;">
           <span id="feed-stat-packets">Total Paket Tertangkap: 0</span>
-          <span>Protokol: ESP-NOW 2.4GHz + Local REST HTTP</span>
+          <span>ESP-NOW 2.4GHz + Local REST HTTP</span>
         </div>
       </div>
 

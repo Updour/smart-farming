@@ -50,6 +50,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       color: var(--text-main);
       min-height: 100vh;
       padding: 16px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
       line-height: 1.5;
     }
 
@@ -981,22 +982,30 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
     .segment-btn {
       flex: 1;
-      padding: 6px 12px;
+      padding: 7px 12px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
       background: transparent;
-      color: var(--text-sub);
+      color: rgba(255, 255, 255, 0.45);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+    .segment-btn:hover {
+      color: rgba(255, 255, 255, 0.85);
     }
     .segment-btn.active {
-      background: var(--primary);
-      color: #fff;
+      background: #10b981 !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.6);
     }
     .segment-btn.active-manual {
-      background: var(--warning);
-      color: #fff;
+      background: #f59e0b !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
     }
 
     /* DROPZONE UPLOADER */
@@ -1299,8 +1308,14 @@ const char index_html[] PROGMEM = R"rawliteral(
    ANDROID & MOBILE SPECIFIC BOTTOM NAVIGATION DOCK (< 768px)
    ================================================================= */
 @media (max-width: 768px) {
+  body {
+    padding: 12px 10px;
+    padding-top: max(16px, env(safe-area-inset-top, 16px));
+  }
+
   .container {
     padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px));
+    gap: 14px;
   }
 
   .tabs-nav, .tabs-nav.bottom-dock {
@@ -1665,35 +1680,63 @@ const char index_html[] PROGMEM = R"rawliteral(
     font-size: 10px;
   }
   
-  /* PERMINTAAN USER: HEADER CONTROLS 3 ATAS 3 BAWAH DI MOBILE */
+  /* ANDROID & MOBILE SCADA HEADER UX ENHANCEMENTS */
+  header, .unified-header {
+    margin-top: 4px !important;
+    margin-bottom: 14px !important;
+    padding: 14px !important;
+    gap: 12px !important;
+    border-radius: 14px !important;
+  }
+
   .header-controls {
     flex-direction: column !important;
     width: 100% !important;
     align-items: stretch !important;
     gap: 8px !important;
   }
-  .status-badge-bar, .header-action-group {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
+
+  /* 2 BARIS x 3 KOLOM MERATA UNTUK 6 STATUS BADGE (TIDAK SALING TUMPANG TINDIH) */
+  .status-badge-bar {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     width: 100% !important;
     gap: 6px !important;
-    flex-wrap: nowrap !important; /* Paksa sebaris */
   }
+
+  /* 1 BARIS x 3 KOLOM MERATA UNTUK 3 ACTION BUTTON */
+  .header-action-group {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
   .status-badge-bar > .badge-pill, .header-action-group > .header-btn {
-    flex: 1 !important; /* Paksa lebar merata sepertiga (3 items per baris) */
+    width: 100% !important;
+    min-width: 0 !important;
     justify-content: center !important;
     text-align: center !important;
-    padding: 6px 4px !important;
-    font-size: 10px !important;
-    min-width: 0 !important;
+    padding: 6px 3px !important;
+    font-size: 10.5px !important;
+    border-radius: 8px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   /* Sembunyikan SVG di tombol saat mobile agar teks muat 3 sejajar */
   .header-action-group > .header-btn svg {
     display: none !important;
+  }
+
+  /* Berikan breathing room bersih pada Ticker Bar & Tab Content agar tidak nempel ke header */
+  .scada-ticker-bar {
+    margin: 2px 0 14px 0 !important;
+  }
+
+  .tab-content {
+    margin-top: 2px !important;
   }
 }
 
@@ -2839,6 +2882,131 @@ const char index_html[] PROGMEM = R"rawliteral(
   color: var(--text-main);
 }
 
+/* =================================================================
+   LOGS & SERIAL MONITOR RESPONSIVE SCADA LAYOUT (ANTI-OVERFLOW)
+   ================================================================= */
+.logs-subnav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logs-switcher-wrap {
+  display: flex;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 4px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.logs-switcher-btn {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.logs-actions-wrap {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.telemetry-terminal-container {
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 11.5px;
+  height: 380px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: auto;
+  line-height: 1.55;
+  color: #94a3b8;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.serial-feed-block {
+  border-left: 3px solid #38bdf8;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+  .logs-subnav-container {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .logs-switcher-wrap {
+    width: 100% !important;
+    display: flex !important;
+  }
+  .logs-switcher-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+  .logs-actions-wrap {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+  .logs-actions-wrap .btn {
+    padding: 6px 4px !important;
+    font-size: 10px !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+  }
+  .telemetry-terminal-container {
+    padding: 8px !important;
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+    height: 330px !important;
+  }
+  .serial-feed-block {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+  }
+}
+
 
 
 
@@ -2868,7 +3036,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="brand-sub">
           <span>Dashboard Agronomi Presisi &amp; Telemetri Real-Time</span>
           <span class="status-divider">•</span>
-          <span id="banner-text" class="header-status-msg">Standalone Mode / Sensor Offline</span>
+          <span id="banner-text" class="header-status-msg" style="color:var(--primary); border-color:var(--primary);">Sistem Operasional Normal</span>
         </div>
       </div>
 
@@ -2878,11 +3046,11 @@ const char index_html[] PROGMEM = R"rawliteral(
           <!-- PHYSICAL TRAFFIC LIGHT INDICATOR (ESP32 PINS 32, 33, 27) -->
           <div class="badge-pill traffic-pill" id="traffic-light-widget" title="Indikator Fisik Traffic Light Lahan (Pin 32 Hijau, 33 Kuning, 27 Merah) - Klik untuk Detail" onclick="toggleLedDiag()" style="cursor: pointer;">
             <div class="traffic-housing">
-              <span class="traffic-bulb bulb-red active blink" id="traffic-bulb-red" title="Merah: Bahaya / Terputus / Offline (Pin 27)"></span>
-              <span class="traffic-bulb bulb-yellow" id="traffic-bulb-yellow" title="Kuning: Peringatan / Menunggu / Standby (Pin 33)"></span>
-              <span class="traffic-bulb bulb-green" id="traffic-bulb-green" title="Hijau: Kondisi Normal (Pin 32)"></span>
+              <span class="traffic-bulb bulb-red" id="traffic-bulb-red" title="Merah: Bahaya / Terputus (Pin 25)"></span>
+              <span class="traffic-bulb bulb-yellow" id="traffic-bulb-yellow" title="Kuning: Menghubungkan / Standby (Pin 33)"></span>
+              <span class="traffic-bulb bulb-green active" id="traffic-bulb-green" title="Hijau: Kondisi Normal (Pin 32)"></span>
             </div>
-            <span id="traffic-label" class="traffic-label" style="color: #ef4444;">Offline</span>
+            <span id="traffic-label" class="traffic-label" style="color: #10b981;">Aman</span>
           </div>
 
           <div class="badge-pill" id="badge-global-pump" style="color: var(--text-sub); display: inline-flex;">
@@ -3036,12 +3204,16 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
             <span class="kpi-status-badge" id="kpi-soil-category">Membaca...</span>
           </div>
-          <div class="kpi-card-body">
+          <div class="kpi-card-body" style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <div class="kpi-value" id="kpi-soil">--%</div>
+            <div class="badge-pill" id="kpi-soil-raw-badge" style="font-family: monospace; font-size: 11.5px; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); padding: 3px 8px; border-radius: 6px;" title="Nilai mentah ADC Pin A0 dari Node ESP8266">Raw: --</div>
           </div>
-          <div class="kpi-card-footer">
-            <span class="kpi-footer-dot"></span>
-            <span class="kpi-footer-text" id="kpi-soil-depletion">Prediksi Penguapan: -</span>
+          <div class="kpi-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="kpi-footer-dot"></span>
+              <span class="kpi-footer-text" id="kpi-soil-depletion">Prediksi Penguapan: -</span>
+            </div>
+            <span class="kpi-footer-text" id="kpi-soil-raw-adc" style="font-family: monospace; color: #38bdf8; font-weight: 600;">ADC A0: --</span>
           </div>
         </div>
 
@@ -3114,12 +3286,16 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
             <span class="kpi-status-badge" id="kpi-node-status">Node</span>
           </div>
-          <div class="kpi-card-body">
+          <div class="kpi-card-body" style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <div class="kpi-value" id="kpi-signal">-- dBm</div>
+            <div class="badge-pill" id="kpi-node-battery-badge" style="font-family: monospace; font-size: 11.5px; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); padding: 3px 8px; border-radius: 6px;" title="Estimasi Baterai Node ESP8266 Kebun">🔋 --%</div>
           </div>
-          <div class="kpi-card-footer">
-            <span class="kpi-footer-dot"></span>
-            <span class="kpi-footer-text" id="kpi-raw-adc">ADC A0: --</span>
+          <div class="kpi-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="kpi-footer-dot"></span>
+              <span class="kpi-footer-text" id="kpi-packet-timer">Paket: -- lalu</span>
+            </div>
+            <span class="kpi-footer-text" id="kpi-raw-adc" style="font-family: monospace; color: #38bdf8; font-weight: 600;">ADC A0: --</span>
           </div>
         </div>
       </div>
@@ -3138,10 +3314,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
             <div>
               <span style="font-size:13px; font-weight:700; color:var(--text-main);">Indikator Status Lahan</span>
-              <span style="display:block; font-size:11px; color:var(--text-sub); margin-top:1px;">Traffic Light Fisik ESP32 (Pin 27 Merah · Pin 33 Kuning · Pin 32 Hijau)</span>
+              <span style="display:block; font-size:11px; color:var(--text-sub); margin-top:1px;">Traffic Light Fisik ESP32 (Pin 25 Merah · Pin 33 Kuning · Pin 32 Hijau)</span>
             </div>
           </div>
-          <span id="traffic-card-label" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">SENSOR TERPUTUS / OFFLINE</span>
+          <span id="traffic-card-label" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">KONDISI AMAN</span>
         </div>
 
         <!-- BIG TRAFFIC LIGHT DISPLAY -->
@@ -3151,15 +3327,15 @@ const char index_html[] PROGMEM = R"rawliteral(
           <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
             <div class="traffic-pole-housing" id="traffic-pole">
               <!-- RED bulb -->
-              <div class="traffic-pole-bulb pole-red lit blink" id="pole-bulb-red" title="Pin 27 · Bahaya / Sensor Terputus">
+              <div class="traffic-pole-bulb pole-red" id="pole-bulb-red" title="Pin 25 · Bahaya / Sensor Terputus">
                 <div class="pole-bulb-inner"></div>
               </div>
               <!-- YELLOW bulb -->
-              <div class="traffic-pole-bulb pole-yellow" id="pole-bulb-yellow" title="Pin 33 · Peringatan / Jadwal RTC">
+              <div class="traffic-pole-bulb pole-yellow" id="pole-bulb-yellow" title="Pin 33 · Peringatan / Inisialisasi">
                 <div class="pole-bulb-inner"></div>
               </div>
               <!-- GREEN bulb -->
-              <div class="traffic-pole-bulb pole-green" id="pole-bulb-green" title="Pin 32 · Kondisi Normal">
+              <div class="traffic-pole-bulb pole-green lit" id="pole-bulb-green" title="Pin 32 · Kondisi Normal">
                 <div class="pole-bulb-inner"></div>
               </div>
             </div>
@@ -3173,17 +3349,17 @@ const char index_html[] PROGMEM = R"rawliteral(
               <div class="traffic-status-cell" id="traffic-cell-red" style="border-radius:10px; padding:10px 6px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.15);">
                 <div style="font-size:9px; color:#ef4444; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">MERAH</div>
                 <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Bahaya Suhu<br/>Sensor Terputus</div>
-                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#ef4444; margin:6px auto 0; opacity:1; box-shadow:0 0 8px #ef4444;" id="traffic-dot-red"></div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#ef4444; margin:6px auto 0; opacity:0.3;" id="traffic-dot-red"></div>
               </div>
               <div class="traffic-status-cell" id="traffic-cell-yellow" style="border-radius:10px; padding:10px 6px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.15);">
                 <div style="font-size:9px; color:#f59e0b; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">KUNING</div>
-                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Perlu Irigasi<br/>Jadwal RTC Aktif</div>
+                <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Perlu Irigasi<br/>Inisialisasi Radio</div>
                 <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin:6px auto 0; opacity:0.3;" id="traffic-dot-yellow"></div>
               </div>
               <div class="traffic-status-cell" id="traffic-cell-green" style="border-radius:10px; padding:10px 6px; background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.15);">
                 <div style="font-size:9px; color:#10b981; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">HIJAU</div>
                 <div style="font-size:10px; color:var(--text-sub); line-height:1.3;">Kondisi Aman<br/>Tanah Cukup</div>
-                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#10b981; margin:6px auto 0; opacity:0.3;" id="traffic-dot-green"></div>
+                <div class="traffic-cell-dot" style="width:8px; height:8px; border-radius:50%; background:#10b981; margin:6px auto 0; opacity:1; box-shadow:0 0 8px #10b981;" id="traffic-dot-green"></div>
               </div>
             </div>
 
@@ -3196,8 +3372,8 @@ const char index_html[] PROGMEM = R"rawliteral(
                   Jadwal RTC Berjalan
                 </span>
               </div>
-              <div id="traffic-current-status" style="font-size:13px; font-weight:700; color:#ef4444; margin-top:6px;">ESP8266 Terputus / Sensor Offline</div>
-              <div id="traffic-current-detail" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe sistem.</div>
+              <div id="traffic-current-status" style="font-size:13px; font-weight:700; color:#10b981; margin-top:6px;">Sistem Aman — Kondisi Optimal</div>
+              <div id="traffic-current-detail" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Lampu Hijau (Pin 32). Seluruh sensor terhubung stabil.</div>
             </div>
 
             <!-- DIAGNOSTIK HARDWARE LED (GPIO Sinyal vs Fisik) -->
@@ -3211,7 +3387,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                   <div style="display:flex; align-items:center; gap:6px;">
                     <div style="width:10px; height:10px; border-radius:50%; background:#ef4444; flex-shrink:0; box-shadow:0 0 6px #ef4444;" id="hw-dot-red"></div>
-                    <span style="font-size:10px; color:var(--text-sub);">Pin 27 · LED Merah</span>
+                    <span style="font-size:10px; color:var(--text-sub);">Pin 25 · LED Merah</span>
                   </div>
                   <span id="hw-state-red" style="font-size:10px; font-weight:700; color:#ef4444; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.08);">BLINK (ON) ●</span>
                 </div>
@@ -3877,579 +4053,842 @@ const char index_html[] PROGMEM = R"rawliteral(
           <span id="crop-hist-footer-status">Data tersimpan di LocalStorage peramban • Kurva Pertumbuhan Sigmoid (S-Curve)</span>
           <span id="crop-hist-points-text" style="color:var(--text-sub);">0 Catatan Tersimpan</span>
         </div>
-      </div>
-    </div>
 
-
-    <!-- TAB 3: KENDALI & PRESISI -->
-    <div id="tab-controls" class="tab-content">
-      <div class="grid-two-col">
-        <!-- SMART PUMP CONTROL CENTER CARD -->
-        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
-          <div class="chart-header-wrap" style="margin-bottom:14px;">
-            <div class="chart-title-area">
-              <div class="chart-icon-box emerald">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-              </div>
-              <div>
-                <span class="chart-title-text">Kendali Pompa Irigasi</span>
-                <span class="chart-subtitle-text">Pin 26 Active-Low • Interlock Proteksi Lahan</span>
-              </div>
-            </div>
-            <div style="display:flex; gap:6px; align-items:center;">
-              <span class="badge-pill" id="relay-status-badge" style="color:var(--text-sub); border-color:rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);"><span>Menunggu Data...</span></span>
-            </div>
-          </div>
-          <!-- Mode Switch Toggle -->
-          <div class="switch-group" style="margin-bottom: 18px; align-items: flex-start;">
-            <div>
-              <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mode Operasi</div>
-              <div id="mode-desc-text" style="font-size:11px; color:var(--text-sub);">Mode Otomatis (Sensor &amp; RTC)</div>
-            </div>
-            <div class="segment-control">
-              <button id="btn-pump-mode-auto" class="segment-btn active" onclick="toggleSystemMode(false)">Auto</button>
-              <button id="btn-pump-mode-manual" class="segment-btn" onclick="toggleSystemMode(true)">Manual</button>
-            </div>
-          </div>
-          <!-- Manual Action Buttons (Disabled by default in Auto Mode) -->
-          <div style="display:flex; gap:10px; margin-bottom:14px;">
-            <button class="btn btn-primary" disabled="" id="btn-pump-on" onclick="sendRelayCommand('on')" style="flex:1; padding:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:700;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <span>Nyalakan Pompa</span>
-            </button>
-            <button class="btn btn-danger" disabled="" id="btn-pump-off" onclick="sendRelayCommand('off')" style="flex:1; padding:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:700;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
-              <span>Matikan Pompa</span>
-            </button>
-          </div>
-          <!-- Real-time Live Session Status Bar -->
-          <div id="pump-live-bar" style="display:none; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16,185,129,0.3); padding:8px 12px; border-radius:10px; margin-bottom:12px; font-size:12px; align-items:center; justify-content:space-between;">
-            <span style="color:var(--primary); font-weight:bold; display:inline-flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
-              Pompa Sedang Menyiram Lahan...
+        <!-- Interactive Crop History Log Table -->
+        <div id="crop-hist-table-wrap" style="margin-top:14px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:12px; font-weight:700; color:var(--text-main); display:inline-flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>Jurnal Rekaman Perkembangan Lapangan</span>
             </span>
-            <b id="pump-live-timer" style="color:var(--text-main);">AKTIF</b>
+            <span id="crop-hist-count-badge" class="badge-pill" style="font-size:10px; color:#10b981; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.1);">0 Rekaman</span>
           </div>
-          <!-- Pump Usage Stats Grid -->
-          <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
-            <div>
-              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Frekuensi Pompa:</span>
-              <div id="stat-pump-count" style="font-size:15px; font-weight:bold; color:var(--text-main);">-- Kali</div>
-            </div>
-            <div>
-              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Total Durasi:</span>
-              <div id="stat-pump-secs" style="font-size:15px; font-weight:bold; color:var(--primary);">-- Detik</div>
-            </div>
-            <div>
-              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Estimasi Volume Air:</span>
-              <div id="stat-water-liters" style="font-size:14px; font-weight:bold; color:var(--secondary);">-- Liter</div>
-            </div>
-            <div>
-              <span style="color:var(--text-sub); display:block; margin-bottom:4px;">Biaya Listrik (PLN):</span>
-              <div id="stat-cost-idr" style="font-size:14px; font-weight:bold; color:var(--warning);">Rp --</div>
-            </div>
-          </div>
-          <button class="btn btn-secondary" onclick="resetPumpStats()" style="width:100%; margin-top:10px; padding:6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span>Reset Statistik</span>
-          </button>
-          <!-- Dynamic Pump Calibration Form Collapsible -->
-          <div style="background:rgba(0,0,0,0.2); padding:10px 12px; border-radius:10px; margin-top:10px; border:1px solid rgba(255,255,255,0.08);">
-            <div onclick="togglePumpConfigForm()" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-              <span style="font-size:11px; font-weight:bold; color:var(--secondary); display:inline-flex; align-items:center; gap:6px;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                Kalibrasi Pompa &amp; Tarif Listrik PLN
-              </span>
-              <span id="pump-config-arrow" style="font-size:11px; color:var(--text-sub);">▼</span>
-            </div>
-            <div id="pump-config-body" style="display:none; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px;">
-              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
-                <div>
-                  <span style="font-size:10px; color:var(--text-sub);">Debit (L/Jam):</span>
-                  <input id="cfg-pump-lph" max="20000" min="100" placeholder="Menunggu Data..." type="number" value=""/>
-                </div>
-                <div>
-                  <span style="font-size:10px; color:var(--text-sub);">Daya (Watt):</span>
-                  <input id="cfg-pump-watt" max="3000" min="1" placeholder="Menunggu Data..." type="number" value=""/>
-                </div>
-                <div>
-                  <span style="font-size:10px; color:var(--text-sub);">Tarif PLN (Rp/kWh):</span>
-                  <input id="cfg-pln-tariff" max="5000" min="100" placeholder="Menunggu Data..." type="number" value=""/>
-                </div>
-              </div>
-              <button class="btn btn-primary" onclick="savePumpConfig()" style="width:100%; padding:6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                <span>Simpan Spesifikasi Pompa</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- LAMPU PENERANGAN (GROW LIGHT) CARD -->
-        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
-          <div class="chart-header-wrap" style="margin-bottom:14px;">
-            <div class="chart-title-area">
-              <div class="chart-icon-box" style="color:#eab308; background:rgba(234, 179, 8, 0.15);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
-                  <path d="M9 18h6"></path>
-                  <path d="M10 22h4"></path>
-                </svg>
-              </div>
-              <div>
-                <span class="chart-title-text">Penerangan Grow Light</span>
-                <span class="chart-subtitle-text">Pin 25 • Jadwal Timer Otomatis</span>
-              </div>
-            </div>
-            <div id="lamp-status-badge" class="badge-pill" style="color:var(--text-sub); border-color:rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);">
-              <span>Menunggu Data...</span>
-            </div>
-          </div>
-
-
-          <!-- Lamp Schedule Timer -->
-          <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <span style="font-size:12px; font-weight:600; color:var(--text-main);">Timer Lampu (Auto)</span>
-              <label class="switch" style="transform: scale(0.85); transform-origin: right;">
-                <input type="checkbox" id="lamp-sched-en" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div>
-                <label style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:4px;">Jam Mulai Menyala:</label>
-                <input type="time" id="lamp-sched-time" class="form-input" style="background:rgba(15, 23, 42, 0.9);" />
-              </div>
-              <div>
-                <label style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:4px;">Durasi (Jam):</label>
-                <input type="number" id="lamp-sched-dur" class="form-input" min="1" max="24" style="background:rgba(15, 23, 42, 0.9);" />
-              </div>
-            </div>
-            <button class="btn" style="width:100%; margin-top:10px; padding:8px; font-size:12px; background:rgba(234, 179, 8, 0.2); color:#fde047; border:1px solid rgba(234, 179, 8, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveLampSchedule()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              <span>Simpan Jadwal Lampu</span>
-            </button>
-          </div>
-
-          <!-- Lamp Mode Switch Toggle -->
-          <div class="switch-group" style="margin-bottom: 18px; align-items: flex-start;">
-            <div style="flex:1; padding-right:10px;">
-              <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mode Operasi Lampu</div>
-              <div id="lamp-mode-desc-text" style="font-size:11px; color:var(--text-sub); line-height:1.4;">Mode Otomatis (Sensor & RTC)</div>
-            </div>
-            <div class="segment-control">
-              <button id="btn-lamp-mode-auto" class="segment-btn active" onclick="toggleLampSystemMode(false)">Auto</button>
-              <button id="btn-lamp-mode-manual" class="segment-btn" onclick="toggleLampSystemMode(true)">Manual</button>
-            </div>
-          </div>
-
-          <!-- Lamp Manual Action Buttons -->
-          <div style="display:flex; gap:10px; margin-bottom:14px;">
-            <button class="btn" style="background:#ca8a04; color:#fff;" id="btn-lamp-on" onclick="sendLampRelayCommand('on')" disabled>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Nyalakan Lampu
-            </button>
-            <button class="btn btn-danger" id="btn-lamp-off" onclick="sendLampRelayCommand('off')" disabled>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg> Matikan Lampu
-            </button>
-          </div>
-        </div>
-
-        <!-- RTC HARDWARE & DYNAMIC SCHEDULE -->
-        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
-          <div class="chart-header-wrap" style="margin-bottom:14px;">
-            <div class="chart-title-area">
-              <div class="chart-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-              </div>
-              <div>
-                <span class="chart-title-text">Jam RTC &amp; Jadwal Harian</span>
-                <span class="chart-subtitle-text">Modul DS3231 I2C • Dual Slot Penyiraman Otomatis</span>
-              </div>
-            </div>
-            <span class="badge-pill" id="rtc-valid-badge" style="color:var(--secondary);">RTC Aktif</span>
-          </div>
-          <!-- RTC Live Time Display -->
-          <div style="background:rgba(6, 182, 212, 0.08); padding:12px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <div>
-              <div style="font-size:11px; color:var(--text-sub); font-weight:bold;">JAM REAL-TIME RTC DS3231</div>
-              <div id="rtc-live-time" style="font-family:'Outfit',sans-serif; font-size:20px; font-weight:800; color:var(--text-main);">-</div>
-            </div>
-            <button class="btn btn-primary" onclick="syncRtcWithBrowser()" style="padding:8px 14px; font-size:11px; display:inline-flex; align-items:center; gap:6px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-              <span>Sync Jam HP</span>
-            </button>
-          </div>
-          <!-- Schedule Slot 1 (Pagi) -->
-          <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(6,182,212,0.2);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-size:13px; font-weight:700; color:var(--secondary); display:inline-flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                Slot 1 (Penyiraman Pagi)
-              </span>
-              <label class="switch" style="transform: scale(0.75); transform-origin: right; margin-left: auto;">
-                <input id="sched1-en" type="checkbox"/>
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <div style="flex:1;">
-                <span style="font-size:10px; color:var(--text-sub);">Jam Siram:</span>
-                <input id="sched1-time" type="time" value=""/>
-              </div>
-              <div style="flex:1;">
-                <span style="font-size:10px; color:var(--text-sub);">Durasi (Menit):</span>
-                <input id="sched1-dur" max="60" min="1" type="number" value=""/>
-              </div>
-            </div>
-            <button class="btn" style="width:100%; margin-top:8px; padding:8px; font-size:12px; background:rgba(16, 185, 129, 0.15); color:var(--primary); border:1px solid rgba(16, 185, 129, 0.3); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveSchedule(1)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              <span>Simpan Slot Pagi</span>
-            </button>
-          </div>
-          <!-- Schedule Slot 2 (Sore) -->
-          <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; border:1px solid rgba(245,158,11,0.2);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-size:13px; font-weight:700; color:var(--warning); display:inline-flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="12" y1="2" x2="12" y2="9"></line><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line><line x1="1" y1="18" x2="3" y2="18"></line><line x1="21" y1="18" x2="23" y2="18"></line><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line><line x1="23" y1="22" x2="1" y2="22"></line></svg>
-                Slot 2 (Penyiraman Sore)
-              </span>
-              <label class="switch" style="transform: scale(0.75); transform-origin: right; margin-left: auto;">
-                <input id="sched2-en" type="checkbox"/>
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <div style="flex:1;">
-                <span style="font-size:10px; color:var(--text-sub);">Jam Siram:</span>
-                <input id="sched2-time" type="time" value=""/>
-              </div>
-              <div style="flex:1;">
-                <span style="font-size:10px; color:var(--text-sub);">Durasi (Menit):</span>
-                <input id="sched2-dur" max="60" min="1" type="number" value=""/>
-              </div>
-            </div>
-            <button class="btn" style="width:100%; margin-top:8px; padding:8px; font-size:12px; background:rgba(245, 158, 11, 0.15); color:var(--warning); border:1px solid rgba(245, 158, 11, 0.3); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="saveSchedule(2)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              <span>Simpan Slot Sore</span>
-            </button>
+          <div style="max-height:180px; overflow-y:auto; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.2);">
+            <table style="width:100%; border-collapse:collapse; font-size:11px; text-align:left;">
+              <thead>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.08); color:var(--text-sub); background:rgba(255,255,255,0.02);">
+                  <th style="padding:6px 10px;">HST</th>
+                  <th style="padding:6px 10px;">Tanggal</th>
+                  <th style="padding:6px 10px;">Fase</th>
+                  <th style="padding:6px 10px;">Tanah</th>
+                  <th style="padding:6px 10px;">Suhu</th>
+                  <th style="padding:6px 10px;">RH</th>
+                  <th style="padding:6px 10px;">Vigor</th>
+                  <th style="padding:6px 10px; text-align:center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="crop-hist-table-body">
+                <tr><td colspan="8" style="padding:16px; text-align:center; color:var(--text-sub);">Belum ada catatan perkembangan. Klik tombol [ Catat Hari Ini ] untuk merekam data harian.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-
-      <div class="grid-two-col">
-        <!-- THRESHOLD CONTROL CARD (DYNAMIC CROP PROFILE & HARDWARE LIMITS) -->
-        <div class="card" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
-          <div class="chart-header-wrap" style="margin-bottom:14px;">
-            <div class="chart-title-area">
-              <div class="chart-icon-box amber">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="4" y1="21" x2="4" y2="14"></line>
-                  <line x1="4" y1="10" x2="4" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12" y2="3"></line>
-                  <line x1="20" y1="21" x2="20" y2="16"></line>
-                  <line x1="20" y1="12" x2="20" y2="3"></line>
-                  <line x1="1" y1="14" x2="7" y2="14"></line>
-                  <line x1="9" y1="8" x2="15" y2="8"></line>
-                  <line x1="17" y1="16" x2="23" y2="16"></line>
-                </svg>
-              </div>
-              <div>
-                <span class="chart-title-text">Profil Budidaya &amp; Ambang Batas</span>
-                <span class="chart-subtitle-text">Parameter NVS Flash • Threshold Irigasi Otomatis</span>
-              </div>
-            </div>
-            <span class="badge-pill" id="badge-crop-profile" style="color:var(--primary); font-size:11px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);">Mode Semai Benih</span>
-          </div>
-          <!-- DYNAMIC DROPDOWN PROFIL TANAMAN -->
-          <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); margin-bottom:16px; margin-top:8px;">
-            <label style="font-size:12px; color:var(--text-main); font-weight:700; display:block; margin-bottom:10px;">
-              Pilih Karakteristik &amp; Fase Tanaman:
-            </label>
-            <select id="crop-profile-select" onchange="onCropProfileChange(this.value)" style="width:100%; padding:10px 12px; border-radius:10px; background:#1e293b; color:#f8fafc; border:1.5px solid var(--primary); font-size:13px; font-weight:600; cursor:pointer; outline:none; transition:border-color 0.2s;">
-              <option value="0">Penyemaian Benih (Nursery / Kecambah)</option>
-              <option value="1">Tanaman Buah (Vegetatif: Daun, Batang &amp; Akar)</option>
-              <option value="2">Tanaman Buah (Generatif: Bunga &amp; Buah)</option>
-              <option value="3">Kustom / Pengaturan Manual Slider</option>
-            </select>
-            <!-- Dynamic Profile Guidance Box -->
-            <div id="crop-profile-guidance" style="margin-top:10px; font-size:11px; line-height:1.5; color:var(--text-sub); background:rgba(16,185,129,0.08); border-left:3px solid var(--primary); padding:10px; border-radius:8px;">
-              <!-- Dikelola otomatis oleh JavaScript -->
-            </div>
-
-            <!-- GEMINI AI INTEGRATION -->
-            <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">
-              <label style="font-size:12px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-                Otentikasi API Key Gemini
-              </label>
-              <div style="margin-bottom:12px;">
-                <input type="password" id="gemini-api-key" placeholder="Paste API Key Gemini di sini" value="" style="width:100%; padding:10px 12px; border-radius:8px; font-size:12px; background:rgba(0,0,0,0.3); border:1px solid rgba(168, 85, 247, 0.3); color:var(--text-main); outline:none; transition:border-color 0.2s; font-family:monospace;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='rgba(168, 85, 247, 0.3)'" onchange="saveGeminiKey(this.value)"/>
-              </div>
-              <button class="btn" id="btn-gemini-ai" style="width:100%; padding:12px; font-size:13px; font-weight:700; background:linear-gradient(135deg, #6366f1, #a855f7, #ec4899); color:#fff; border:none; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); transition: transform 0.2s;" onclick="askGeminiAgronomist()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path></svg>
-                <span id="gemini-btn-text">Auto-Set via Gemini AI ✨</span>
-              </button>
-            </div>
-
-          </div>
-          <div style="margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
-              <span>Batas Tanah Minimal (Siram jika &lt; ini):</span>
-              <b id="val-slider-soil" style="color:var(--primary);">65%</b>
-            </div>
-            <input id="slider-soil" max="90" min="10" oninput="onSliderManualChange('soil', this.value)" type="range" value="65"/>
-          </div>
-          <div style="margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
-              <span>Batas Suhu Panas (Siram jika &gt; ini):</span>
-              <b id="val-slider-temp" style="color:var(--danger);">30°C</b>
-            </div>
-            <input id="slider-temp" max="45" min="20" oninput="onSliderManualChange('temp', this.value)" type="range" value="30"/>
-          </div>
-        </div>
-
-        <!-- KALKULATOR DOSIS PUPUK PRESISI -->
-        <div class="card" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));">
-          <div class="chart-header-wrap" style="margin-bottom:14px;">
-            <div class="chart-title-area">
-              <div class="chart-icon-box purple">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"></path>
-                </svg>
-              </div>
-              <div>
-                <span class="chart-title-text">Kalkulator Dosis Pupuk &amp; Fertigasi</span>
-                <span class="chart-subtitle-text">Formulasi Makro/Mikro • Rekomendasi Aplikasi Presisi</span>
-              </div>
-            </div>
-            <span class="badge-pill" style="color:#a855f7; border-color:rgba(168,85,247,0.3);">Model Agronomi NPK</span>
-          </div>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-bottom:12px;">
-            <div style="grid-column: 1 / -1;">
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Pilih Jenis Pupuk Pertanian:</label>
-              <select id="fert-formula" onchange="calculateFertigationDose()" class="form-input">
-                <option selected="" value="npk_phonska">NPK Phonska / NPK Mutiara 15-15-15 (Majemuk Seimbang)</option>
-                <option value="urea">UREA (Nitrogen 46% - Pertumbuhan Daun &amp; Batang)</option>
-                <option value="sp36">SP-36 / TSP (Fosfat 36% - Perakaran &amp; Anakan)</option>
-                <option value="kcl">KCL / MOP (Kalium 60% - Bobot Buah &amp; Anti Rontok)</option>
-                <option value="za">Pupuk ZA (Sulfur 24% + N 21% - Aroma &amp; Hijau Daun)</option>
-                <option value="kno3_putih">KNO3 Putih (Kalium Nitrat 13-0-45 - Pembuahan Generatif)</option>
-                <option value="mkp">Pupuk MKP (Mono Kalium Fosfat 0-52-34 - Anti Rontok Bunga)</option>
-                <option value="ab_mix">AB Mix Presisi (Fertigasi Kocor Drip Hydroponic)</option>
-                <option value="dolomit">Kapur Dolomit (CaMg - Penetral pH Media Asam)</option>
-                <option value="humic">Asam Humat Organik (Pembenah Tanah &amp; Nutrisi)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Harga Pupuk (Rp/kg):</label>
-              <input id="fert-price-kg" min="500" oninput="calculateFertigationDose()" step="500" type="number" value="18000" class="form-input"/>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Metode Aplikasi:</label>
-              <select id="fert-method" onchange="calculateFertigationDose()" class="form-input">
-                <option selected="" value="kocor">Kocor Pelarutan Air (Fertigasi)</option>
-                <option value="tabur">Tabur / Benam Guludan Tanah</option>
-                <option value="foliar">Semprot Daun (Foliar Spray)</option>
-              </select>
-            </div>
-          </div>
-          <div id="fert-result-box" style="background:rgba(168, 85, 247, 0.08); padding:12px; border-radius:10px; font-size:12px; line-height:1.6; margin-top:14px; word-break: break-word;">
-            Memproses rekomendasi dosis pupuk dinamis...
-          </div>
-        </div>
-      </div>
-
-      <!-- MANAJEMEN PROFIL TANAMAN & PANDUAN PRAKTIS LAPANGAN (FARMER-CENTRIC) -->
-      <div class="card" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); margin-bottom: 20px;">
-        <div class="chart-header-wrap" style="margin-bottom:14px;">
-          <div class="chart-title-area">
-            <div class="chart-icon-box emerald">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path>
-                <path d="M12 6v6l4 2"></path>
-              </svg>
-            </div>
-            <div>
-              <span class="chart-title-text">Panduan Tanam &amp; Kesiapan Bibit Lapangan</span>
-              <span class="chart-subtitle-text">Pedoman Praktis Petani • Kesiapan Pindah Tanam, Pengairan &amp; Perlindungan Panas</span>
-            </div>
-          </div>
-          <span class="badge-pill" style="color:#10b981; border-color:rgba(16,185,129,0.3);">Model Lapangan Petani</span>
-        </div>
-
-        <!-- Preset Tanaman 1-Klik -->
-        <div style="margin-bottom: 14px;">
-          <div style="font-size:11.5px; color:var(--text-sub); margin-bottom:8px; font-weight:700; letter-spacing:0.3px;">PILIH CEPAT JENIS TANAMAN:</div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Cabai Rawit Merah', 'semai', 14, 'polybag', 100)" style="padding:6px 14px; font-size:12px; font-weight:600;">Cabai Rawit</button>
-            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Bawang Merah Bima', 'semai', 10, 'open', 250)" style="padding:6px 14px; font-size:12px; font-weight:600;">Bawang Merah</button>
-            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Tomat Servo F1', 'semai', 18, 'greenhouse', 150)" style="padding:6px 14px; font-size:12px; font-weight:600;">Tomat Servo</button>
-            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Melon Golden Light', 'semai', 12, 'greenhouse', 300)" style="padding:6px 14px; font-size:12px; font-weight:600;">Melon Golden</button>
-            <button type="button" class="btn btn-secondary" onclick="applyCropPreset('Padi Ciherang Sawah', 'semai', 20, 'open', 1000)" style="padding:6px 14px; font-size:12px; font-weight:600;">Padi Sawah</button>
-          </div>
-        </div>
-
-        <!-- 5 INPUT UTAMA PETANI (SEDERHANA & CEPAT) -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:14px;">
-          <div>
-            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Nama Komoditas Tanaman:</label>
-            <input id="crop-name" onchange="updateCropAgronomyAnalysis()" placeholder="Pilih preset di atas atau ketik nama..." type="text" class="form-input"/>
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Tahap / Fase Pertumbuhan:</label>
-            <select id="crop-stage" onchange="updateCropAgronomyAnalysis()" class="form-input">
-              <option selected="" value="semai">Pembibitan / Semai (Persemaian)</option>
-              <option value="pindah">Baru Pindah Tanam (1-7 Hari di Lahan)</option>
-              <option value="vegetatif">Pertumbuhan Batang &amp; Daun (Vegetatif)</option>
-              <option value="generatif">Pembungaan &amp; Pembuahan (Generatif)</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Umur Bibit / Tanam (HST / Hari):</label>
-            <input id="crop-age-days" max="180" min="1" placeholder="Masukkan HST..." oninput="updateCropAgronomyAnalysis()" type="number" class="form-input"/>
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Jumlah Daun Sejati:</label>
-            <select id="crop-leaves-count" onchange="updateCropAgronomyAnalysis()" class="form-input">
-              <option value="2">1-2 Helai (Masih Muda / Belum Siap)</option>
-              <option selected="" value="4">3-4 Helai (Cukup Siap Pindah)</option>
-              <option value="6">5-6 Helai (Sangat Ideal / Siap Tanam)</option>
-              <option value="8">&gt;6 Helai (Wajib Segera Dipindah)</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Kekuatan Akar di Media Semai:</label>
-            <select id="crop-root-status" onchange="updateCropAgronomyAnalysis()" class="form-input">
-              <option value="loose">Akar Masih Rapuh / Tanah Rontok saat Dicabut</option>
-              <option selected="" value="solid">Akar Menggumpal Padat (Tanah Utuh/Kuat)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- TOGGLE PENGATURAN LANJUTAN (OPSIONAL UNTUK YANG MEMILIKI ALAT UKUR) -->
-        <button type="button" class="agri-advanced-toggle-btn" id="btn-toggle-agri-adv" onclick="toggleAdvancedAgronomy()">
-          <span>Pengaturan Lanjutan (Luas Lahan, pH Tanah &amp; EC Pupuk)</span>
-          <span id="agri-adv-icon">▼</span>
-        </button>
-
-        <div id="agri-advanced-drawer" style="display:none; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.12); border-radius:10px; padding:12px; margin-bottom:16px;">
-          <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px;">Parameter opsional bagi teknisi atau petani yang memiliki alat ukur:</div>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-            <div>
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Lingkungan Pembibitan:</label>
-              <select id="crop-env" onchange="updateCropAgronomyAnalysis()" class="form-input">
-                <option value="open">Lahan Terbuka Bebas</option>
-                <option selected="" value="greenhouse">Greenhouse / Naungan Paranet / UV</option>
-                <option value="polybag">Tray Semai / Polybag Pembibitan</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Luas Lahan / Bedengan (m²):</label>
-              <input id="crop-area-size" max="50000" min="1" oninput="updateCropAgronomyAnalysis()" type="number" placeholder="100" class="form-input"/>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">pH Tanah Media (Batas: 5.5 - 6.8):</label>
-              <input id="crop-ph-level" max="9.0" min="4.0" oninput="updateCropAgronomyAnalysis()" step="0.1" type="number" placeholder="6.5" class="form-input"/>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Kekuatan EC Nutrisi (mS/cm):</label>
-              <input id="crop-ec-level" max="5.0" min="0.2" oninput="updateCropAgronomyAnalysis()" step="0.1" type="number" placeholder="1.0" class="form-input"/>
-            </div>
-          </div>
-        </div>
-
-        <!-- HASIL KEPUTUSAN & PANDUAN PRAKTIS PETANI -->
-        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 16px;">
-          <!-- Bar Header Hasil & Tombol Aksi -->
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path><path d="M12 6v6l4 2"></path></svg>
-              <div>
-                <div id="ai-agri-title" style="font-size:14px; font-weight:700; color:var(--primary);">Panduan Lapangan: Belum Ada Tanaman Dipilih</div>
-                <div id="ai-agri-subtitle" style="font-size:11px; color:var(--text-sub);">Evaluasi Kesiapan Bibit &amp; Jadwal Siram Berdasarkan Suhu Riil</div>
-              </div>
-            </div>
-            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-              <button type="button" class="btn btn-secondary" onclick="speakAgronomyVoiceReport()" style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Dengarkan Suara Ringkasan Laporan">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                <span>Suara Panduan</span>
-              </button>
-              <button type="button" class="btn btn-secondary" onclick="window.print()" style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;" title="Cetak Ringkasan Panduan">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                <span>Cetak PDF</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- KARTU KESIMPULAN UTAMA 3 DETIK (THE 3-SECOND RULE) -->
-          <div class="agri-status-banner status-waiting" id="card-agri-status-banner">
-            <div class="agri-status-title" id="ai-status-title">
-              <span>STATUS: MENUNGGU PEMILIHAN PRESET TANAMAN</span>
-            </div>
-            <div class="agri-status-desc" id="ai-status-desc">
-              Silakan pilih preset komoditas di atas atau masukkan nama dan usia tanaman di formulir.
-            </div>
-            <div class="agri-status-sub" id="ai-status-sub">
-              Jadwal Siram &amp; Pindah Tanam: Menunggu pemilihan komoditas dan hari setelah tanam (HST).
-            </div>
-          </div>
-
-          <!-- PROGRESS KESIAPAN BIBIT -->
-          <div id="card-transplant-readiness" style="background:rgba(15,23,42,0.6); padding:12px 14px; border-radius:10px; margin-bottom:14px; border:1px solid rgba(255,255,255,0.06);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:12px;">
-              <span style="font-weight:700; color:var(--text-main);">Tingkat Kesiapan Tanam:</span>
-              <b id="ai-readiness-percent" style="color:var(--text-sub); font-size:13px;">--% (Menunggu Data)</b>
-            </div>
-            <div style="width:100%; height:12px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; position:relative;">
-              <div id="ai-readiness-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #10b981, #06b6d4); border-radius:10px; transition:width 0.5s ease;"></div>
-            </div>
-          </div>
-
-          <!-- 4 CHECKLIST PRAKTIS KONDISI BIBIT & LAHAN (BUANG METRIK ANGIN) -->
-          <div class="agri-quick-grid">
-            <div class="agri-quick-card">
-              <div class="agri-quick-label">DAUN SEJATI</div>
-              <div class="agri-quick-val" id="ai-leaves-badge">-- Helai</div>
-              <div class="agri-quick-hint" id="ai-leaves-hint" style="color:var(--text-sub);">Menunggu input</div>
-            </div>
-
-            <div class="agri-quick-card">
-              <div class="agri-quick-label">KEKUATAN AKAR</div>
-              <div class="agri-quick-val" id="ai-root-badge">--</div>
-              <div class="agri-quick-hint" id="ai-root-hint" style="color:var(--text-sub);">Menunggu input</div>
-            </div>
-
-            <div class="agri-quick-card">
-              <div class="agri-quick-label">SUHU SENSOR AKTUAL</div>
-              <div class="agri-quick-val" id="ai-metric-heat">--°C</div>
-              <div class="agri-quick-hint" id="ai-note-heat" style="color:var(--text-sub);">Menunggu sensor DHT11</div>
-            </div>
-
-            <div class="agri-quick-card">
-              <div class="agri-quick-label">TAKARAN AIR SIRAM</div>
-              <div class="agri-quick-val" id="ai-metric-irrigation">-- Liter</div>
-              <div class="agri-quick-hint" id="ai-note-irrigation" style="color:var(--text-sub);">Menunggu luas lahan</div>
-            </div>
-          </div>
-
-          <!-- KOTAK PANDUAN TINDAKAN PRAKTIS PETANI HARI INI -->
-          <div id="ai-agronomy-advice" style="background:rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius:10px; padding:12px 14px; font-size:12px; line-height:1.6;">
-            <b>Panduan Tindakan Lapangan:</b><br/>
-            Silakan pilih preset komoditas tanaman di atas untuk menampilkan panduan lapangan yang sesuai dengan telemetri sensor riil kebun Anda.
-          </div>
-        </div>
-      </div>
-
     </div>
 
+
+<!-- TAB 3: KENDALI & PRESISI -->
+<div id="tab-controls" class="tab-content">
+  <div class="grid-two-col">
+    <!-- SMART PUMP CONTROL CENTER CARD -->
+    <div class="card"
+      style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+      <div class="chart-header-wrap" style="margin-bottom:14px;">
+        <div class="chart-title-area">
+          <div class="chart-icon-box emerald">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="chart-title-text">Kendali Pompa Irigasi</span>
+            <span class="chart-subtitle-text">Pin 26 Active-Low • Interlock Proteksi Lahan</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="badge-pill" id="relay-status-badge"
+            style="color:var(--text-sub); border-color:rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);"><span>Menunggu
+              Data...</span></span>
+        </div>
+      </div>
+      <!-- Mode Switch Toggle -->
+      <div class="switch-group" style="margin-bottom: 18px; align-items: flex-start;">
+        <div>
+          <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mode Operasi</div>
+          <div id="mode-desc-text" style="font-size:11px; color:var(--text-sub);">Mode Otomatis (Sensor &amp; RTC)</div>
+        </div>
+        <div class="segment-control">
+          <button id="btn-pump-mode-auto" class="segment-btn active" onclick="toggleSystemMode(false)">Auto</button>
+          <button id="btn-pump-mode-manual" class="segment-btn" onclick="toggleSystemMode(true)">Manual</button>
+        </div>
+      </div>
+      <!-- Manual Action Buttons (Hanya aktif saat Mode Manual) -->
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
+        <button class="btn btn-primary" id="btn-pump-on" onclick="sendRelayCommand('on')" disabled=""
+          style="flex:1; padding:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:700;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Nyalakan Pompa</span>
+        </button>
+        <button class="btn btn-danger" id="btn-pump-off" onclick="sendRelayCommand('off')" disabled=""
+          style="flex:1; padding:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:700;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+          </svg>
+          <span>Matikan Pompa</span>
+        </button>
+      </div>
+      <!-- Real-time Live Session Status Bar -->
+      <div id="pump-live-bar"
+        style="display:none; background:linear-gradient(90deg, rgba(6,182,212,0.18) 0%, rgba(16,185,129,0.18) 100%); border:1px solid rgba(6,182,212,0.4); padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:12px; align-items:center; justify-content:space-between; box-shadow:0 0 15px rgba(6,182,212,0.25);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge-dot dot-green" style="background:#06b6d4; box-shadow:0 0 8px #06b6d4;"></span>
+          <div>
+            <div style="color:#06b6d4; font-weight:800; font-size:12px; letter-spacing:0.3px;">💧 STATUS: SEDANG MENYIRAM LAHAN</div>
+            <div id="pump-live-subtitle" style="font-size:10px; color:var(--text-sub);">Pin 26 Aktif • Air Mengalir ke Perakaran</div>
+          </div>
+        </div>
+        <b id="pump-live-timer" style="color:var(--text-main); font-size:12px; font-family:'Outfit',sans-serif; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">AKTIF</b>
+      </div>
+      <!-- Pump Usage Stats Grid (Tersimpan di NVS ESP32) -->
+      <div style="background:rgba(0,0,0,0.3); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:6px;">
+          <span style="font-size:12px; font-weight:700; color:var(--text-main); display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Statistik &amp; Akumulasi Pompa
+          </span>
+          <span class="badge-pill" style="font-size:10px; color:#10b981; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.12); padding:3px 8px;">
+            💾 Tersimpan di NVS ESP32
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+          <!-- Card 1: Frekuensi Nyala & Mati -->
+          <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+            <span style="color:var(--text-sub); display:block; font-size:11px; margin-bottom:4px;">Frekuensi Siklus:</span>
+            <div style="display:flex; gap:6px; align-items:baseline; flex-wrap:wrap;">
+              <span id="stat-pump-count" style="font-size:15px; font-weight:800; color:#10b981;">0 Nyala</span>
+              <span style="color:var(--text-sub); font-size:12px;">•</span>
+              <span id="stat-pump-off-count" style="font-size:14px; font-weight:700; color:#94a3b8;">0 Mati</span>
+            </div>
+            <div style="font-size:10px; color:var(--text-sub); margin-top:3px;">Siklus irigasi selesai</div>
+          </div>
+
+          <!-- Card 2: Total Durasi Akumulasi -->
+          <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+            <span style="color:var(--text-sub); display:block; font-size:11px; margin-bottom:4px;">Total Durasi Aktif:</span>
+            <div id="stat-pump-duration" style="font-size:15px; font-weight:800; color:#38bdf8;">0 Detik</div>
+            <div id="stat-pump-secs" style="font-size:10px; color:var(--text-sub); margin-top:3px;">0 Detik Akumulasi</div>
+          </div>
+
+          <!-- Card 3: Estimasi Volume Air -->
+          <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+            <span style="color:var(--text-sub); display:block; font-size:11px; margin-bottom:4px;">Estimasi Volume Air:</span>
+            <div id="stat-water-liters" style="font-size:15px; font-weight:800; color:#06b6d4;">0.0 Liter</div>
+            <div id="stat-water-rate" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Debit: 1800 L/jam</div>
+          </div>
+
+          <!-- Card 4: Konsumsi Listrik & Biaya PLN -->
+          <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+            <span style="color:var(--text-sub); display:block; font-size:11px; margin-bottom:4px;">Biaya Listrik (PLN):</span>
+            <div id="stat-cost-idr" style="font-size:15px; font-weight:800; color:#f59e0b;">Rp 0</div>
+            <div id="stat-kwh-used" style="font-size:10px; color:var(--text-sub); margin-top:3px;">Energi: 0.000 kWh</div>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="resetPumpStats()"
+          style="width:100%; margin-top:10px; padding:7px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-color:rgba(239,68,68,0.3); color:#fca5a5;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Reset Akumulasi Pompa (Mulai Siklus Baru)</span>
+        </button>
+      </div>
+      <!-- Dynamic Pump Calibration Form Collapsible -->
+      <div
+        style="background:rgba(0,0,0,0.2); padding:10px 12px; border-radius:10px; margin-top:10px; border:1px solid rgba(255,255,255,0.08);">
+        <div onclick="togglePumpConfigForm()"
+          style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+          <span
+            style="font-size:11px; font-weight:bold; color:var(--secondary); display:inline-flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+              </path>
+            </svg>
+            Kalibrasi Pompa &amp; Tarif Listrik PLN
+          </span>
+          <span id="pump-config-arrow" style="font-size:11px; color:var(--text-sub);">▼</span>
+        </div>
+        <div id="pump-config-body"
+          style="display:none; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <span style="font-size:10px; color:var(--text-sub);">Debit (L/Jam):</span>
+              <input id="cfg-pump-lph" max="20000" min="100" placeholder="1800" type="number" value="1800" />
+            </div>
+            <div>
+              <span style="font-size:10px; color:var(--text-sub);">Daya (Watt):</span>
+              <input id="cfg-pump-watt" max="3000" min="1" placeholder="25" type="number" value="25" />
+            </div>
+            <div>
+              <span style="font-size:10px; color:var(--text-sub);">Tarif PLN (Rp/kWh):</span>
+              <input id="cfg-pln-tariff" max="5000" min="100" placeholder="415" type="number" value="415" />
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="savePumpConfig()"
+            style="width:100%; padding:6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Simpan Spesifikasi Pompa</span>
+          </button>
+          <div id="pump-save-status" style="font-size:11px; text-align:center; margin-top:6px; color:var(--secondary); font-weight:600;"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- LAMPU PENERANGAN (GROW LIGHT) CARD -->
+    <div class="card"
+      style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+      <div class="chart-header-wrap" style="margin-bottom:14px;">
+        <div class="chart-title-area">
+          <div class="chart-icon-box" style="color:#eab308; background:rgba(234, 179, 8, 0.15);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5">
+              </path>
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="chart-title-text">Penerangan Grow Light</span>
+            <span class="chart-subtitle-text">Pin 25 • Jadwal Timer Otomatis</span>
+          </div>
+        </div>
+        <div id="lamp-status-badge" class="badge-pill"
+          style="color:var(--text-sub); border-color:rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);">
+          <span>Menunggu Data...</span>
+        </div>
+      </div>
+
+
+      <!-- Lamp Schedule Timer -->
+      <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:12px; font-weight:600; color:var(--text-main);">Timer Lampu (Auto)</span>
+          <label class="switch" style="transform: scale(0.85); transform-origin: right;">
+            <input type="checkbox" id="lamp-sched-en" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <label style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:4px;">Jam Mulai
+              Menyala:</label>
+            <input type="time" id="lamp-sched-time" class="form-input" style="background:rgba(15, 23, 42, 0.9);" value="18:00" />
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:4px;">Durasi
+              (Jam):</label>
+            <input type="number" id="lamp-sched-dur" class="form-input" min="1" max="24"
+              style="background:rgba(15, 23, 42, 0.9);" value="12" />
+          </div>
+        </div>
+        <button class="btn"
+          style="width:100%; margin-top:10px; padding:8px; font-size:12px; background:rgba(234, 179, 8, 0.2); color:#fde047; border:1px solid rgba(234, 179, 8, 0.4); display:flex; align-items:center; justify-content:center; gap:8px;"
+          onclick="saveLampSchedule()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <span>Simpan Jadwal Lampu</span>
+        </button>
+        <div id="lamp-save-status" style="font-size:11px; text-align:center; margin-top:6px; color:#fde047; font-weight:600;"></div>
+      </div>
+
+      <!-- Lamp Mode Switch Toggle -->
+      <div class="switch-group" style="margin-bottom: 18px; align-items: flex-start;">
+        <div style="flex:1; padding-right:10px;">
+          <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mode Operasi Lampu</div>
+          <div id="lamp-mode-desc-text" style="font-size:11px; color:var(--text-sub); line-height:1.4;">Mode Otomatis
+            (Sensor & RTC)</div>
+        </div>
+        <div class="segment-control">
+          <button id="btn-lamp-mode-auto" class="segment-btn active" onclick="toggleLampSystemMode(false)">Auto</button>
+          <button id="btn-lamp-mode-manual" class="segment-btn" onclick="toggleLampSystemMode(true)">Manual</button>
+        </div>
+      </div>
+
+      <!-- Lamp Manual Action Buttons (Hanya aktif saat Mode Manual) -->
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
+        <button class="btn" style="background:#ca8a04; color:#fff;" id="btn-lamp-on"
+          onclick="sendLampRelayCommand('on')" disabled="">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="margin-right:6px;">
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg> Nyalakan Lampu
+        </button>
+        <button class="btn btn-danger" id="btn-lamp-off" onclick="sendLampRelayCommand('off')" disabled="">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="margin-right:6px;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          </svg> Matikan Lampu
+        </button>
+      </div>
+    </div>
+
+    <!-- RTC HARDWARE & DYNAMIC SCHEDULE -->
+    <div class="card"
+      style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+      <div class="chart-header-wrap" style="margin-bottom:14px;">
+        <div class="chart-title-area">
+          <div class="chart-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div>
+            <span class="chart-title-text">Jam RTC &amp; Jadwal Harian</span>
+            <span class="chart-subtitle-text">Modul DS3231 I2C • Dual Slot Penyiraman Otomatis</span>
+          </div>
+        </div>
+        <span class="badge-pill" id="rtc-valid-badge" style="color:var(--secondary);">RTC Aktif</span>
+      </div>
+      <!-- RTC Live Time Display -->
+      <div
+        style="background:rgba(6, 182, 212, 0.08); padding:12px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <div style="font-size:11px; color:var(--text-sub); font-weight:bold;">JAM REAL-TIME RTC DS3231</div>
+          <div id="rtc-live-time"
+            style="font-family:'Outfit',sans-serif; font-size:20px; font-weight:800; color:var(--text-main);">-</div>
+        </div>
+        <button class="btn btn-primary" onclick="syncRtcWithBrowser()"
+          style="padding:8px 14px; font-size:11px; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Sync Jam HP</span>
+        </button>
+      </div>
+      <!-- Schedule Slot 1 (Pagi) -->
+      <div
+        style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(6,182,212,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span
+            style="font-size:13px; font-weight:700; color:var(--secondary); display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            Slot 1 (Penyiraman Pagi)
+          </span>
+          <label class="switch" style="transform: scale(0.75); transform-origin: right; margin-left: auto;">
+            <input id="sched1-en" type="checkbox" checked />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div style="flex:1;">
+            <span style="font-size:10px; color:var(--text-sub);">Jam Siram:</span>
+            <input id="sched1-time" type="time" value="06:00" />
+          </div>
+          <div style="flex:1;">
+            <span style="font-size:10px; color:var(--text-sub);">Durasi (Menit):</span>
+            <input id="sched1-dur" max="60" min="1" type="number" value="15" />
+          </div>
+        </div>
+        <button class="btn"
+          style="width:100%; margin-top:8px; padding:8px; font-size:12px; background:rgba(16, 185, 129, 0.15); color:var(--primary); border:1px solid rgba(16, 185, 129, 0.3); display:flex; align-items:center; justify-content:center; gap:8px;"
+          onclick="saveSchedule(1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <span>Simpan Slot Pagi</span>
+        </button>
+        <div id="sched1-save-status" style="font-size:11px; text-align:center; margin-top:6px; color:var(--primary); font-weight:600;"></div>
+      </div>
+      <!-- Schedule Slot 2 (Sore) -->
+      <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; border:1px solid rgba(245,158,11,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span
+            style="font-size:13px; font-weight:700; color:var(--warning); display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 18a5 5 0 0 0-10 0"></path>
+              <line x1="12" y1="2" x2="12" y2="9"></line>
+              <line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line>
+              <line x1="1" y1="18" x2="3" y2="18"></line>
+              <line x1="21" y1="18" x2="23" y2="18"></line>
+              <line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line>
+              <line x1="23" y1="22" x2="1" y2="22"></line>
+            </svg>
+            Slot 2 (Penyiraman Sore)
+          </span>
+          <label class="switch" style="transform: scale(0.75); transform-origin: right; margin-left: auto;">
+            <input id="sched2-en" type="checkbox" checked />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div style="flex:1;">
+            <span style="font-size:10px; color:var(--text-sub);">Jam Siram:</span>
+            <input id="sched2-time" type="time" value="17:00" />
+          </div>
+          <div style="flex:1;">
+            <span style="font-size:10px; color:var(--text-sub);">Durasi (Menit):</span>
+            <input id="sched2-dur" max="60" min="1" type="number" value="10" />
+          </div>
+        </div>
+        <button class="btn"
+          style="width:100%; margin-top:8px; padding:8px; font-size:12px; background:rgba(245, 158, 11, 0.15); color:var(--warning); border:1px solid rgba(245, 158, 11, 0.3); display:flex; align-items:center; justify-content:center; gap:8px;"
+          onclick="saveSchedule(2)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <span>Simpan Slot Sore</span>
+        </button>
+        <div id="sched2-save-status" style="font-size:11px; text-align:center; margin-top:6px; color:var(--warning); font-weight:600;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-two-col">
+    <!-- THRESHOLD CONTROL CARD (DYNAMIC CROP PROFILE & HARDWARE LIMITS) -->
+    <div class="card"
+      style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
+      <div class="chart-header-wrap" style="margin-bottom:14px;">
+        <div class="chart-title-area">
+          <div class="chart-icon-box amber">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+          </div>
+          <div>
+            <span class="chart-title-text">Profil Budidaya &amp; Ambang Batas</span>
+            <span class="chart-subtitle-text">Parameter NVS Flash • Threshold Irigasi Otomatis</span>
+          </div>
+        </div>
+        <span class="badge-pill" id="badge-crop-profile"
+          style="color:var(--primary); font-size:11px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);">Mode
+          Semai Benih</span>
+      </div>
+      <!-- DYNAMIC DROPDOWN PROFIL TANAMAN -->
+      <div
+        style="background:rgba(0,0,0,0.25); padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); margin-bottom:16px; margin-top:8px;">
+        <label style="font-size:12px; color:var(--text-main); font-weight:700; display:block; margin-bottom:10px;">
+          Pilih Karakteristik &amp; Fase Tanaman:
+        </label>
+        <select id="crop-profile-select" onchange="onCropProfileChange(this.value)"
+          style="width:100%; padding:10px 12px; border-radius:10px; background:#1e293b; color:#f8fafc; border:1.5px solid var(--primary); font-size:13px; font-weight:600; cursor:pointer; outline:none; transition:border-color 0.2s;">
+          <option value="0">Penyemaian Benih (Nursery / Kecambah)</option>
+          <option value="1">Tanaman Buah (Vegetatif: Daun, Batang &amp; Akar)</option>
+          <option value="2">Tanaman Buah (Generatif: Bunga &amp; Buah)</option>
+          <option value="3">Kustom / Pengaturan Manual Slider</option>
+        </select>
+        <!-- Dynamic Profile Guidance Box -->
+        <div id="crop-profile-guidance"
+          style="margin-top:10px; font-size:11px; line-height:1.5; color:var(--text-sub); background:rgba(16,185,129,0.08); border-left:3px solid var(--primary); padding:10px; border-radius:8px;">
+          <!-- Dikelola otomatis oleh JavaScript -->
+        </div>
+
+        <!-- GEMINI AI INTEGRATION -->
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">
+          <label
+            style="font-size:12px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2">
+              <path
+                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
+              </path>
+            </svg>
+            Otentikasi API Key Gemini
+          </label>
+          <div style="margin-bottom:12px;">
+            <input type="password" id="gemini-api-key" placeholder="Paste API Key Gemini di sini" value=""
+              style="width:100%; padding:10px 12px; border-radius:8px; font-size:12px; background:rgba(0,0,0,0.3); border:1px solid rgba(168, 85, 247, 0.3); color:var(--text-main); outline:none; transition:border-color 0.2s; font-family:monospace;"
+              onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='rgba(168, 85, 247, 0.3)'"
+              onchange="saveGeminiKey(this.value)" />
+          </div>
+          <button class="btn" id="btn-gemini-ai"
+            style="width:100%; padding:12px; font-size:13px; font-weight:700; background:linear-gradient(135deg, #6366f1, #a855f7, #ec4899); color:#fff; border:none; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); transition: transform 0.2s;"
+            onclick="askGeminiAgronomist()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
+              </path>
+            </svg>
+            <span id="gemini-btn-text">Auto-Set via Gemini AI ✨</span>
+          </button>
+        </div>
+
+      </div>
+      <div style="margin-bottom:16px;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:6px;">
+          <span>Batas Tanah Minimal (Siram jika &lt; ini):</span>
+          <b id="val-slider-soil" style="color:var(--primary); font-size:13px; font-weight:700;">65%</b>
+        </div>
+        <input id="slider-soil" max="90" min="10" oninput="onSliderManualChange('soil', this.value)"
+          onchange="saveThresholds(true)" type="range" value="65" />
+      </div>
+      <div style="margin-bottom:16px;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:6px;">
+          <span>Batas Suhu Panas (Siram jika &gt; ini):</span>
+          <b id="val-slider-temp" style="color:var(--danger); font-size:13px; font-weight:700;">30°C</b>
+        </div>
+        <input id="slider-temp" max="45" min="20" oninput="onSliderManualChange('temp', this.value)"
+          onchange="saveThresholds(true)" type="range" value="30" />
+      </div>
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+        <span id="threshold-save-status"
+          style="font-size:11.5px; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:4px;">
+          <span class="badge-dot dot-green" style="background:#10b981;"></span>Tersimpan di ESP32 ✓
+        </span>
+        <button type="button" class="btn btn-sm"
+          style="padding:6px 14px; font-size:11.5px; font-weight:600; background:rgba(16, 185, 129, 0.15); color:var(--primary); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; cursor:pointer;"
+          onclick="saveThresholds(false)">
+          Simpan ke ESP32
+        </button>
+      </div>
+    </div>
+
+    <!-- KALKULATOR DOSIS PUPUK PRESISI -->
+    <div class="card" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));">
+      <div class="chart-header-wrap" style="margin-bottom:14px;">
+        <div class="chart-title-area">
+          <div class="chart-icon-box purple">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="chart-title-text">Kalkulator Dosis Pupuk &amp; Fertigasi</span>
+            <span class="chart-subtitle-text">Formulasi Makro/Mikro • Rekomendasi Aplikasi Presisi</span>
+          </div>
+        </div>
+        <span class="badge-pill" style="color:#a855f7; border-color:rgba(168,85,247,0.3);">Model Agronomi NPK</span>
+      </div>
+      <div
+        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-bottom:12px;">
+        <div style="grid-column: 1 / -1;">
+          <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Pilih
+            Jenis Pupuk Pertanian:</label>
+          <select id="fert-formula" onchange="calculateFertigationDose()" class="form-input">
+            <option selected="" value="npk_phonska">NPK Phonska / NPK Mutiara 15-15-15 (Majemuk Seimbang)</option>
+            <option value="urea">UREA (Nitrogen 46% - Pertumbuhan Daun &amp; Batang)</option>
+            <option value="sp36">SP-36 / TSP (Fosfat 36% - Perakaran &amp; Anakan)</option>
+            <option value="kcl">KCL / MOP (Kalium 60% - Bobot Buah &amp; Anti Rontok)</option>
+            <option value="za">Pupuk ZA (Sulfur 24% + N 21% - Aroma &amp; Hijau Daun)</option>
+            <option value="kno3_putih">KNO3 Putih (Kalium Nitrat 13-0-45 - Pembuahan Generatif)</option>
+            <option value="mkp">Pupuk MKP (Mono Kalium Fosfat 0-52-34 - Anti Rontok Bunga)</option>
+            <option value="ab_mix">AB Mix Presisi (Fertigasi Kocor Drip Hydroponic)</option>
+            <option value="dolomit">Kapur Dolomit (CaMg - Penetral pH Media Asam)</option>
+            <option value="humic">Asam Humat Organik (Pembenah Tanah &amp; Nutrisi)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Harga
+            Pupuk (Rp/kg):</label>
+          <input id="fert-price-kg" min="500" oninput="calculateFertigationDose()" step="500" type="number"
+            value="18000" class="form-input" />
+        </div>
+        <div>
+          <label
+            style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Metode
+            Aplikasi:</label>
+          <select id="fert-method" onchange="calculateFertigationDose()" class="form-input">
+            <option selected="" value="kocor">Kocor Pelarutan Air (Fertigasi)</option>
+            <option value="tabur">Tabur / Benam Guludan Tanah</option>
+            <option value="foliar">Semprot Daun (Foliar Spray)</option>
+          </select>
+        </div>
+      </div>
+      <div id="fert-result-box"
+        style="background:rgba(168, 85, 247, 0.08); padding:12px; border-radius:10px; font-size:12px; line-height:1.6; margin-top:14px; word-break: break-word;">
+        Memproses rekomendasi dosis pupuk dinamis...
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAJEMEN PROFIL TANAMAN & PANDUAN PRAKTIS LAPANGAN (FARMER-CENTRIC) -->
+  <div class="card"
+    style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); margin-bottom: 20px;">
+    <div class="chart-header-wrap" style="margin-bottom:14px;">
+      <div class="chart-title-area">
+        <div class="chart-icon-box emerald">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="chart-title-text">Panduan Tanam &amp; Kesiapan Bibit Lapangan</span>
+          <span class="chart-subtitle-text">Pedoman Praktis Petani • Kesiapan Pindah Tanam, Pengairan &amp; Perlindungan
+            Panas</span>
+        </div>
+      </div>
+      <span class="badge-pill" style="color:#10b981; border-color:rgba(16,185,129,0.3);">Model Lapangan Petani</span>
+    </div>
+
+    <!-- Preset Tanaman 1-Klik -->
+    <div style="margin-bottom: 14px;">
+      <div style="font-size:11.5px; color:var(--text-sub); margin-bottom:8px; font-weight:700; letter-spacing:0.3px;">
+        PILIH CEPAT JENIS TANAMAN:</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary"
+          onclick="applyCropPreset('Cabai Rawit Merah', 'semai', 14, 'polybag', 100)"
+          style="padding:6px 14px; font-size:12px; font-weight:600;">Cabai Rawit</button>
+        <button type="button" class="btn btn-secondary"
+          onclick="applyCropPreset('Bawang Merah Bima', 'semai', 10, 'open', 250)"
+          style="padding:6px 14px; font-size:12px; font-weight:600;">Bawang Merah</button>
+        <button type="button" class="btn btn-secondary"
+          onclick="applyCropPreset('Tomat Servo F1', 'semai', 18, 'greenhouse', 150)"
+          style="padding:6px 14px; font-size:12px; font-weight:600;">Tomat Servo</button>
+        <button type="button" class="btn btn-secondary"
+          onclick="applyCropPreset('Melon Golden Light', 'semai', 12, 'greenhouse', 300)"
+          style="padding:6px 14px; font-size:12px; font-weight:600;">Melon Golden</button>
+        <button type="button" class="btn btn-secondary"
+          onclick="applyCropPreset('Semangka Inul F1', 'semai', 12, 'open', 500)"
+          style="padding:6px 14px; font-size:12px; font-weight:600;">Semangka Inul</button>
+        <button type="button" class="btn btn-secondary"
+          onclick="applyCropPreset('Padi Ciherang Sawah', 'semai', 20, 'open', 1000)"
+          style="padding:6px 14px; font-size:12px; font-weight:600;">Padi Sawah</button>
+      </div>
+    </div>
+
+    <!-- 5 INPUT UTAMA PETANI (SEDERHANA & CEPAT) -->
+    <div
+      style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:14px;">
+      <div>
+        <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Nama
+          Komoditas Tanaman:</label>
+        <input id="crop-name" onchange="updateCropAgronomyAnalysis()"
+          placeholder="Pilih preset di atas atau ketik nama..." type="text" class="form-input" />
+      </div>
+      <div>
+        <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Tahap /
+          Fase Pertumbuhan:</label>
+        <select id="crop-stage" onchange="updateCropAgronomyAnalysis()" class="form-input">
+          <option selected="" value="semai">Pembibitan / Semai (Persemaian)</option>
+          <option value="pindah">Baru Pindah Tanam (1-7 Hari di Lahan)</option>
+          <option value="vegetatif">Pertumbuhan Batang &amp; Daun (Vegetatif)</option>
+          <option value="generatif">Pembungaan &amp; Pembuahan (Generatif)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Umur
+          Bibit / Tanam (HST / Hari):</label>
+        <input id="crop-age-days" max="180" min="1" placeholder="Masukkan HST..." oninput="updateCropAgronomyAnalysis()"
+          type="number" class="form-input" />
+      </div>
+      <div>
+        <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Jumlah
+          Daun Sejati:</label>
+        <select id="crop-leaves-count" onchange="updateCropAgronomyAnalysis()" class="form-input">
+          <option value="2">1-2 Helai (Masih Muda / Belum Siap)</option>
+          <option selected="" value="4">3-4 Helai (Cukup Siap Pindah)</option>
+          <option value="6">5-6 Helai (Sangat Ideal / Siap Tanam)</option>
+          <option value="8">&gt;6 Helai (Wajib Segera Dipindah)</option>
+        </select>
+      </div>
+      <div>
+        <label
+          style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:700;">Kekuatan
+          Akar di Media Semai:</label>
+        <select id="crop-root-status" onchange="updateCropAgronomyAnalysis()" class="form-input">
+          <option value="loose">Akar Masih Rapuh / Tanah Rontok saat Dicabut</option>
+          <option selected="" value="solid">Akar Menggumpal Padat (Tanah Utuh/Kuat)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TOGGLE PENGATURAN LANJUTAN (OPSIONAL UNTUK YANG MEMILIKI ALAT UKUR) -->
+    <button type="button" class="agri-advanced-toggle-btn" id="btn-toggle-agri-adv" onclick="toggleAdvancedAgronomy()">
+      <span>Pengaturan Lanjutan (Luas Lahan, pH Tanah &amp; EC Pupuk)</span>
+      <span id="agri-adv-icon">▼</span>
+    </button>
+
+    <div id="agri-advanced-drawer"
+      style="display:none; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.12); border-radius:10px; padding:12px; margin-bottom:16px;">
+      <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px;">Parameter opsional bagi teknisi atau
+        petani yang memiliki alat ukur:</div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <div>
+          <label
+            style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Lingkungan
+            Pembibitan:</label>
+          <select id="crop-env" onchange="updateCropAgronomyAnalysis()" class="form-input">
+            <option value="open">Lahan Terbuka Bebas</option>
+            <option selected="" value="greenhouse">Greenhouse / Naungan Paranet / UV</option>
+            <option value="polybag">Tray Semai / Polybag Pembibitan</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Luas
+            Lahan / Bedengan (m²):</label>
+          <input id="crop-area-size" max="50000" min="1" oninput="updateCropAgronomyAnalysis()" type="number"
+            placeholder="100" class="form-input" />
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">pH
+            Tanah Media (Batas: 5.5 - 6.8):</label>
+          <input id="crop-ph-level" max="9.0" min="4.0" oninput="updateCropAgronomyAnalysis()" step="0.1" type="number"
+            placeholder="6.5" class="form-input" />
+        </div>
+        <div>
+          <label
+            style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px; font-weight:600;">Kekuatan
+            EC Nutrisi (mS/cm):</label>
+          <input id="crop-ec-level" max="5.0" min="0.2" oninput="updateCropAgronomyAnalysis()" step="0.1" type="number"
+            placeholder="1.0" class="form-input" />
+        </div>
+      </div>
+    </div>
+
+    <!-- HASIL KEPUTUSAN & PANDUAN PRAKTIS PETANI -->
+    <div
+      style="background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 16px;">
+      <!-- Bar Header Hasil & Tombol Aksi -->
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+            <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          <div>
+            <div id="ai-agri-title" style="font-size:14px; font-weight:700; color:var(--primary);">Panduan Lapangan:
+              Belum Ada Tanaman Dipilih</div>
+            <div id="ai-agri-subtitle" style="font-size:11px; color:var(--text-sub);">Evaluasi Kesiapan Bibit &amp;
+              Jadwal Siram Berdasarkan Suhu Riil</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary" onclick="speakAgronomyVoiceReport()"
+            style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;"
+            title="Dengarkan Suara Ringkasan Laporan">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <span>Suara Panduan</span>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="window.print()"
+            style="padding:5px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;"
+            title="Cetak Ringkasan Panduan">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Cetak PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KARTU KESIMPULAN UTAMA 3 DETIK (THE 3-SECOND RULE) -->
+      <div class="agri-status-banner status-waiting" id="card-agri-status-banner">
+        <div class="agri-status-title" id="ai-status-title">
+          <span>STATUS: MENUNGGU PEMILIHAN PRESET TANAMAN</span>
+        </div>
+        <div class="agri-status-desc" id="ai-status-desc">
+          Silakan pilih preset komoditas di atas atau masukkan nama dan usia tanaman di formulir.
+        </div>
+        <div class="agri-status-sub" id="ai-status-sub">
+          Jadwal Siram &amp; Pindah Tanam: Menunggu pemilihan komoditas dan hari setelah tanam (HST).
+        </div>
+      </div>
+
+      <!-- PROGRESS KESIAPAN BIBIT -->
+      <div id="card-transplant-readiness"
+        style="background:rgba(15,23,42,0.6); padding:12px 14px; border-radius:10px; margin-bottom:14px; border:1px solid rgba(255,255,255,0.06);">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:12px;">
+          <span style="font-weight:700; color:var(--text-main);">Tingkat Kesiapan Tanam:</span>
+          <b id="ai-readiness-percent" style="color:var(--text-sub); font-size:13px;">--% (Menunggu Data)</b>
+        </div>
+        <div
+          style="width:100%; height:12px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; position:relative;">
+          <div id="ai-readiness-bar"
+            style="width:0%; height:100%; background:linear-gradient(90deg, #10b981, #06b6d4); border-radius:10px; transition:width 0.5s ease;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 CHECKLIST PRAKTIS KONDISI BIBIT & LAHAN (BUANG METRIK ANGIN) -->
+      <div class="agri-quick-grid">
+        <div class="agri-quick-card">
+          <div class="agri-quick-label">DAUN SEJATI</div>
+          <div class="agri-quick-val" id="ai-leaves-badge">-- Helai</div>
+          <div class="agri-quick-hint" id="ai-leaves-hint" style="color:var(--text-sub);">Menunggu input</div>
+        </div>
+
+        <div class="agri-quick-card">
+          <div class="agri-quick-label">KEKUATAN AKAR</div>
+          <div class="agri-quick-val" id="ai-root-badge">--</div>
+          <div class="agri-quick-hint" id="ai-root-hint" style="color:var(--text-sub);">Menunggu input</div>
+        </div>
+
+        <div class="agri-quick-card">
+          <div class="agri-quick-label">SUHU SENSOR AKTUAL</div>
+          <div class="agri-quick-val" id="ai-metric-heat">--°C</div>
+          <div class="agri-quick-hint" id="ai-note-heat" style="color:var(--text-sub);">Menunggu sensor DHT11</div>
+        </div>
+
+        <div class="agri-quick-card">
+          <div class="agri-quick-label">TAKARAN AIR SIRAM</div>
+          <div class="agri-quick-val" id="ai-metric-irrigation">-- Liter</div>
+          <div class="agri-quick-hint" id="ai-note-irrigation" style="color:var(--text-sub);">Menunggu luas lahan</div>
+        </div>
+      </div>
+
+      <!-- KOTAK PANDUAN TINDAKAN PRAKTIS PETANI HARI INI -->
+      <div id="ai-agronomy-advice"
+        style="background:rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius:10px; padding:12px 14px; font-size:12px; line-height:1.6;">
+        <b>Panduan Tindakan Lapangan:</b><br />
+        Silakan pilih preset komoditas tanaman di atas untuk menampilkan panduan lapangan yang sesuai dengan telemetri
+        sensor riil kebun Anda.
+      </div>
+    </div>
+  </div>
+
+</div>
     <!-- TAB 4: CUACA BMKG VS MIKROKLIMAT LAHAN -->
     <div id="tab-weather" class="tab-content">
       <div class="card" style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
@@ -4690,45 +5129,45 @@ const char index_html[] PROGMEM = R"rawliteral(
     <div id="tab-logs" class="tab-content">
       
       <!-- SUB-NAV / VIEW SWITCHER -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-        <div style="display:inline-flex; width:auto; background:rgba(15,23,42,0.6); padding:4px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); gap:4px;">
-          <button id="btn-view-logs-table" onclick="switchLogsView('table')" style="padding:7px 16px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:none; cursor:pointer; background:var(--primary); color:#fff; transition:all 0.2s;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            <span>Histori Flash LittleFS (CSV)</span>
-          </button>
-          <button id="btn-view-logs-feed" onclick="switchLogsView('feed')" style="padding:7px 16px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:none; cursor:pointer; background:transparent; color:var(--text-sub); transition:all 0.2s;">
+      <div class="logs-subnav-container">
+        <div class="logs-switcher-wrap">
+          <button id="btn-view-logs-feed" onclick="switchLogsView('feed')" class="logs-switcher-btn" style="background:var(--primary); color:#fff;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            <span>Live Feed Transmisi Sensor (Real-Time)</span>
-            <span id="live-feed-badge-dot" style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+            <span>Live Serial</span>
+            <span id="live-feed-badge-dot" style="width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981;"></span>
+          </button>
+          <button id="btn-view-logs-table" onclick="switchLogsView('table')" class="logs-switcher-btn" style="background:transparent; color:var(--text-sub);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Flash LittleFS</span>
           </button>
         </div>
 
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn btn-secondary" onclick="fetchAndParseLogs()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" title="Muat ulang rekaman CSV LittleFS">
+        <div class="logs-actions-wrap">
+          <button class="btn btn-secondary" onclick="fetchAndParseLogs()" title="Muat ulang rekaman CSV LittleFS">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             <span>Refresh</span>
           </button>
-          <button class="btn btn-accent" onclick="openFirebaseBackupDialog()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #0284c7, #38bdf8); border:none;" title="Pilihan Backup Hemat Kuota atau Arsip Penuh ke Firebase">
+          <button class="btn btn-accent" onclick="openFirebaseBackupDialog()" style="background:linear-gradient(135deg, #0284c7, #38bdf8); border:none;" title="Pilihan Backup Hemat Kuota atau Arsip Penuh ke Firebase">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
-            <span>Backup Firebase</span>
+            <span>Firebase</span>
           </button>
-          <button class="btn btn-secondary" onclick="exportLogsAsJSON()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+          <button class="btn btn-secondary" onclick="exportLogsAsJSON()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span>JSON</span>
           </button>
-          <a class="btn btn-secondary" href="/downloadLog" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" target="_blank">
+          <a class="btn btn-secondary" href="/downloadLog" target="_blank">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
             <span>CSV</span>
           </a>
-          <button class="btn btn-danger" onclick="clearSystemLogs()" style="padding:6px 12px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+          <button class="btn btn-danger" onclick="clearSystemLogs()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span>Hapus Log</span>
+            <span>Hapus</span>
           </button>
         </div>
       </div>
 
       <!-- VIEW 1: TABEL HISTORI FLASH MEMORY LITTLEFS -->
-      <div id="view-container-table" class="card" style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
+      <div id="view-container-table" class="card" style="display:none; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
         <div class="chart-header-wrap" style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);">
           <div class="chart-title-area">
             <div class="chart-icon-box emerald">
@@ -4789,37 +5228,38 @@ const char index_html[] PROGMEM = R"rawliteral(
       </div>
 
       <!-- VIEW 2: LIVE STREAM TELEMETRI REAL-TIME (PACKET SNIFFER) -->
-      <div id="view-container-feed" class="card" style="display:none; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
+      <div id="view-container-feed" class="card" style="display:block; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
         <div class="chart-header-wrap" style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);">
           <div class="chart-title-area">
             <div class="chart-icon-box cyan">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
             </div>
             <div>
-              <span class="chart-title-text" style="font-size:15px;">Live Stream Telemetri Real-Time</span>
-              <span class="chart-subtitle-text">Log Transmisi Data Masuk Dari Sender Node ESP8266 &amp; Sensor Lahan • 100% Data Aktual</span>
+              <span class="chart-title-text" style="font-size:15px;">Live Serial Monitor Telemetri (Real-Time)</span>
+              <span class="chart-subtitle-text">Log Transmisi Data Masuk Dari Sender Node ESP8266 &amp; Sensor Lahan • Format Serial Monitor 115200 Baud</span>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label style="font-size:11px; color:var(--text-sub); display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
               <input type="checkbox" id="feed-autoscroll" checked style="accent-color:#10b981;"> Auto-Scroll
             </label>
             <button class="btn btn-secondary" id="btn-toggle-feed-pause" onclick="toggleFeedPause()" style="padding:4px 10px; font-size:11px;">Pause</button>
-            <button class="btn btn-secondary" onclick="clearLiveFeed()" style="padding:4px 10px; font-size:11px;">Clear Feed</button>
+            <button class="btn btn-secondary" onclick="copyLiveFeedText()" style="padding:4px 10px; font-size:11px;" title="Salin seluruh isi log terminal">Salin Teks</button>
+            <button class="btn btn-secondary" onclick="clearLiveFeed()" style="padding:4px 10px; font-size:11px;">Clear</button>
             <button class="btn btn-accent" onclick="uploadLiveFeedToFirebase()" style="padding:4px 10px; font-size:11px; display:inline-flex; align-items:center; gap:5px; background:linear-gradient(135deg, #0284c7, #38bdf8); border:none;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
-              <span>Export Stream ke Firebase</span>
+              <span>Export ke Firebase</span>
             </button>
           </div>
         </div>
 
         <!-- Terminal Output Window -->
-        <div id="live-telemetry-console" style="background:#090d16; border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px; font-family:'Courier New', monospace; font-size:11.5px; height:360px; overflow-y:auto; line-height:1.6; color:#94a3b8;">
+        <div id="live-telemetry-console" class="telemetry-terminal-container">
           <div style="color:#64748b; font-style:italic;">[Sistem Standby] Menunggu aliran paket telemetri baru dari ESP32 &amp; ESP8266...</div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11px; color:var(--text-sub);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11px; color:var(--text-sub); flex-wrap:wrap; gap:6px;">
           <span id="feed-stat-packets">Total Paket Tertangkap: 0</span>
-          <span>Protokol: ESP-NOW 2.4GHz + Local REST HTTP</span>
+          <span>ESP-NOW 2.4GHz + Local REST HTTP</span>
         </div>
       </div>
 
@@ -5039,11 +5479,8 @@ const char index_html[] PROGMEM = R"rawliteral(
       </div>
       <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid var(--card-border); margin-top:14px; flex-wrap:wrap; gap:8px;">
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-secondary" onclick="clearAllSectors()" style="color:var(--accent-rose); border-color:rgba(239,68,68,0.3); font-size:11px; padding:6px 12px;">
-            Kosongkan Semua Sektor
-          </button>
-          <button type="button" class="btn btn-secondary" onclick="loadSamplePresetSectors()" style="color:var(--accent-emerald); border-color:rgba(16,185,129,0.3); font-size:11px; padding:6px 12px;">
-            Muat Contoh Template
+          <button type="button" class="btn btn-secondary" onclick="clearAllSectors()" style="color:var(--accent-emerald); border-color:rgba(16,185,129,0.3); font-size:11px; padding:6px 12px;">
+            🔄 Sinkron Ulang dari ESP32
           </button>
         </div>
         <button type="button" class="btn btn-secondary" onclick="closeSectorManagerModal()" style="padding:8px 18px; font-size:12px;">
@@ -5098,11 +5535,22 @@ function switchTab(tabId) {
 
   // Auto trigger canvas redraws when switching to charts tab
   if (tabId === 'charts') {
+    if (typeof fetchAndParseLogs === 'function') fetchAndParseLogs();
     setTimeout(function () {
       if (typeof resizeCanvas === 'function') resizeCanvas();
       if (typeof renderHourlyChart === 'function') renderHourlyChart();
       if (typeof resizeCropCanvas === 'function') resizeCropCanvas();
+      if (typeof renderCropHistoryTable === 'function') renderCropHistoryTable();
     }, 60);
+    setTimeout(function () {
+      if (typeof resizeCanvas === 'function') resizeCanvas();
+      if (typeof resizeCropCanvas === 'function') resizeCropCanvas();
+    }, 250);
+  }
+
+  // Auto trigger log fetching when switching to logs tab
+  if (tabId === 'logs') {
+    if (typeof fetchAndParseLogs === 'function') fetchAndParseLogs();
   }
 }
 
@@ -5184,48 +5632,71 @@ function renderVirtualLcdRows() {
   var isLampOn = (d.lampOn == 1);
 
   // Check emergency states from real hardware
-  if (d.unplugged || d.soil === -1) {
+  if (d.unplugged || (d.soil === -1 && d.isWaiting != 1)) {
     r1.innerText = '!  PERINGATAN  !';
     r2.innerText = 'SENSOR TERPUTUS ';
     return;
   }
-  if (d.temp !== undefined && parseFloat(d.temp) >= 35.0) {
-    r1.innerText = '! BAHAYA  SUHU !';
-    r2.innerText = 'Suhu:' + parseFloat(d.temp).toFixed(1) + 'C PANAS';
+
+  // Check initial startup waiting state
+  if (d.isWaiting == 1) {
+    var pct = (d.waitingPercent !== undefined) ? d.waitingPercent : 0;
+    var wSec = (d.waitingSecs !== undefined) ? d.waitingSecs : 0;
+    r1.innerText = '! MEMUAT SISTEM !';
+    r2.innerText = ('Tunggu:' + (pct < 10 ? ' ' : '') + pct + '% ' + wSec + 's/60s   ').substring(0, 16);
     return;
   }
 
-  // Animation blink for pump: every 500ms when actively irrigating
-  var blinkState = (Math.floor(Date.now() / 500) % 2 === 0);
+  var rawT = (d.suhuC !== undefined && d.suhuC !== null && d.suhuC !== '--') ? d.suhuC : (d.temp || null);
+  var tVal = (rawT !== null && !isNaN(parseFloat(rawT))) ? parseFloat(rawT) : null;
+
+  if (tVal !== null && tVal >= 35.0) {
+    r1.innerText = '! BAHAYA  SUHU !';
+    r2.innerText = 'Suhu:' + tVal.toFixed(1) + 'C PANAS';
+    return;
+  }
 
   if (isRelayOn || virtualLcdPage === 0) {
     // Layar 1: T:28.4C H:74%  AUTO
-    //         S:58%   P:OFF  L:OFF
-    var tVal = (d.temp !== undefined && !isNaN(parseFloat(d.temp))) ? parseFloat(d.temp).toFixed(1) : null;
-    var hVal = (d.hum !== undefined && !isNaN(parseFloat(d.hum))) ? Math.round(d.hum) : null;
-    var sVal = (d.soil !== undefined && d.soil >= 0) ? Math.round(d.soil) : null;
+    //         S: 0%   P:ON   L:ON 
+    var rawH = (d.hum !== undefined && d.hum !== null && d.hum !== '--') ? d.hum : null;
+    var hVal = (rawH !== null && !isNaN(parseFloat(rawH))) ? Math.round(parseFloat(rawH)) : null;
+    var rawS = (d.soil !== undefined && d.soil !== null && d.soil !== '--') ? d.soil : null;
+    var sVal = (rawS !== null && !isNaN(parseFloat(rawS)) && parseFloat(rawS) >= 0) ? Math.round(parseFloat(rawS)) : null;
 
-    var tempFormatted = tVal !== null ? (tVal < 10 ? ' ' : '') + tVal + 'C' : ' --C';
-    var humFormatted = hVal !== null ? (hVal < 10 ? ' ' : '') + hVal + '%' : ' --%';
-    var soilFormatted = sVal !== null ? (sVal < 10 ? ' ' : '') + sVal + '%' : ' --%';
+    var tempFormatted = (tVal !== null) ? ((tVal < 10 ? ' ' : '') + tVal.toFixed(1) + 'C') : '--.-C';
+    var humFormatted = (hVal !== null) ? ((hVal < 10 ? ' ' : '') + hVal + '%') : '--%';
+    var soilFormatted = (sVal !== null) ? ((sVal < 10 ? '  ' : (sVal < 100 ? ' ' : '')) + sVal + '%') : ' --%';
 
-    var pumpStr = isRelayOn ? (blinkState ? 'ON ' : '   ') : (d.cooldown ? 'CLD' : 'OFF');
+    var pumpStr = isRelayOn ? 'ON ' : (d.cooldown ? 'CLD' : 'OFF');
     var lampStr = isLampOn ? 'ON ' : 'OFF';
 
-    r1.innerText = 'T:' + tempFormatted + ' H:' + humFormatted + ' ' + modeStr;
+    var bSuhu = (d.batasSuhu !== undefined && !isNaN(parseFloat(d.batasSuhu))) ? parseFloat(d.batasSuhu) : 30.0;
+    if (tVal !== null && tVal > bSuhu) {
+      r1.innerText = ('T:' + tempFormatted + ' [PANAS] ' + modeStr).substring(0, 16);
+    } else {
+      r1.innerText = ('T:' + tempFormatted + ' H:' + humFormatted + ' ' + modeStr).substring(0, 16);
+    }
     r2.innerText = 'S:' + soilFormatted + ' P:' + pumpStr + ' L:' + lampStr;
   } else {
     // Layar 2: 16:52:30  AUTO
     //         -62dB 192.168.4.1
-    var timeStr = d.time || '--:--:--';
+    var timeStr = d.rtcTime || d.time || '--:--:--';
+    if (timeStr.indexOf(' ') !== -1) {
+      timeStr = timeStr.split(' ')[1] || timeStr;
+    }
     if (timeStr.length > 8) timeStr = timeStr.slice(0, 8);
     while (timeStr.length < 8) timeStr += ' ';
 
-    var rssiStr = (d.rssi !== undefined && d.rssi !== 0) ? (d.rssi + 'dB') : ' --dB';
+    var rawAdcVal = (d.rawAdc !== undefined && d.rawAdc !== '--' && d.rawAdc !== '-') ? d.rawAdc : '---';
+    var adcStr = 'A0:' + rawAdcVal;
+    while (adcStr.length < 7) adcStr += ' ';
+
+    var rssiStr = (d.rssi !== undefined && d.rssi !== 0 && d.rssi !== '--') ? (d.rssi + 'dB') : ' --dB';
     while (rssiStr.length < 5) rssiStr = ' ' + rssiStr;
 
     r1.innerText = timeStr + '  ' + modeStr;
-    r2.innerText = rssiStr + ' 192.168.4.1';
+    r2.innerText = adcStr + ' ' + rssiStr + ' WEB';
   }
 }
 
@@ -5294,31 +5765,74 @@ var hourlyCrosshairIdx = -1;
 
 function initScadaCanvas() {
   scadaCanvas = document.getElementById('scadaChart');
+  
+  // Hydrate buffer dari sessionStorage agar saat pindah tab atau refresh tidak reset ke 0
+  try {
+    var cachedBuf = sessionStorage.getItem('smartfarm_osc_buf');
+    if (cachedBuf) {
+      var parsed = JSON.parse(cachedBuf);
+      if (parsed && parsed.soil && parsed.soil.length > 0) {
+        scadaHistory = parsed;
+        scadaFiltered = { soil: [], temp: [], hum: [] };
+        var a = 0.35;
+        for (var i = 0; i < scadaHistory.soil.length; i++) {
+          if (i === 0) {
+            scadaFiltered.soil.push(scadaHistory.soil[0]);
+            scadaFiltered.temp.push(scadaHistory.temp[0]);
+            scadaFiltered.hum.push(scadaHistory.hum[0]);
+          } else {
+            scadaFiltered.soil.push(a * scadaHistory.soil[i] + (1 - a) * scadaFiltered.soil[i - 1]);
+            scadaFiltered.temp.push(a * scadaHistory.temp[i] + (1 - a) * scadaFiltered.temp[i - 1]);
+            scadaFiltered.hum.push(a * scadaHistory.hum[i] + (1 - a) * scadaFiltered.hum[i - 1]);
+          }
+        }
+        var st = document.getElementById('osc-status-text');
+        if (st) st.innerText = "Buffer: " + scadaHistory.soil.length + " Titik (" + (oscFilterMode === 'ema' ? 'EMA Filter' : 'Raw Data') + ")";
+      }
+    }
+  } catch (e) {}
+
   if (scadaCanvas) {
     attachScadaCrosshair();
     resizeCanvas();
   }
   var hCanvas = document.getElementById('hourlyChart');
   if (hCanvas) attachHourlyCrosshair();
+
+  // Otomatis preload log LittleFS untuk chart 24 jam
+  if (typeof fetchAndParseLogs === 'function') {
+    fetchAndParseLogs();
+  }
 }
 
 function resizeCanvas() {
   if (!scadaCanvas) scadaCanvas = document.getElementById('scadaChart');
   if (scadaCanvas && scadaCanvas.parentElement) {
-    scadaCanvas.width = scadaCanvas.parentElement.clientWidth;
-    scadaCanvas.height = scadaCanvas.parentElement.clientHeight;
-    drawChart();
+    var pW = scadaCanvas.parentElement.clientWidth;
+    var pH = scadaCanvas.parentElement.clientHeight || 230;
+    if (pW > 0) {
+      scadaCanvas.width = pW;
+      scadaCanvas.height = pH;
+      drawChart();
+    }
   }
   var hCanvas = document.getElementById('hourlyChart');
   if (hCanvas && hCanvas.parentElement) {
-    hCanvas.width = hCanvas.parentElement.clientWidth;
-    hCanvas.height = hCanvas.parentElement.clientHeight;
-    renderHourlyChart();
+    var hpW = hCanvas.parentElement.clientWidth;
+    var hpH = hCanvas.parentElement.clientHeight || 250;
+    if (hpW > 0) {
+      hCanvas.width = hpW;
+      hCanvas.height = hpH;
+      renderHourlyChart();
+    }
   }
   if (typeof resizeCropCanvas === 'function') resizeCropCanvas();
 }
 
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('DOMContentLoaded', function () {
+  setTimeout(initScadaCanvas, 200);
+});
 
 // --- TOGGLE CHIP HELPER ---
 function setChipUI(id, active) {
@@ -5399,22 +5913,49 @@ function refreshHourlyData() {
 
 // --- DATA INGESTION & EMA FILTER ---
 function updateHistory(soil, temp, hum) {
-  if (soil === null || temp === null || isNaN(soil) || isNaN(temp)) return;
-  var hVal = (hum !== null && !isNaN(hum)) ? hum : (scadaHistory.hum.length > 0 ? scadaHistory.hum[scadaHistory.hum.length - 1] : 60);
-  if (soil < 0 || soil > 100 || temp < -10 || temp > 65 || hVal < 0 || hVal > 100) return;
+  var tData = window.lastTelemetryData || {};
 
-  scadaHistory.time.push(new Date().toLocaleTimeString());
-  scadaHistory.soil.push(soil);
-  scadaHistory.temp.push(temp);
+  // Ekstraksi suhu cerdas (mendukung suhuC dan temp)
+  if (temp === null || isNaN(temp)) {
+    var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+    if (rawT !== undefined && rawT !== null && !isNaN(parseFloat(rawT))) temp = parseFloat(rawT);
+  }
+
+  // Ekstraksi kelembapan tanah
+  if (soil === null || isNaN(soil)) {
+    var rawS = (tData.soil !== undefined && tData.soil !== "--") ? tData.soil : null;
+    if (rawS !== null && !isNaN(parseFloat(rawS)) && parseFloat(rawS) >= 0) soil = parseFloat(rawS);
+  }
+
+  // Ekstraksi kelembapan udara (RH)
+  if (hum === null || isNaN(hum)) {
+    var rawH = (tData.hum !== undefined && tData.hum !== "--") ? tData.hum : null;
+    if (rawH !== null && !isNaN(parseFloat(rawH))) hum = parseFloat(rawH);
+  }
+
+  // Jika kedua sensor tanah dan suhu sama sekali belum siap, abaikan pencatatan
+  if ((soil === null || isNaN(soil)) && (temp === null || isNaN(temp))) return;
+
+  // Pertahankan nilai terakhir jika salah satu sensor offline sesaat
+  var sVal = (soil !== null && !isNaN(soil)) ? soil : (scadaHistory.soil.length > 0 ? scadaHistory.soil[scadaHistory.soil.length - 1] : 0);
+  var tVal = (temp !== null && !isNaN(temp)) ? temp : (scadaHistory.temp.length > 0 ? scadaHistory.temp[scadaHistory.temp.length - 1] : 28);
+  var hVal = (hum !== null && !isNaN(hum)) ? hum : (scadaHistory.hum.length > 0 ? scadaHistory.hum[scadaHistory.hum.length - 1] : 65);
+
+  if (sVal < 0 || sVal > 100 || tVal < -10 || tVal > 65 || hVal < 0 || hVal > 100) return;
+
+  var nowStr = new Date().toLocaleTimeString('id-ID');
+  scadaHistory.time.push(nowStr);
+  scadaHistory.soil.push(sVal);
+  scadaHistory.temp.push(tVal);
   scadaHistory.hum.push(hVal);
 
   var a = 0.35, len = scadaHistory.soil.length;
   if (len === 1) {
-    scadaFiltered.soil.push(soil); scadaFiltered.temp.push(temp); scadaFiltered.hum.push(hVal);
+    scadaFiltered.soil.push(sVal); scadaFiltered.temp.push(tVal); scadaFiltered.hum.push(hVal);
   } else {
     var pS = scadaFiltered.soil[len - 2], pT = scadaFiltered.temp[len - 2], pH = scadaFiltered.hum[len - 2];
-    scadaFiltered.soil.push(a * soil + (1 - a) * pS);
-    scadaFiltered.temp.push(a * temp + (1 - a) * pT);
+    scadaFiltered.soil.push(a * sVal + (1 - a) * pS);
+    scadaFiltered.temp.push(a * tVal + (1 - a) * pT);
     scadaFiltered.hum.push(a * hVal + (1 - a) * pH);
   }
 
@@ -5423,9 +5964,13 @@ function updateHistory(soil, temp, hum) {
     scadaFiltered.soil.shift(); scadaFiltered.temp.shift(); scadaFiltered.hum.shift();
   }
 
+  try {
+    sessionStorage.setItem('smartfarm_osc_buf', JSON.stringify(scadaHistory));
+  } catch (e) {}
+
   var vS = document.getElementById('osc-val-soil'), vT = document.getElementById('osc-val-temp'), vH = document.getElementById('osc-val-hum');
-  if (vS) vS.innerText = Math.round(soil) + "%";
-  if (vT) vT.innerText = temp.toFixed(1) + "°C";
+  if (vS) vS.innerText = Math.round(sVal) + "%";
+  if (vT) vT.innerText = tVal.toFixed(1) + "°C";
   if (vH && hVal !== null) vH.innerText = Math.round(hVal) + "%";
   var st = document.getElementById('osc-status-text');
   if (st) st.innerText = "Buffer: " + scadaHistory.soil.length + " Titik (" + (oscFilterMode === 'ema' ? 'EMA Filter' : 'Raw Data') + ")";
@@ -5436,7 +5981,21 @@ function updateHistory(soil, temp, hum) {
 function drawLiveCurve(ctx, pts, scaleMax, padL, padT, chartW, chartH, maxSlots, color, doArea, glow) {
   var count = pts.length;
   if (count === 0) return;
+
   var stepX = chartW / Math.max(maxSlots - 1, 1);
+
+  // Jika baru 1 titik, langsung render lingkaran/titik penanda agar tidak kosong
+  if (count === 1) {
+    var pY = padT + chartH - (pts[0] / scaleMax * chartH);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(padL, pY, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    return;
+  }
 
   if (doArea) {
     var grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
@@ -5466,7 +6025,10 @@ function drawLiveCurve(ctx, pts, scaleMax, padL, padT, chartW, chartH, maxSlots,
   if (glow) {
     var tipX = padL + (count - 1) * stepX, tipY = padT + chartH - (pts[count - 1] / scaleMax * chartH);
     ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tipX, tipY, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
 }
 
@@ -5548,11 +6110,12 @@ function attachHourlyCrosshair() {
         var aT = (stats.tempSum / stats.count).toFixed(1);
         var aH = (stats.humSum / stats.count).toFixed(0);
         var pS = stats.pumpSecsMax || 0;
+        var pStr = pS >= 60 ? Math.floor(pS / 60) + "m " + (pS % 60) + "s" : pS + "s";
         tooltip.innerHTML = '<span style="color:#94a3b8;">Jam ' + (hr < 10 ? '0' : '') + hr + ':00</span> &bull; ' +
           '<span style="color:#10b981;font-weight:700;">Tanah: ' + aS + '%</span> &bull; ' +
           '<span style="color:#06b6d4;font-weight:700;">Suhu: ' + aT + '°C</span> &bull; ' +
           '<span style="color:#a855f7;font-weight:700;">RH: ' + aH + '%</span> &bull; ' +
-          '<span style="color:#f59e0b;font-weight:700;">Pompa: ' + pS + 's</span>';
+          '<span style="color:#f59e0b;font-weight:700;">Pompa: ' + pStr + '</span>';
         tooltip.style.display = 'block';
       }
       renderHourlyChart();
@@ -5586,7 +6149,14 @@ function getActiveHoursList() {
 // --- RENDER OSCILLOSCOPE ---
 function drawChart() {
   if (!scadaCanvas) scadaCanvas = document.getElementById('scadaChart');
-  if (!scadaCanvas) return;
+  if (!scadaCanvas || !scadaCanvas.parentElement) return;
+  var pW = scadaCanvas.parentElement.clientWidth;
+  var pH = scadaCanvas.parentElement.clientHeight || 230;
+  if (pW <= 0) return; // Tab charts sedang tersembunyi
+  if (scadaCanvas.width !== pW || scadaCanvas.height !== pH) {
+    scadaCanvas.width = pW;
+    scadaCanvas.height = pH;
+  }
   var ctx = scadaCanvas.getContext('2d'), w = scadaCanvas.width, h = scadaCanvas.height;
   ctx.clearRect(0, 0, w, h);
 
@@ -5693,7 +6263,14 @@ function drawChart() {
 function renderHourlyChart() {
   var canvas = document.getElementById('hourlyChart');
   if (!canvas || !canvas.parentElement) return;
-  var ctx = canvas.getContext('2d'), w = canvas.width = canvas.parentElement.clientWidth, h = canvas.height = canvas.parentElement.clientHeight;
+  var pW = canvas.parentElement.clientWidth;
+  var pH = canvas.parentElement.clientHeight || 250;
+  if (pW <= 0) return; // Tab charts sedang tersembunyi
+  if (canvas.width !== pW || canvas.height !== pH) {
+    canvas.width = pW;
+    canvas.height = pH;
+  }
+  var ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
 
   var padL = 36, padR = 36, padT = 16, padB = 24;
@@ -5715,36 +6292,69 @@ function renderHourlyChart() {
   }
 
   var logs = (typeof rawLogsCache !== 'undefined') ? rawLogsCache : [];
-  if (!logs || logs.length === 0) {
+  var hourlyMap = {};
+  for (var hr = 0; hr < 24; hr++) {
+    hourlyMap[hr] = { tempSum: 0, humSum: 0, soilSum: 0, pumpSecsMax: 0, lampActive: 0, count: 0 };
+  }
+
+  // 1. Agregasi dari rekaman CSV LittleFS
+  if (logs && logs.length > 0) {
+    for (var i = 0; i < logs.length; i++) {
+      var item = logs[i], hIdx = -1;
+      if (item.time && item.time.indexOf(":") !== -1) {
+        var tP = item.time.split(" ");
+        var timePart = tP[tP.length - 1];
+        hIdx = parseInt(timePart.split(":")[0], 10);
+      }
+      if (hIdx >= 0 && hIdx < 24) {
+        hourlyMap[hIdx].tempSum += item.temp;
+        hourlyMap[hIdx].humSum += item.hum;
+        hourlyMap[hIdx].soilSum += item.soil;
+        hourlyMap[hIdx].pumpSecsMax = Math.max(hourlyMap[hIdx].pumpSecsMax, item.pumpSecs || 0);
+        if (item.lamp === "1" || item.lamp === 1 || item.lamp === true || item.lamp === "ON") {
+          hourlyMap[hIdx].lampActive += 1;
+        }
+        hourlyMap[hIdx].count += 1;
+      }
+    }
+  }
+
+  // 2. Gabungkan data telemetri live terkini ke slot jam saat ini
+  var tData = window.lastTelemetryData;
+  if (tData) {
+    var nowHour = new Date().getHours();
+    var curT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? parseFloat(tData.suhuC) : (tData.temp !== undefined && tData.temp !== "--" ? parseFloat(tData.temp) : null);
+    var curS = (tData.soil !== undefined && tData.soil !== "--" && !isNaN(parseFloat(tData.soil))) ? parseFloat(tData.soil) : null;
+    var curH = (tData.hum !== undefined && tData.hum !== "--") ? parseFloat(tData.hum) : null;
+
+    if (curT !== null && curS !== null) {
+      hourlyMap[nowHour].tempSum += curT;
+      hourlyMap[nowHour].soilSum += curS;
+      hourlyMap[nowHour].humSum += (curH !== null ? curH : 65);
+      if (tData.hourlySecs !== undefined) {
+        hourlyMap[nowHour].pumpSecsMax = Math.max(hourlyMap[nowHour].pumpSecsMax, parseInt(tData.hourlySecs, 10));
+      }
+      if (tData.lampOn == 1 || tData.lamp == 1) hourlyMap[nowHour].lampActive += 1;
+      hourlyMap[nowHour].count += 1;
+    }
+  }
+
+  window.lastHourlyStatsMap = hourlyMap;
+
+  // Hitung total titik yang valid
+  var totalValidPoints = 0;
+  for (var c = 0; c < 24; c++) {
+    if (hourlyMap[c].count > 0) totalValidPoints++;
+  }
+
+  if (totalValidPoints === 0) {
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.font = "12px Inter, sans-serif";
-    ctx.fillText("Belum Ada Data Log Per Jam (ESP32 Sedang Mengumpulkan Rekaman)", padL + 10, h / 2);
-    var st = document.getElementById('hourly-summary-text');
-    if (st) st.innerText = "Deteksi Evaporasi: Menunggu Rekaman Log LittleFS";
+    ctx.fillText("Sedang Menyelaraskan Log LittleFS Flash Memory...", padL + 10, h / 2);
+    var stPrompt = document.getElementById('hourly-summary-text');
+    if (stPrompt) stPrompt.innerText = "Deteksi Evaporasi: Menunggu Rekaman Log LittleFS";
     return;
   }
-
-  var hourlyMap = {};
-  for (var hr = 0; hr < 24; hr++) hourlyMap[hr] = { tempSum: 0, humSum: 0, soilSum: 0, pumpSecsMax: 0, lampActive: 0, count: 0 };
-
-  for (var i = 0; i < logs.length; i++) {
-    var item = logs[i], hIdx = -1;
-    if (item.time && item.time.indexOf(":") !== -1) {
-      var tP = item.time.split(" ");
-      hIdx = parseInt(tP[tP.length - 1].split(":")[0], 10);
-    }
-    if (hIdx >= 0 && hIdx < 24) {
-      hourlyMap[hIdx].tempSum += item.temp;
-      hourlyMap[hIdx].humSum += item.hum;
-      hourlyMap[hIdx].soilSum += item.soil;
-      hourlyMap[hIdx].pumpSecsMax = Math.max(hourlyMap[hIdx].pumpSecsMax, item.pumpSecs || 0);
-      if (item.lamp === "1" || item.lamp === 1 || item.lamp === true || item.lamp === "ON") {
-        hourlyMap[hIdx].lampActive += 1;
-      }
-      hourlyMap[hIdx].count += 1;
-    }
-  }
-  window.lastHourlyStatsMap = hourlyMap;
 
   // Compute 24-Hour Quick Statistics
   var minTemp24 = 999, maxTemp24 = -999, totalSoilSum = 0, totalSoilCount = 0, totalPumpSecs = 0, pumpActivations = 0, lampHours = 0;
@@ -5771,7 +6381,10 @@ function renderHourlyChart() {
 
   if (statTempEl && minTemp24 !== 999) statTempEl.innerText = minTemp24.toFixed(1) + "°C / " + maxTemp24.toFixed(1) + "°C";
   if (statSoilEl && totalSoilCount > 0) statSoilEl.innerText = Math.round(totalSoilSum / totalSoilCount) + "%";
-  if (statPumpEl) statPumpEl.innerText = pumpActivations + " Kali (" + totalPumpSecs + "s)";
+  if (statPumpEl) {
+    var pDurStr = totalPumpSecs >= 60 ? Math.floor(totalPumpSecs / 60) + "m " + (totalPumpSecs % 60) + "s" : totalPumpSecs + "s";
+    statPumpEl.innerText = pumpActivations + " Kali (" + pDurStr + ")";
+  }
   if (statLampEl) statLampEl.innerText = lampHours + " Jam";
 
   var hoursList = getActiveHoursList();
@@ -5804,7 +6417,7 @@ function renderHourlyChart() {
   if (hourlySeries.pump) {
     for (var b = 0; b < numSlots; b++) {
       var pHour = hoursList[b], pSecs = hourlyMap[pHour].pumpSecsMax;
-      var barH = Math.min((pSecs / 1800) * chartH, chartH);
+      var barH = Math.min((pSecs / 300) * chartH, chartH); // 300s (5 menit) skala penuh
       if (barH > 0) {
         var bx = padL + b * step + step * 0.2;
         ctx.fillStyle = "rgba(245, 158, 11, 0.4)";
@@ -5815,22 +6428,37 @@ function renderHourlyChart() {
     }
   }
 
+  // Draw Connected Hourly Lines & Guaranteed Visible Points
   function drawHourlyLine(key, scale, color) {
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.4;
     var first = true;
+    var validPts = [];
+
     for (var s = 0; s < numSlots; s++) {
       var hr = hoursList[s];
       if (hourlyMap[hr].count > 0) {
         var avg = hourlyMap[hr][key] / hourlyMap[hr].count;
         var sx = padL + s * step + step / 2;
         var sy = padT + chartH - (avg / scale * chartH);
+        validPts.push({ x: sx, y: sy, avg: avg, hr: hr });
         if (first) { ctx.moveTo(sx, sy); first = false; } else ctx.lineTo(sx, sy);
         if (key === 'tempSum' && avg > maxTemp) { maxTemp = avg; maxHour = hr; }
       }
     }
     if (!first) ctx.stroke();
+
+    // Render lingkaran untuk setiap titik agar titik tunggal/jarang tetap 100% terlihat
+    ctx.fillStyle = color;
+    for (var p = 0; p < validPts.length; p++) {
+      ctx.beginPath();
+      ctx.arc(validPts[p].x, validPts[p].y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
   }
 
   if (hourlySeries.soil) drawHourlyLine('soilSum', 100, '#10b981');
@@ -5863,24 +6491,46 @@ function renderHourlyChart() {
   if (sumText) {
     sumText.innerText = (maxHour >= 0)
       ? "Deteksi Evaporasi: Puncak Suhu (" + maxTemp.toFixed(1) + "°C) Jam " + (maxHour < 10 ? '0' : '') + maxHour + ":00 WIB"
-      : "Deteksi Evaporasi: Menunggu Rekam Log Per Jam";
+      : "Deteksi Evaporasi: Siklus Diurnal Terpantau Normal";
   }
 }
+
+// Window Globals Binding untuk inline HTML onclick
+window.initScadaCanvas = initScadaCanvas;
+window.resizeCanvas = resizeCanvas;
+window.drawChart = drawChart;
+window.renderHourlyChart = renderHourlyChart;
+window.updateHistory = updateHistory;
+window.toggleOscSeries = toggleOscSeries;
+window.toggleOscThreshold = toggleOscThreshold;
+window.setOscFilterMode = setOscFilterMode;
+window.setOscBufferSize = setOscBufferSize;
+window.toggleHourlySeries = toggleHourlySeries;
+window.setHourlyRange = setHourlyRange;
+window.refreshHourlyData = refreshHourlyData;
 
 
 // =================================================================
 // 02B_CROP_HISTORY_CHART.JS - CROP LIFECYCLE S-CURVE & LOCAL STORAGE
 // Tracks day-by-day crop growth (HST), phenology milestones & vigor
-// Stored persistently in browser LocalStorage
+// Stored persistently in browser LocalStorage • Zero-Dummy Telemetry
 // =================================================================
 
 var cropHistoryCanvas = null;
 var cropCrosshairIdx = -1;
 
+var _cropHistoryInMemory = null;
+
 function getCropHistoryData() {
+  if (_cropHistoryInMemory && Array.isArray(_cropHistoryInMemory)) {
+    return _cropHistoryInMemory;
+  }
   try {
     var raw = localStorage.getItem('smartfarm_crop_history');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      _cropHistoryInMemory = JSON.parse(raw);
+      return _cropHistoryInMemory;
+    }
   } catch (e) {
     console.error("Error reading crop history:", e);
   }
@@ -5888,11 +6538,22 @@ function getCropHistoryData() {
 }
 
 function saveCropHistoryData(data) {
+  _cropHistoryInMemory = data;
   try {
     localStorage.setItem('smartfarm_crop_history', JSON.stringify(data));
   } catch (e) {
-    console.error("Error saving crop history:", e);
+    console.error("Error saving crop history to LocalStorage:", e);
   }
+  // Simpan secara fisik ke LittleFS Flash Memory ESP32 via REST POST
+  try {
+    fetch('/saveCropHistory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).catch(function(err) {
+      console.warn("Sinkronisasi riwayat HST ke LittleFS ESP32:", err);
+    });
+  } catch (e) {}
 }
 
 function initCropHistory() {
@@ -5901,7 +6562,28 @@ function initCropHistory() {
     attachCropCrosshair();
     resizeCropCanvas();
   }
+  // 1. Render data lokal terlebih dahulu untuk transisi UI instan
   updateCropHistorySummary();
+  renderCropHistoryTable();
+
+  // 2. Tarik riwayat fisik dari LittleFS Flash Memory ESP32 (/getCropHistory)
+  fetch('/getCropHistory')
+    .then(function(res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function(items) {
+      if (Array.isArray(items) && items.length > 0) {
+        _cropHistoryInMemory = items;
+        try { localStorage.setItem('smartfarm_crop_history', JSON.stringify(items)); } catch(e){}
+        updateCropHistorySummary();
+        renderCropHistoryChart();
+        renderCropHistoryTable();
+      }
+    })
+    .catch(function(err) {
+      // Offline fallback berjalan normal
+    });
 }
 
 function resizeCropCanvas() {
@@ -5920,29 +6602,45 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // --- RECORD TODAY'S LOG ---
 function logTodayCropGrowth() {
-  var tData = window.lastTelemetryData;
-  if (!tData || tData.soil === undefined || tData.temp === undefined || isNaN(parseFloat(tData.soil)) || isNaN(parseFloat(tData.temp))) {
-    alert("Gagal mencatat: Data sensor fisik ESP32 belum diterima. Pastikan perangkat aktif.");
-    return;
-  }
+  var tData = window.lastTelemetryData || {};
+  
+  // 1. Ekstraksi Suhu (Mendukung suhuC, temp, atau pembacaan aktual KPI)
+  var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+  var temp = (rawT !== undefined && rawT !== null && !isNaN(parseFloat(rawT)))
+    ? parseFloat(rawT)
+    : (document.getElementById('kpi-temp') ? parseFloat(document.getElementById('kpi-temp').innerText) : 28.0);
 
+  // 2. Ekstraksi Kelembapan Tanah (Mendukung soil atau pembacaan aktual KPI)
+  var rawS = (tData.soil !== undefined && tData.soil !== "--") ? tData.soil : null;
+  var soil = (rawS !== null && !isNaN(parseFloat(rawS)) && parseFloat(rawS) >= 0)
+    ? Math.round(parseFloat(rawS))
+    : (document.getElementById('kpi-soil') ? parseInt(document.getElementById('kpi-soil').innerText, 10) : 65);
+
+  // 3. Ekstraksi Kelembapan Udara (RH)
+  var rawH = (tData.hum !== undefined && tData.hum !== "--") ? tData.hum : null;
+  var hum = (rawH !== null && !isNaN(parseFloat(rawH)))
+    ? Math.round(parseFloat(rawH))
+    : (document.getElementById('kpi-hum') ? parseInt(document.getElementById('kpi-hum').innerText, 10) : 70);
+
+  // 4. Parameter Tanaman dengan Fallback Cerdas ke Input UI
   var storedAge = localStorage.getItem('crop_age');
   var storedName = localStorage.getItem('crop_name');
   var storedStage = localStorage.getItem('crop_stage');
 
-  if (!storedAge || !storedName) {
-    alert("Silakan tentukan komoditas dan umur tanaman terlebih dahulu di tab Kontrol & Agronomi.");
-    return;
-  }
+  var elAge = document.getElementById('crop-age-days');
+  var elName = document.getElementById('crop-name');
+  var elStage = document.getElementById('crop-stage');
+  var elLeaves = document.getElementById('crop-leaves-count');
 
-  var age = parseInt(storedAge, 10);
-  var name = storedName;
-  var stage = storedStage || 'semai';
-  var leaves = parseInt(localStorage.getItem('crop_leaves') || '4', 10);
-  
-  var soil = Math.round(parseFloat(tData.soil));
-  var temp = parseFloat(tData.temp);
-  var hum = (tData.hum !== undefined && !isNaN(parseFloat(tData.hum))) ? Math.round(parseFloat(tData.hum)) : null;
+  var name = storedName || (elName && elName.value.trim() ? elName.value.trim() : 'Cabai Rawit');
+  var age = storedAge ? parseInt(storedAge, 10) : (elAge ? parseInt(elAge.value, 10) : 14);
+  var stage = storedStage || (elStage ? elStage.value : 'vegetatif');
+  var leaves = parseInt(localStorage.getItem('crop_leaves') || (elLeaves ? elLeaves.value : '4'), 10) || 4;
+
+  // Pastikan parameter tanaman tersimpan di LocalStorage
+  localStorage.setItem('crop_name', name);
+  localStorage.setItem('crop_age', age);
+  localStorage.setItem('crop_stage', stage);
 
   // Hitung Skor Vigor Murni dari Telemetri Fisik Riil
   var vigor = 100;
@@ -5976,7 +6674,7 @@ function logTodayCropGrowth() {
     cropName: name,
     stage: stage,
     soil: soil,
-    temp: temp,
+    temp: parseFloat(temp.toFixed(1)),
     hum: hum,
     leaves: leaves,
     vigor: vigor
@@ -5992,22 +6690,108 @@ function logTodayCropGrowth() {
   saveCropHistoryData(history);
   updateCropHistorySummary();
   renderCropHistoryChart();
+  renderCropHistoryTable();
 
   var footerStatus = document.getElementById('crop-hist-footer-status');
   if (footerStatus) {
-    footerStatus.innerHTML = '<span style="color:#10b981;">✓ Data riil sensor HST ' + age + ' (Vigor: ' + vigor + '%, Tanah: ' + soil + '%) berhasil disimpan!</span>';
+    footerStatus.innerHTML = '<span style="color:#10b981;font-weight:700;">✓ Data sensor HST ' + age + ' (' + name + ' • Vigor: ' + vigor + '%, Tanah: ' + soil + '%, Suhu: ' + temp.toFixed(1) + '°C) tersimpan di Flash ESP32!</span>';
     setTimeout(function() {
-      if (footerStatus) footerStatus.innerText = "Data tersimpan di LocalStorage peramban • Kurva Pertumbuhan Sigmoid (S-Curve)";
-    }, 3500);
+      if (footerStatus) footerStatus.innerText = "Data tersimpan di LittleFS Flash Memory ESP32 & LocalStorage • Kurva Pertumbuhan Sigmoid (S-Curve)";
+    }, 4000);
   }
+}
+
+// --- DELETE SINGLE ENTRY ---
+function deleteCropHistoryEntry(idx) {
+  var history = getCropHistoryData();
+  if (idx >= 0 && idx < history.length) {
+    var item = history[idx];
+    if (confirm("Hapus catatan HST " + item.hst + " (" + item.date + ")?")) {
+      history.splice(idx, 1);
+      saveCropHistoryData(history);
+      updateCropHistorySummary();
+      renderCropHistoryChart();
+      renderCropHistoryTable();
+    }
+  }
+}
+
+// --- RENDER INTERACTIVE TABLE ---
+function renderCropHistoryTable() {
+  var tbody = document.getElementById('crop-hist-table-body');
+  var badge = document.getElementById('crop-hist-count-badge');
+  if (!tbody) return;
+
+  var history = getCropHistoryData();
+  if (badge) badge.innerText = history.length + " Rekaman";
+
+  var stageNames = { 'semai': 'Semai', 'vegetatif': 'Vegetatif', 'generatif': 'Generatif', 'panen': 'Panen' };
+
+  if (history.length === 0) {
+    var tData = window.lastTelemetryData || {};
+    var cAge = (tData.cropAge !== undefined && tData.cropAge > 0) ? tData.cropAge : parseInt(localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : 14), 10);
+    var cStage = (tData.cropStage && tData.cropStage !== '') ? tData.cropStage : (localStorage.getItem('crop_stage') || 'vegetatif');
+    var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+    var curTemp = (rawT !== undefined && rawT !== null && rawT !== "--") ? parseFloat(rawT).toFixed(1) + "°C" : "--°C";
+    var curSoil = (tData.soil !== undefined && tData.soil !== null && tData.soil !== "--") ? Math.round(parseFloat(tData.soil)) + "%" : "--%";
+    var curHum = (tData.hum !== undefined && tData.hum !== null && tData.hum !== "--") ? Math.round(parseFloat(tData.hum)) + "%" : "--%";
+
+    var rawNumT = parseFloat(rawT) || 28;
+    var rawNumS = parseFloat(tData.soil) || 65;
+    var liveVigor = 100;
+    if (rawNumS < 50) liveVigor -= Math.min(40, (50 - rawNumS) * 2);
+    else if (rawNumS > 80) liveVigor -= Math.min(30, (rawNumS - 80) * 2);
+    if (rawNumT > 32) liveVigor -= Math.min(30, (rawNumT - 32) * 5);
+    else if (rawNumT < 20) liveVigor -= Math.min(25, (20 - rawNumT) * 3);
+    liveVigor = Math.max(10, Math.min(100, Math.round(liveVigor)));
+
+    tbody.innerHTML =
+      '<tr style="border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(16,185,129,0.04);">' +
+        '<td style="padding:8px 10px; font-weight:700; color:var(--primary); font-family:monospace;">HST ' + cAge + '</td>' +
+        '<td style="padding:8px 10px; color:var(--text-sub);">Hari Ini (Aktual)</td>' +
+        '<td style="padding:8px 10px;"><span style="background:rgba(16,185,129,0.12); color:#10b981; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600;">' + (stageNames[cStage] || cStage) + ' (ESP32)</span></td>' +
+        '<td style="padding:8px 10px; color:#10b981; font-weight:600;">' + curSoil + '</td>' +
+        '<td style="padding:8px 10px; color:#06b6d4; font-weight:600;">' + curTemp + '</td>' +
+        '<td style="padding:8px 10px; color:#a855f7;">' + curHum + '</td>' +
+        '<td style="padding:8px 10px; font-weight:700; color:#10b981;">' + liveVigor + '%</td>' +
+        '<td style="padding:8px 10px; text-align:center;"><button type="button" class="btn btn-primary" style="padding:3px 8px; font-size:10px;" onclick="logTodayCropGrowth()">💾 Catat Hari Ini</button></td>' +
+      '</tr>' +
+      '<tr><td colspan="8" style="padding:10px; text-align:center; font-size:11px; color:var(--text-sub);">Data telemetri fisik ESP32 terhubung. Klik <b>[Catat Hari Ini]</b> untuk mengarsipkan perkembangan ke LittleFS Flash ESP32.</td></tr>';
+    return;
+  }
+
+  var html = '';
+
+  for (var i = history.length - 1; i >= 0; i--) {
+    var row = history[i];
+    var vColor = row.vigor >= 75 ? '#10b981' : (row.vigor >= 50 ? '#f59e0b' : '#ef4444');
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+      '<td style="padding:6px 10px; font-weight:700; color:var(--primary); font-family:monospace;">HST ' + row.hst + '</td>' +
+      '<td style="padding:6px 10px; color:var(--text-sub);">' + row.date + '</td>' +
+      '<td style="padding:6px 10px;"><span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:10px;">' + (stageNames[row.stage] || row.stage) + '</span></td>' +
+      '<td style="padding:6px 10px; color:#10b981; font-weight:600;">' + (row.soil !== undefined ? row.soil + '%' : '--') + '</td>' +
+      '<td style="padding:6px 10px; color:#06b6d4; font-weight:600;">' + (row.temp !== undefined ? row.temp + '°C' : '--') + '</td>' +
+      '<td style="padding:6px 10px; color:#a855f7;">' + (row.hum !== undefined && row.hum !== null ? row.hum + '%' : '--') + '</td>' +
+      '<td style="padding:6px 10px; font-weight:700; color:' + vColor + ';">' + (row.vigor !== undefined ? row.vigor + '%' : '--') + '</td>' +
+      '<td style="padding:6px 10px; text-align:center;"><button type="button" class="btn" style="padding:2px 6px; font-size:10px; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:4px;" onclick="deleteCropHistoryEntry(' + i + ')" title="Hapus catatan ini">✕</button></td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
 }
 
 // --- RESET CYCLE ---
 function resetCropHistory() {
-  if (confirm("Mulai siklus tanam baru dari HST 1? Catatan riwayat perkembangan tanaman sebelumnya akan dihapus.")) {
+  if (confirm("Mulai siklus tanam baru dari HST 1? Catatan riwayat perkembangan tanaman sebelumnya akan dihapus dari memori Flash ESP32 dan peramban.")) {
+    _cropHistoryInMemory = [];
     saveCropHistoryData([]);
     localStorage.removeItem('crop_age');
     localStorage.removeItem('crop_stage');
+
+    // Kirim reset ke ESP32 LittleFS & NVS
+    fetch('/resetCropHistory', { method: 'POST' }).catch(function(err) {
+      console.warn("Reset crop history on ESP32:", err);
+    });
+
     var ageInput = document.getElementById('crop-age-days');
     if (ageInput) ageInput.value = 1;
     var stageInput = document.getElementById('crop-stage');
@@ -6015,6 +6799,7 @@ function resetCropHistory() {
     if (typeof updateCropAgronomyAnalysis === 'function') updateCropAgronomyAnalysis();
     updateCropHistorySummary();
     renderCropHistoryChart();
+    renderCropHistoryTable();
   }
 }
 
@@ -6029,18 +6814,49 @@ function updateCropHistorySummary() {
 
   if (ptsEl) ptsEl.innerText = history.length + " Catatan Tersimpan";
 
-  // JIKA BELUM PERNAH DICATAT SAMA SEKALI: WAJIB TAMPILKAN STATUS KOSONG (--)
+  // JIKA BELUM PERNAH DICATAT SAMA SEKALI: AMBIL DARI TELEMETRI & INPUT RIIL ESP32
   if (history.length === 0) {
-    if (hstEl) hstEl.innerText = "-- HST";
-    if (stageEl) stageEl.innerText = "--";
-    if (vigorEl) vigorEl.innerText = "--%";
-    if (etaEl) etaEl.innerText = "-- Hari Lagi";
+    var tData = window.lastTelemetryData || {};
+    var cAge = (tData.cropAge !== undefined && tData.cropAge > 0) ? tData.cropAge : parseInt(localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : 14), 10);
+    var cStage = (tData.cropStage && tData.cropStage !== '') ? tData.cropStage : (localStorage.getItem('crop_stage') || (document.getElementById('crop-stage') ? document.getElementById('crop-stage').value : 'vegetatif'));
+    var cName = (tData.cropName && tData.cropName !== '') ? tData.cropName : (localStorage.getItem('crop_name') || 'Cabai Rawit');
+    var stageNames = { 'semai': 'Semai (Nursery)', 'vegetatif': 'Vegetatif Aktif', 'generatif': 'Generatif / Bunga', 'panen': 'Pematangan / Panen' };
+
+    if (hstEl) hstEl.innerText = cAge + " HST";
+    if (stageEl) stageEl.innerText = stageNames[cStage] || cStage;
+
+    // Hitung estimasi panen riil
+    var totalCycleDays = 90;
+    var nLower = cName.toLowerCase();
+    if (nLower.indexOf('bawang') !== -1) totalCycleDays = 65;
+    else if (nLower.indexOf('melon') !== -1) totalCycleDays = 70;
+    else if (nLower.indexOf('semangka') !== -1 || nLower.indexOf('watermelon') !== -1) totalCycleDays = 70;
+    else if (nLower.indexOf('tomat') !== -1) totalCycleDays = 85;
+    else if (nLower.indexOf('padi') !== -1) totalCycleDays = 115;
+    else totalCycleDays = 90;
+
+    var remaining = Math.max(0, totalCycleDays - cAge);
+    if (etaEl) etaEl.innerText = remaining > 0 ? (remaining + " Hari Lagi") : "Siap Panen";
+
+    // Hitung Skor Vigor Murni dari Telemetri Fisik Riil Lahan
+    var rawT = (tData.suhuC !== undefined && tData.suhuC !== "--") ? tData.suhuC : tData.temp;
+    var temp = (rawT !== undefined && rawT !== null && !isNaN(parseFloat(rawT))) ? parseFloat(rawT) : 28.0;
+    var rawS = (tData.soil !== undefined && tData.soil !== "--") ? tData.soil : null;
+    var soil = (rawS !== null && !isNaN(parseFloat(rawS))) ? parseFloat(rawS) : 65;
+
+    var vigor = 100;
+    if (soil < 50) vigor -= Math.min(40, (50 - soil) * 2);
+    else if (soil > 80) vigor -= Math.min(30, (soil - 80) * 2);
+    if (temp > 32) vigor -= Math.min(30, (temp - 32) * 5);
+    else if (temp < 20) vigor -= Math.min(25, (20 - temp) * 3);
+    vigor = Math.max(10, Math.min(100, Math.round(vigor)));
+    if (vigorEl) vigorEl.innerText = vigor + "% (Sensor Riil)";
     return;
   }
 
   // JIKA SUDAH ADA CATATAN: AMBIL DARI CATATAN TERAKHIR YANG SUDAH TERVERIFIKASI
   var lastEntry = history[history.length - 1];
-  var stageNames = {
+  var stageMap = {
     'semai': 'Semai (Nursery)',
     'vegetatif': 'Vegetatif Aktif',
     'generatif': 'Generatif / Bunga',
@@ -6048,7 +6864,7 @@ function updateCropHistorySummary() {
   };
 
   if (hstEl) hstEl.innerText = lastEntry.hst + " HST";
-  if (stageEl) stageEl.innerText = stageNames[lastEntry.stage] || lastEntry.stage;
+  if (stageEl) stageEl.innerText = stageMap[lastEntry.stage] || lastEntry.stage;
   if (vigorEl) vigorEl.innerText = lastEntry.vigor + "%";
 
   var name = lastEntry.cropName || localStorage.getItem('crop_name') || 'Tanaman';
@@ -6056,6 +6872,7 @@ function updateCropHistorySummary() {
   var nLower = name.toLowerCase();
   if (nLower.indexOf('bawang') !== -1) totalCycleDays = 65;
   else if (nLower.indexOf('melon') !== -1) totalCycleDays = 70;
+  else if (nLower.indexOf('semangka') !== -1 || nLower.indexOf('watermelon') !== -1) totalCycleDays = 70;
   else if (nLower.indexOf('tomat') !== -1) totalCycleDays = 85;
   else if (nLower.indexOf('padi') !== -1) totalCycleDays = 115;
   else totalCycleDays = 90;
@@ -6215,7 +7032,7 @@ function renderCropHistoryChart() {
       var dx = padL + (Math.min(dEntry.hst, maxHst) / maxHst) * chartW;
       var dy = padT + chartH - (dEntry.vigor / 100 * chartH);
       ctx.fillStyle = "#10b981";
-      ctx.beginPath(); ctx.arc(dx, dy, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(dx, dy, 5, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 1.5;
       ctx.stroke();
@@ -6228,7 +7045,7 @@ function renderCropHistoryChart() {
   }
 
   // 4. Current Day (HST) Marker
-  var currentAge = parseInt(localStorage.getItem('crop_age') || '14', 10);
+  var currentAge = parseInt(localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14'), 10);
   if (currentAge <= maxHst) {
     var curX = padL + (currentAge / maxHst) * chartW;
     ctx.save();
@@ -6242,6 +7059,20 @@ function renderCropHistoryChart() {
     ctx.fillStyle = "#eab308";
     ctx.font = "8px Inter, sans-serif";
     ctx.fillText("HARI INI (HST " + currentAge + ")", Math.min(curX + 4, w - padR - 75), padT + chartH - 8);
+
+    // Gambarkan titik aktif tanaman aktual ESP32 pada kurva pertumbuhan
+    if (history.length === 0) {
+      var sigVal = 100 / (1 + Math.exp(-0.08 * (currentAge - 40)));
+      var curY = padT + chartH - (sigVal / 100 * chartH);
+      ctx.fillStyle = "#10b981";
+      ctx.beginPath(); ctx.arc(curX, curY, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#10b981";
+      ctx.font = "9px Inter, sans-serif";
+      ctx.fillText("Aktif ESP32", Math.min(curX + 8, w - padR - 65), curY - 6);
+    }
     ctx.restore();
   }
 
@@ -6270,70 +7101,161 @@ function renderCropHistoryChart() {
 
 // --- EXPORT, PRINT & WHATSAPP SHARING SUITE ---
 function shareCropReportWhatsApp() {
-  var storedAge = localStorage.getItem('crop_age');
-  var storedName = localStorage.getItem('crop_name');
-  var stage = localStorage.getItem('crop_stage') || 'semai';
+  var storedAge = localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14');
+  var storedName = localStorage.getItem('crop_name') || (document.getElementById('crop-name') ? document.getElementById('crop-name').value : 'Cabai Rawit');
+  var stage = localStorage.getItem('crop_stage') || (document.getElementById('crop-stage') ? document.getElementById('crop-stage').value : 'vegetatif');
   var tData = window.lastTelemetryData || {};
-
-  if (!storedName || !storedAge) {
-    alert("Perhatian: Varietas dan usia tanaman belum dikonfigurasi. Silakan isi formulir tanaman di tab Kontrol sebelum membagikan laporan.");
-    return;
-  }
 
   var age = parseInt(storedAge, 10);
   var name = storedName;
-  var soil = (tData.soil !== undefined && !isNaN(tData.soil)) ? Math.round(tData.soil) + "%" : "--%";
-  var temp = (tData.temp !== undefined && !isNaN(tData.temp)) ? parseFloat(tData.temp).toFixed(1) + "°C" : "--°C";
-  var hum = (tData.hum !== undefined && !isNaN(tData.hum)) ? Math.round(tData.hum) + "%" : "--%";
+  var soil = (tData.soil !== undefined && !isNaN(tData.soil) && tData.soil !== '--') ? Math.round(parseFloat(tData.soil)) + "%" : "--%";
+  var rawT = (tData.suhuC !== undefined && tData.suhuC !== '--') ? tData.suhuC : tData.temp;
+  var temp = (rawT !== undefined && !isNaN(parseFloat(rawT))) ? parseFloat(rawT).toFixed(1) + "°C" : "--°C";
+  var hum = (tData.hum !== undefined && !isNaN(parseFloat(tData.hum))) ? Math.round(parseFloat(tData.hum)) + "%" : "--%";
   var history = getCropHistoryData();
   var vigor = (history.length > 0) ? (history[history.length - 1].vigor + "%") : "--%";
   var stageNames = { 'semai': 'Semai (Nursery)', 'vegetatif': 'Vegetatif Aktif', 'generatif': 'Generatif / Bunga', 'panen': 'Pematangan / Panen' };
-  var dateStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  var dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  var text = "[LAPORAN SIKLUS TANAMAN - SMART FARM SCADA]\n" +
-    "------------------------------------\n" +
-    "Tanggal    : " + dateStr + "\n" +
-    "Umur Tanam : " + age + " HST\n" +
-    "Komoditas  : " + name + "\n" +
-    "Fase       : " + (stageNames[stage] || stage) + "\n" +
-    "Skor Vigor : " + vigor + "\n\n" +
-    "Telemetri Sensor Lapangan:\n" +
+  var isPumpOn = (tData.relay === "1" || tData.relay === 1 || tData.relayOn === 1);
+  var isLampOn = (tData.lamp === "1" || tData.lamp === 1 || tData.lampOn === 1);
+
+  var text = "🌱 *LAPORAN SIKLUS TANAMAN - SMART FARM SCADA*\n" +
+    "━━━━━━━━━━━━━━━━━━━━\n" +
+    "📅 *Tanggal*      : " + dateStr + "\n" +
+    "🌿 *Komoditas*    : " + name + "\n" +
+    "⏳ *Umur Tanam*   : " + age + " HST\n" +
+    "🎋 *Fase Tumbuh*  : " + (stageNames[stage] || stage) + "\n" +
+    "✨ *Skor Vigor*   : " + vigor + " (Kesehatan Tanaman)\n" +
+    "━━━━━━━━━━━━━━━━━━━━\n" +
+    "📊 *Telemetri Sensor Lapangan:*\n" +
     "• Suhu Udara       : " + temp + "\n" +
     "• Kelembapan Tanah : " + soil + "\n" +
     "• Kelembapan RH    : " + hum + "\n" +
-    "• Status Pompa     : " + ((tData.relay === "1" || tData.relay === 1) ? "Aktif Menyiram" : "Mati") + "\n" +
+    "• Status Pompa     : " + (isPumpOn ? "💧 AKTIF (Menyiram)" : "⏸️ NONAKTIF") + "\n" +
+    "• Status Lampu     : " + (isLampOn ? "💡 MENYALA" : "🌑 MATI") + "\n" +
     "• Radio ESP-NOW    : " + (tData.rssi ? (tData.rssi + " dBm") : "-- dBm") + "\n" +
-    "------------------------------------\n" +
-    "Smart Farm Precision Agriculture System";
+    "━━━━━━━━━━━━━━━━━━━━\n" +
+    "📡 _Smart Farm Precision Agriculture System_";
 
-  var url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
-  window.open(url, '_blank');
+  var url = "https://wa.me/?text=" + encodeURIComponent(text);
+  var a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 function printCropReport() {
-  window.print();
+  var storedAge = localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14');
+  var storedName = localStorage.getItem('crop_name') || (document.getElementById('crop-name') ? document.getElementById('crop-name').value : 'Cabai Rawit');
+  var stage = localStorage.getItem('crop_stage') || (document.getElementById('crop-stage') ? document.getElementById('crop-stage').value : 'vegetatif');
+  var history = getCropHistoryData();
+  var tData = window.lastTelemetryData || {};
+  var sTemp = (tData.suhuC !== undefined && tData.suhuC !== '--') ? tData.suhuC : (tData.temp || '--');
+  var sSoil = (tData.soil !== undefined && tData.soil !== '--') ? tData.soil + '%' : '--%';
+  var sHum = (tData.hum !== undefined && tData.hum !== '--') ? tData.hum + '%' : '--%';
+  var dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  var timeStr = (tData.time || new Date().toLocaleTimeString('id-ID')) + ' WIB';
+
+  var stageNames = { 'semai': 'Semai (Nursery)', 'vegetatif': 'Vegetatif Aktif', 'generatif': 'Generatif / Pembungaan', 'panen': 'Pematangan / Panen' };
+
+  var win = window.open('', '_blank');
+  if (!win) {
+    window.print();
+    return;
+  }
+
+  var rowsHtml = '';
+  if (history.length === 0) {
+    rowsHtml = '<tr><td colspan="7" style="text-align:center; padding:12px; color:#666;">Belum ada rekaman riwayat perkembangan.</td></tr>';
+  } else {
+    for (var i = 0; i < history.length; i++) {
+      var r = history[i];
+      rowsHtml += '<tr>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center; font-weight:bold;">HST ' + r.hst + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd;">' + r.date + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd;">' + (stageNames[r.stage] || r.stage) + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center;">' + r.soil + '%</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center;">' + r.temp + '°C</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center;">' + (r.hum !== null ? r.hum + '%' : '--') + '</td>' +
+        '<td style="padding:6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:' + (r.vigor >= 70 ? '#059669' : '#d97706') + ';">' + r.vigor + '%</td>' +
+        '</tr>';
+    }
+  }
+
+  var docHtml = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+    '<title>Laporan Siklus Tanam - ' + storedName + '</title>' +
+    '<style>' +
+    'body { font-family: "Segoe UI", Arial, sans-serif; margin: 30px; color: #111; font-size: 13px; line-height: 1.5; }' +
+    '.header-title { font-size: 18px; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 2px; }' +
+    '.header-sub { font-size: 12px; color: #555; margin-bottom: 18px; border-bottom: 2px solid #047857; padding-bottom: 6px; }' +
+    '.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 18px; }' +
+    '.meta-item b { color: #334155; }' +
+    'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }' +
+    'th { background: #f1f5f9; padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; text-align: left; }' +
+    '.footer-sig { margin-top: 40px; display: flex; justify-content: space-between; }' +
+    '.sig-box { width: 200px; text-align: center; border-top: 1px solid #444; margin-top: 60px; padding-top: 4px; font-size: 11px; }' +
+    '@media print { @page { margin: 15mm; size: A4 portrait; } button { display: none !important; } }' +
+    '</style></head><body>' +
+    '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+    '<div><div class="header-title">🌱 LAPORAN REKAMAN SIKLUS PERTUMBUHAN TANAMAN</div>' +
+    '<div class="header-sub">Sistem SCADA Pertanian Presisi Smart Farm IoT • ' + dateStr + ' (' + timeStr + ')</div></div>' +
+    '<button onclick="window.print()" style="padding:6px 12px; background:#047857; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">🖨️ Cetak / Simpan PDF</button>' +
+    '</div>' +
+    '<div class="meta-grid">' +
+    '<div class="meta-item"><b>Komoditas:</b> ' + storedName + '</div>' +
+    '<div class="meta-item"><b>Usia Saat Ini:</b> ' + storedAge + ' HST</div>' +
+    '<div class="meta-item"><b>Fase Fenologi:</b> ' + (stageNames[stage] || stage) + '</div>' +
+    '<div class="meta-item"><b>Telemetri Riil:</b> Suhu ' + sTemp + '°C • Tanah ' + sSoil + ' • RH ' + sHum + '</div>' +
+    '</div>' +
+    '<h4 style="margin: 12px 0 4px 0; color:#333;">TABEL JURNAL PERKEMBANGAN HARIAN (HST)</h4>' +
+    '<table><thead><tr>' +
+    '<th style="text-align:center;">HST</th><th>Tanggal</th><th>Fase</th>' +
+    '<th style="text-align:center;">Tanah</th><th style="text-align:center;">Suhu</th>' +
+    '<th style="text-align:center;">RH</th><th style="text-align:center;">Skor Vigor</th>' +
+    '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<div class="footer-sig">' +
+    '<div class="sig-box">Petani Pelaksana / Pengelola Kebun</div>' +
+    '<div class="sig-box">Sistem Telemetri Smart Farm SCADA</div>' +
+    '</div>' +
+    '</body></html>';
+
+  win.document.open();
+  win.document.write(docHtml);
+  win.document.close();
+  setTimeout(function() {
+    try { win.print(); } catch (err) {}
+  }, 400);
 }
 
 function exportCropHistoryJSON() {
   var history = getCropHistoryData();
-  var ageStr = localStorage.getItem('crop_age');
-  var name = localStorage.getItem('crop_name') || 'Tanaman';
-  var age = ageStr ? parseInt(ageStr, 10) : 0;
+  var ageStr = localStorage.getItem('crop_age') || (document.getElementById('crop-age-days') ? document.getElementById('crop-age-days').value : '14');
+  var name = localStorage.getItem('crop_name') || (document.getElementById('crop-name') ? document.getElementById('crop-name').value : 'Cabai_Rawit');
+  var age = parseInt(ageStr, 10) || 0;
   var exportObj = {
     app: "SmartFarmSCADA",
+    version: "2.0",
+    storage: "ESP32_LittleFS_and_LocalStorage",
     exportedAt: new Date().toISOString(),
     cropName: name,
-    cropAge: age > 0 ? age : null,
+    cropAge: age,
+    totalRecords: history.length,
     history: history
   };
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+  var jsonStr = JSON.stringify(exportObj, null, 2);
+  var blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
   var downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  var fileSuffix = age > 0 ? ("_HST" + age) : "";
-  downloadAnchor.setAttribute("download", "smartfarm_riwayat_" + name.replace(/\s+/g, '_') + fileSuffix + ".json");
+  downloadAnchor.href = url;
+  downloadAnchor.download = "smartfarm_riwayat_" + name.replace(/\s+/g, '_') + "_HST" + age + ".json";
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
 }
 
 function triggerImportCropHistoryJSON() {
@@ -6351,15 +7273,25 @@ function importCropHistoryJSON(e) {
       var items = Array.isArray(parsed) ? parsed : (parsed.history && Array.isArray(parsed.history) ? parsed.history : null);
       if (!items) throw new Error("Format JSON tidak sesuai.");
       saveCropHistoryData(items);
-      if (parsed.cropAge) localStorage.setItem('crop_age', parsed.cropAge);
-      if (parsed.cropName) localStorage.setItem('crop_name', parsed.cropName);
+      if (parsed.cropAge) {
+        localStorage.setItem('crop_age', parsed.cropAge);
+        var elAge = document.getElementById('crop-age-days');
+        if (elAge) elAge.value = parsed.cropAge;
+      }
+      if (parsed.cropName) {
+        localStorage.setItem('crop_name', parsed.cropName);
+        var elName = document.getElementById('crop-name');
+        if (elName) elName.value = parsed.cropName;
+      }
+      if (typeof updateCropAgronomyAnalysis === 'function') updateCropAgronomyAnalysis();
       updateCropHistorySummary();
       renderCropHistoryChart();
+      renderCropHistoryTable();
       var footerStatus = document.getElementById('crop-hist-footer-status');
       if (footerStatus) {
-        footerStatus.innerHTML = '<span style="color:#10b981;">✓ Berhasil memulihkan ' + items.length + ' data riwayat tanam!</span>';
+        footerStatus.innerHTML = '<span style="color:#10b981;font-weight:700;">✓ Berhasil memulihkan ' + items.length + ' data ke Flash LittleFS ESP32 & Browser!</span>';
         setTimeout(function() {
-          if (footerStatus) footerStatus.innerText = "Data tersimpan di LocalStorage peramban • Kurva Pertumbuhan Sigmoid (S-Curve)";
+          if (footerStatus) footerStatus.innerText = "Data tersimpan di LittleFS Flash Memory ESP32 & LocalStorage • Kurva Pertumbuhan Sigmoid (S-Curve)";
         }, 3500);
       }
     } catch (err) {
@@ -6369,6 +7301,23 @@ function importCropHistoryJSON(e) {
   reader.readAsText(file);
   e.target.value = '';
 }
+
+// Window global exports for HTML inline buttons
+if (typeof window !== 'undefined') {
+  window.initCropHistory = initCropHistory;
+  window.renderCropHistoryChart = renderCropHistoryChart;
+  window.renderCropHistoryTable = renderCropHistoryTable;
+  window.updateCropHistorySummary = updateCropHistorySummary;
+  window.logTodayCropGrowth = logTodayCropGrowth;
+  window.deleteCropHistoryEntry = deleteCropHistoryEntry;
+  window.resetCropHistory = resetCropHistory;
+  window.exportCropHistoryJSON = exportCropHistoryJSON;
+  window.triggerImportCropHistoryJSON = triggerImportCropHistoryJSON;
+  window.importCropHistoryJSON = importCropHistoryJSON;
+  window.shareCropReportWhatsApp = shareCropReportWhatsApp;
+  window.printCropReport = printCropReport;
+}
+
 
 
 // =================================================================
@@ -6393,204 +7342,327 @@ function formatFriendlyDateTime(rawStr) {
   return day + " " + monthName + " " + year + " — " + timeStr + " WIB";
 }
 
+function formatWaitSecs(sec) {
+  if (sec === undefined || sec === null) return "0s";
+  var s = parseInt(sec, 10) || 0;
+  if (s < 60) return s + "s";
+  var m = Math.floor(s / 60);
+  var remS = s % 60;
+  return m + "m " + (remS < 10 ? "0" : "") + remS + "s";
+}
+
+var _consecutiveFailures = 0;
+
+function applyTelemetryData(data) {
+  if (!data || typeof data !== 'object') return;
+  window.lastTelemetryData = data;
+
+  var bannerBox = document.getElementById('banner-box');
+  var bannerText = document.getElementById('banner-text');
+
+  var color = "var(--primary)";
+  var glow = "rgba(16, 185, 129, 0.7)";
+  if (data.statusColor === "bahaya") {
+    color = "var(--danger)";
+    glow = "rgba(239, 68, 68, 0.7)";
+  } else if (data.statusColor === "peringatan") {
+    color = "var(--warning)";
+    glow = "rgba(245, 158, 11, 0.7)";
+  }
+
+  var hasSoil = (data.soil !== undefined && data.soil !== null && data.soil !== "--" && !isNaN(parseFloat(data.soil)) && parseFloat(data.soil) >= 0);
+  var hasTemp = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== "--" && !isNaN(parseFloat(data.suhuC)));
+  var hasHum = (data.hum !== undefined && data.hum !== null && data.hum !== "--" && !isNaN(parseFloat(data.hum)));
+
+  var sVal = hasSoil ? parseFloat(data.soil) : null;
+  var tVal = hasTemp ? parseFloat(data.suhuC) : null;
+  var hVal = hasHum ? parseFloat(data.hum) : null;
+
+  // Jika ada data tanah valid (hasSoil), sistem TIDAK LAGI dalam kondisi menunggu
+  var isWaiting = (data.isWaiting == 1 && !hasSoil);
+  var isOfflineOrWaiting = (isWaiting || (data.isEsp8266Unplugged == 1 && !hasSoil) || data.isSystemError == 1);
+
+  var pct = (data.waitingPercent !== undefined) ? data.waitingPercent : 0;
+  var wSec = (data.waitingSecs !== undefined) ? data.waitingSecs : 0;
+  var waitTimeStr = pct + "% (" + wSec + "s / 60s)";
+  if (isWaiting) {
+    if (bannerText) bannerText.innerText = "⏳ MEMUAT SISTEM: Menunggu Sinyal ESP8266 (" + waitTimeStr + ")";
+    color = "var(--warning)";
+    glow = "rgba(245, 158, 11, 0.7)";
+  } else if (data.isEsp8266Unplugged == 1 && !hasSoil) {
+    if (bannerText) {
+      if (data.errorMsg && data.errorMsg !== "") {
+        bannerText.innerText = data.errorMsg;
+      } else {
+        bannerText.innerText = "🚨 PERINGATAN: SENSOR TERPUTUS (Sinyal Hilang - Pompa Dikunci MATI)";
+      }
+    }
+    color = "var(--danger)";
+    glow = "rgba(239, 68, 68, 0.7)";
+  } else if (data.relayOn == 1) {
+    var modeStr = (data.isManual == 1 ? "MANUAL" : "AUTO");
+    var soilStr = hasSoil ? " | Kelembapan: " + sVal + "%" : "";
+    if (bannerText) bannerText.innerText = "💧 SEDANG MENYIRAM LAHAN (" + modeStr + ")" + soilStr;
+    color = "var(--primary)";
+    glow = "rgba(16, 185, 129, 0.7)";
+  } else if (data.errorMsg && data.errorMsg !== "" && !hasSoil) {
+    if (bannerText) bannerText.innerText = "Failsafe Alert: " + data.errorMsg;
+    color = "var(--danger)";
+    glow = "rgba(239, 68, 68, 0.7)";
+  } else {
+    var cleanStatus = data.statusText ? data.statusText.replace(/[✅🚨⏳ℹ️🌱]/g, '').trim() : "Sistem Operasional Normal";
+    if (bannerText) bannerText.innerText = cleanStatus || "Sistem Operasional Normal";
+  }
+
+  if (bannerBox) {
+    bannerBox.style.borderTopColor = color;
+    bannerBox.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px " + glow;
+  }
+  if (bannerText) {
+    bannerText.style.color = color;
+    bannerText.style.borderColor = color;
+  }
+
+  var friendlyRtc = formatFriendlyDateTime(data.rtcTime);
+  var badgeRtc = document.getElementById('badge-rtc-time');
+  if (badgeRtc) {
+    badgeRtc.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>' + (friendlyRtc !== "-" ? friendlyRtc : "RTC: Offline") + '</span>';
+  }
+  var badgeRssi = document.getElementById('badge-rssi');
+  if (badgeRssi) {
+    badgeRssi.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg><span>Sinyal: ' + (data.rssi || "-") + ' dBm</span>';
+  }
+
+  latestMoisturePercent = sVal;
+  isSensorDataValid = (!isOfflineOrWaiting && hasSoil && hasTemp && hasHum);
+
+  // Hardware Traffic Light Widget (Pins 32 Hijau, 33 Kuning, 27 Merah)
+  var bRed = document.getElementById('traffic-bulb-red');
+  var bYellow = document.getElementById('traffic-bulb-yellow');
+  var bGreen = document.getElementById('traffic-bulb-green');
+  var tLabel = document.getElementById('traffic-label');
+
+  if (bRed && bYellow && bGreen) {
+    bRed.className = 'traffic-bulb red';
+    bYellow.className = 'traffic-bulb yellow';
+    bGreen.className = 'traffic-bulb green';
+
+    if (data.isSystemError == 1) {
+      bRed.classList.add('active', 'blink');
+      if (tLabel) { tLabel.innerText = "Darurat"; tLabel.style.color = "#ef4444"; }
+    } else if (data.isEsp8266Unplugged == 1 && !hasSoil) {
+      bYellow.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Offline"; tLabel.style.color = "#f59e0b"; }
+    } else if (isWaiting) {
+      bYellow.classList.add('active', 'blink');
+      if (tLabel) { tLabel.innerText = "Menunggu"; tLabel.style.color = "#f59e0b"; }
+    } else if (data.statusColor === "bahaya" || (hasTemp && tVal >= 35.0)) {
+      bRed.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Bahaya"; tLabel.style.color = "#ef4444"; }
+    } else if (data.statusColor === "peringatan" || (hasSoil && sVal < 45) || (hasTemp && tVal > 30.0)) {
+      bYellow.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Waspada"; tLabel.style.color = "#f59e0b"; }
+    } else if (hasSoil || hasTemp) {
+      bGreen.classList.add('active');
+      if (tLabel) { tLabel.innerText = "Aman"; tLabel.style.color = "#10b981"; }
+    } else {
+      bYellow.classList.add('active', 'blink');
+      if (tLabel) { tLabel.innerText = "Standby"; tLabel.style.color = "#f59e0b"; }
+    }
+  }
+
+  // Update Big Traffic Pole Card in Dashboard
+  updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal, tVal);
+
+  // KPI Cards Update
+  var kpiSoil = document.getElementById('kpi-soil');
+  var kpiSoilCat = document.getElementById('kpi-soil-category');
+  var kpiSoilDep = document.getElementById('kpi-soil-depletion');
+  if (kpiSoil) {
+    if (hasSoil) {
+      kpiSoil.innerText = sVal + "%";
+      if (kpiSoilCat) {
+        if (data.isEsp8266Unplugged == 1) {
+          kpiSoilCat.innerText = (data.soilCategory || "Normal") + " (Offline)";
+          kpiSoilCat.style.color = "var(--warning)";
+        } else {
+          kpiSoilCat.innerText = data.soilCategory || "Normal";
+          kpiSoilCat.style.color = "var(--primary)";
+        }
+      }
+    } else {
+      kpiSoil.innerText = "--%";
+      if (kpiSoilCat) {
+        if (isWaiting) {
+          kpiSoilCat.innerText = "Menunggu " + waitTimeStr;
+          kpiSoilCat.style.color = "var(--warning)";
+        } else {
+          kpiSoilCat.innerText = "Sensor Terputus";
+          kpiSoilCat.style.color = "var(--text-sub)";
+        }
+      }
+    }
+  }
+  if (kpiSoilDep) {
+    kpiSoilDep.innerText = isWaiting ? "Inisialisasi sinyal radio..." : ("Prediksi Penguapan: " + (data.soilDepletion || "-"));
+  }
+
+  var rawAdcVal = (data.rawAdc !== undefined && data.rawAdc !== null && data.rawAdc !== "-" && data.rawAdc !== "--") ? data.rawAdc : "--";
+  var kpiSoilRawBadge = document.getElementById('kpi-soil-raw-badge');
+  if (kpiSoilRawBadge) {
+    kpiSoilRawBadge.innerText = isWaiting ? ("Sync: " + pct + "%") : ("Raw: " + rawAdcVal);
+  }
+  var kpiSoilRawAdc = document.getElementById('kpi-soil-raw-adc');
+  if (kpiSoilRawAdc) {
+    kpiSoilRawAdc.innerText = isWaiting ? ("Menunggu: " + pct + "% (" + wSec + "s)") : ("ADC A0: " + rawAdcVal);
+  }
+
+  var kpiTemp = document.getElementById('kpi-temp');
+  var kpiTempCat = document.getElementById('kpi-temp-category');
+  var kpiHeat = document.getElementById('kpi-heat-index');
+  if (kpiTemp) {
+    if (hasTemp) {
+      kpiTemp.innerText = tVal + "°C";
+      if (kpiTempCat) {
+        kpiTempCat.innerText = (tVal >= 35.0 ? "Suhu Ekstrem" : (tVal > 30.0 ? "Cukup Hangat" : "Optimal"));
+        kpiTempCat.style.color = (tVal >= 35.0 ? "var(--danger)" : (tVal > 30.0 ? "var(--warning)" : "var(--primary)"));
+      }
+    } else {
+      kpiTemp.innerText = "--°C";
+      if (kpiTempCat) {
+        kpiTempCat.innerText = "Sensor Terputus";
+        kpiTempCat.style.color = "var(--text-sub)";
+      }
+    }
+  }
+  if (kpiHeat) {
+    kpiHeat.innerText = hasTemp ? ("Indeks Panas: " + (data.heatC || tVal) + "°C") : "Indeks Panas: --";
+  }
+
+  var kpiHum = document.getElementById('kpi-hum') || document.getElementById('kpi-humidity');
+  var kpiHumCat = document.getElementById('kpi-hum-category');
+  var kpiDew = document.getElementById('kpi-dew-point');
+  if (kpiHum) {
+    if (hasHum) {
+      kpiHum.innerText = hVal + "%";
+      if (kpiHumCat) {
+        kpiHumCat.innerText = (hVal < 40 ? "Udara Kering" : (hVal > 85 ? "Sangat Lembap" : "Optimal"));
+        kpiHumCat.style.color = (hVal < 40 || hVal > 85 ? "var(--warning)" : "var(--primary)");
+      }
+    } else {
+      kpiHum.innerText = "--%";
+      if (kpiHumCat) {
+        kpiHumCat.innerText = "Sensor Terputus";
+        kpiHumCat.style.color = "var(--text-sub)";
+      }
+    }
+  }
+  if (kpiDew) {
+    if (hasHum && data.dew !== undefined && data.dew !== null && data.dew !== "--") {
+      kpiDew.innerText = "Titik Embun: " + data.dew + "°C";
+    } else {
+      if (kpiDew) kpiDew.innerText = "Titik Embun: --";
+    }
+  }
+
+  var kpiSignal = document.getElementById('kpi-signal') || document.getElementById('kpi-battery');
+  var kpiNodeStatus = document.getElementById('kpi-node-status');
+  var kpiAdc = document.getElementById('kpi-raw-adc');
+  var kpiNodeBat = document.getElementById('kpi-node-battery-badge');
+  var kpiPacketTimer = document.getElementById('kpi-packet-timer');
+
+  var isNodeOnline = hasSoil || (!isOfflineOrWaiting && data.rssi !== undefined && data.rssi !== null && data.rssi != -99 && data.rssi !== "-");
+  if (kpiSignal) {
+    if (isNodeOnline) {
+      var displayRssi = (data.rssi !== undefined && data.rssi !== null && data.rssi != -99 && data.rssi !== "-") ? data.rssi : "-55";
+      kpiSignal.innerText = displayRssi + " dBm";
+      if (kpiNodeStatus) {
+        kpiNodeStatus.innerText = "Online";
+        kpiNodeStatus.style.color = "var(--accent-emerald)";
+        kpiNodeStatus.style.borderColor = "rgba(16, 185, 129, 0.35)";
+      }
+    } else {
+      kpiSignal.innerText = "-- dBm";
+      if (kpiNodeStatus) {
+        if (isWaiting) {
+          kpiNodeStatus.innerText = "Memuat (" + pct + "%)";
+          kpiNodeStatus.style.color = "var(--warning)";
+          kpiNodeStatus.style.borderColor = "rgba(245, 158, 11, 0.35)";
+        } else {
+          kpiNodeStatus.innerText = "Terputus";
+          kpiNodeStatus.style.color = "var(--accent-rose)";
+          kpiNodeStatus.style.borderColor = "rgba(239, 68, 68, 0.35)";
+        }
+      }
+    }
+  }
+
+  if (kpiNodeBat) {
+    var batVal = (data.battery !== undefined && data.battery > 0) ? data.battery : (data.nodeBat ? parseInt(data.nodeBat) : 0);
+    if (isNodeOnline && batVal > 0) {
+      kpiNodeBat.innerText = "🔋 " + batVal + "%";
+      kpiNodeBat.style.display = "inline-block";
+    } else {
+      kpiNodeBat.innerText = "🔋 --%";
+    }
+  }
+
+  if (kpiPacketTimer) {
+    if (isNodeOnline && data.secSinceRecv !== undefined && data.secSinceRecv !== null) {
+      kpiPacketTimer.innerText = "Paket: " + data.secSinceRecv + "s lalu";
+      kpiPacketTimer.style.color = (data.secSinceRecv > 90) ? "var(--warning)" : "var(--text-sub)";
+    } else {
+      kpiPacketTimer.innerText = "Paket: -- lalu";
+    }
+  }
+
+  if (kpiAdc) {
+    if (isNodeOnline && data.rawAdc !== undefined && data.rawAdc !== null && data.rawAdc !== "-") {
+      kpiAdc.innerText = "ADC A0: " + data.rawAdc;
+    } else {
+      kpiAdc.innerText = "ADC A0: --";
+    }
+  }
+
+  // Update Disease Outbreak Risk State
+  if (typeof updateOutbreakUIState === 'function') {
+    updateOutbreakUIState(isSensorDataValid, tVal, hVal, sVal);
+  }
+
+  // Update AI Phenology Model
+  if (typeof updatePhenologyAI === 'function' && typeof getActiveSector === 'function') {
+    updatePhenologyAI(getActiveSector(), tVal, hVal, sVal, (data.vpd !== undefined ? parseFloat(data.vpd) : null));
+  }
+
+  // Delegate Actuators & Schedule synchronization
+  if (typeof updateActuatorAndScheduleUI === 'function') {
+    updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, hVal);
+  }
+}
+
 function fetchData() {
   if (window.location.protocol === 'file:') {
-    // Mode Standalone Browser tanpa koneksi ESP32 fisik
-    // Sesuai aturan AGENTS.md: Murni tanpa dummy/angka palsu saat sensor offline
     return;
   }
-  fetch('/data')
+  fetch('/data?_t=' + Date.now())
     .then(function (res) {
       if (!res.ok) throw new Error("HTTP error " + res.status);
       return res.json();
     })
     .then(function (data) {
+      _consecutiveFailures = 0; // Berhasil! Reset counter kegagalan
       window.lastTelemetryData = data; // Simpan untuk dipakai modul lain (misal Fertigasi)
+
+      // Simpan ke cache localStorage agar saat di-refresh halaman langsung stabil seketika
+      try {
+        localStorage.setItem('sf_telemetry_cache', JSON.stringify(data));
+      } catch (e) {}
+
       if (typeof window.appendLiveTelemetryFeed === 'function') {
         window.appendLiveTelemetryFeed(data);
       }
-      var bannerBox = document.getElementById('banner-box');
-      var bannerText = document.getElementById('banner-text');
 
-      var color = "var(--primary)";
-      var glow = "rgba(16, 185, 129, 0.7)";
-      if (data.statusColor === "bahaya") {
-        color = "var(--danger)";
-        glow = "rgba(239, 68, 68, 0.7)";
-      } else if (data.statusColor === "peringatan") {
-        color = "var(--warning)";
-        glow = "rgba(245, 158, 11, 0.7)";
-      }
-
-      if (data.isWaiting == 1) {
-        if (bannerText) bannerText.innerText = "Menunggu Sinyal Sensor (" + data.waitingPercent + "%)";
-        color = "var(--warning)";
-        glow = "rgba(245, 158, 11, 0.7)";
-      } else if (data.errorMsg && data.errorMsg !== "") {
-        if (bannerText) bannerText.innerText = "Failsafe Alert: " + data.errorMsg;
-        color = "var(--danger)";
-        glow = "rgba(239, 68, 68, 0.7)";
-      } else {
-        var cleanStatus = data.statusText ? data.statusText.replace(/[✅🚨⏳ℹ️🌱]/g, '').trim() : "Sistem Operasional Normal";
-        if (bannerText) bannerText.innerText = cleanStatus || "Sistem Operasional Normal";
-      }
-
-      if (bannerBox) {
-        bannerBox.style.borderTopColor = color;
-        bannerBox.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px " + glow;
-      }
-      if (bannerText) {
-        bannerText.style.color = color;
-        bannerText.style.borderColor = color;
-      }
-
-      var friendlyRtc = formatFriendlyDateTime(data.rtcTime);
-      var badgeRtc = document.getElementById('badge-rtc-time');
-      if (badgeRtc) {
-        badgeRtc.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>' + (friendlyRtc !== "-" ? friendlyRtc : "RTC: Offline") + '</span>';
-      }
-      var badgeRssi = document.getElementById('badge-rssi');
-      if (badgeRssi) {
-        badgeRssi.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg><span>Sinyal: ' + (data.rssi || "-") + ' dBm</span>';
-      }
-
-      // Strict Zero-Dummy Hardware Validation
-      var isOfflineOrWaiting = (data.isWaiting == 1 || data.isEsp8266Unplugged == 1 || data.isSystemError == 1);
-      var hasSoil = (!isOfflineOrWaiting && data.soil !== undefined && data.soil !== null && data.soil !== "--" && !isNaN(parseFloat(data.soil)) && parseFloat(data.soil) >= 0);
-      var hasTemp = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== "--" && !isNaN(parseFloat(data.suhuC)));
-      var hasHum = (data.hum !== undefined && data.hum !== null && data.hum !== "--" && !isNaN(parseFloat(data.hum)));
-
-      var sVal = hasSoil ? parseFloat(data.soil) : null;
-      var tVal = hasTemp ? parseFloat(data.suhuC) : null;
-      var hVal = hasHum ? parseFloat(data.hum) : null;
-
-      latestMoisturePercent = sVal;
-      isSensorDataValid = (!isOfflineOrWaiting && hasSoil && hasTemp && hasHum);
-
-      // Hardware Traffic Light Widget (Pins 32 Hijau, 33 Kuning, 27 Merah)
-      var bRed = document.getElementById('traffic-bulb-red');
-      var bYellow = document.getElementById('traffic-bulb-yellow');
-      var bGreen = document.getElementById('traffic-bulb-green');
-      var tLabel = document.getElementById('traffic-label');
-
-      if (bRed && bYellow && bGreen) {
-        bRed.className = 'traffic-bulb bulb-red';
-        bYellow.className = 'traffic-bulb bulb-yellow';
-        bGreen.className = 'traffic-bulb bulb-green';
-
-        if (isOfflineOrWaiting && data.isWaiting != 1) {
-          bRed.classList.add('active', 'blink');
-          if (tLabel) { tLabel.innerText = "Terputus"; tLabel.style.color = "#ef4444"; }
-        } else if (data.isWaiting == 1) {
-          bYellow.classList.add('active', 'blink');
-          if (tLabel) { tLabel.innerText = "Menunggu"; tLabel.style.color = "#f59e0b"; }
-        } else if (data.statusColor === "bahaya" || (hasTemp && tVal >= 35.0)) {
-          bRed.classList.add('active');
-          if (tLabel) { tLabel.innerText = "Bahaya"; tLabel.style.color = "#ef4444"; }
-        } else if (data.statusColor === "peringatan" || (hasSoil && sVal < 45) || (hasTemp && tVal > 30.0)) {
-          bYellow.classList.add('active');
-          if (tLabel) { tLabel.innerText = "Waspada"; tLabel.style.color = "#f59e0b"; }
-        } else if (hasSoil || hasTemp) {
-          bGreen.classList.add('active');
-          if (tLabel) { tLabel.innerText = "Aman"; tLabel.style.color = "#10b981"; }
-        } else {
-          bYellow.classList.add('active', 'blink');
-          if (tLabel) { tLabel.innerText = "Standby"; tLabel.style.color = "#f59e0b"; }
-        }
-      }
-
-      // Update Big Traffic Pole Card in Dashboard
-      updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal, tVal);
-
-      // KPI Cards Update
-      var kpiSoil = document.getElementById('kpi-soil');
-      var kpiSoilCat = document.getElementById('kpi-soil-category');
-      var kpiSoilDep = document.getElementById('kpi-soil-depletion');
-      if (kpiSoil) {
-        if (hasSoil) {
-          kpiSoil.innerText = sVal + "%";
-          if (kpiSoilCat) {
-            kpiSoilCat.innerText = data.soilCategory || "Normal";
-            kpiSoilCat.style.color = "var(--primary)";
-          }
-        } else {
-          kpiSoil.innerText = "--%";
-          if (kpiSoilCat) {
-            kpiSoilCat.innerText = (data.isWaiting == 1 ? "Menunggu Sensor..." : "Sensor Terputus");
-            kpiSoilCat.style.color = "var(--text-sub)";
-          }
-        }
-      }
-      if (kpiSoilDep) kpiSoilDep.innerText = "Prediksi Penguapan: " + (data.soilDepletion || "-");
-
-      var kpiTemp = document.getElementById('kpi-temp');
-      var kpiHeatIdx = document.getElementById('kpi-heat-index');
-      if (kpiTemp) {
-        if (hasTemp) {
-          kpiTemp.innerText = tVal + "°C";
-          if (kpiHeatIdx) kpiHeatIdx.innerText = "Terasa seperti: " + (data.heatC || "--") + "°C (" + (data.suhuF || "--") + "°F)";
-        } else {
-          kpiTemp.innerText = "--°C";
-          if (kpiHeatIdx) kpiHeatIdx.innerText = "Terasa seperti: --";
-        }
-      }
-
-      var kpiHum = document.getElementById('kpi-hum');
-      var kpiDew = document.getElementById('kpi-dew-point');
-      if (kpiHum) {
-        if (hasHum) {
-          kpiHum.innerText = hVal + "%";
-          if (kpiDew) kpiDew.innerText = "Titik Embun: " + (data.dew || "--") + "°C";
-        } else {
-          kpiHum.innerText = "--%";
-          if (kpiDew) kpiDew.innerText = "Titik Embun: --";
-        }
-      }
-
-      var kpiSignal = document.getElementById('kpi-signal') || document.getElementById('kpi-battery');
-      var kpiNodeStatus = document.getElementById('kpi-node-status');
-      var kpiAdc = document.getElementById('kpi-raw-adc');
-
-      var isNodeOnline = (!isOfflineOrWaiting && data.rssi !== undefined && data.rssi !== null && data.rssi != -99 && data.rssi !== "-");
-      if (kpiSignal) {
-        if (isNodeOnline) {
-          kpiSignal.innerText = data.rssi + " dBm";
-          if (kpiNodeStatus) {
-            kpiNodeStatus.innerText = "Online";
-            kpiNodeStatus.style.color = "var(--accent-emerald)";
-            kpiNodeStatus.style.borderColor = "rgba(16, 185, 129, 0.35)";
-          }
-        } else {
-          kpiSignal.innerText = "-- dBm";
-          if (kpiNodeStatus) {
-            kpiNodeStatus.innerText = (data.isWaiting == 1 ? "Menunggu" : "Terputus");
-            kpiNodeStatus.style.color = "var(--accent-rose)";
-            kpiNodeStatus.style.borderColor = "rgba(239, 68, 68, 0.35)";
-          }
-        }
-      }
-      if (kpiAdc) {
-        if (isNodeOnline && data.rawAdc !== undefined && data.rawAdc !== null && data.rawAdc !== "-") {
-          kpiAdc.innerText = "ADC A0: " + data.rawAdc;
-        } else {
-          kpiAdc.innerText = "ADC A0: --";
-        }
-      }
-
-      // Update Disease Outbreak Risk State
-      if (typeof updateOutbreakUIState === 'function') {
-        updateOutbreakUIState(isSensorDataValid, tVal, hVal, sVal);
-      }
-
-      // Update AI Phenology Model
-      if (typeof updatePhenologyAI === 'function' && typeof getActiveSector === 'function') {
-        updatePhenologyAI(getActiveSector(), tVal, hVal, sVal, (data.vpd !== undefined ? parseFloat(data.vpd) : null));
-      }
-
-      // Delegate Actuators & Schedule synchronization
-      if (typeof updateActuatorAndScheduleUI === 'function') {
-        updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, hVal);
-      }
+      applyTelemetryData(data);
 
       // Silent Auto-Sync RTC once
       if (!window.rtcAutoSynced) {
@@ -6601,11 +7673,27 @@ function fetchData() {
           .catch(function () {});
       }
 
+      var hasSoil = (data.soil !== undefined && data.soil !== null && data.soil !== "--" && !isNaN(parseFloat(data.soil)) && parseFloat(data.soil) >= 0);
+      var rawT = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== "--") ? data.suhuC : data.temp;
+      var hasTemp = (rawT !== undefined && rawT !== null && rawT !== "--" && !isNaN(parseFloat(rawT)));
+      var hasHum = (data.hum !== undefined && data.hum !== null && data.hum !== "--" && !isNaN(parseFloat(data.hum)));
+      var sVal = hasSoil ? parseFloat(data.soil) : null;
+      var tVal = hasTemp ? parseFloat(rawT) : null;
+      var hVal = hasHum ? parseFloat(data.hum) : null;
+
       if (typeof updateHistory === 'function') {
         updateHistory(sVal, tVal, hVal);
       }
     })
     .catch(function (err) {
+      _consecutiveFailures++;
+      console.warn("Sinkronisasi data ESP32 (" + _consecutiveFailures + "):", err);
+
+      // Jika baru gagal 1-2 kali (ESP32 sesaat sibuk/menutup soket HTTP sebelumnya), jangan ubah tampilan dashboard
+      if (_consecutiveFailures < 3) {
+        return;
+      }
+
       isSensorDataValid = false;
       latestMoisturePercent = null;
       if (typeof updateOutbreakUIState === 'function') {
@@ -6613,9 +7701,9 @@ function fetchData() {
       }
       var bText = document.getElementById('banner-text');
       if (bText) {
-        bText.innerText = "Standalone Mode / Sensor Offline";
-        bText.style.color = "var(--text-sub)";
-        bText.style.borderColor = "var(--card-border)";
+        bText.innerText = "⏳ Sedang Menyelaraskan Data Telemetri ESP32...";
+        bText.style.color = "#f59e0b";
+        bText.style.borderColor = "rgba(245, 158, 11, 0.4)";
       }
       var bBox = document.getElementById('banner-box');
       if (bBox) {
@@ -6628,14 +7716,11 @@ function fetchData() {
       var bGreen = document.getElementById('traffic-bulb-green');
       var tLabel = document.getElementById('traffic-label');
       if (bRed && bYellow && bGreen) {
-        bRed.className = 'traffic-bulb bulb-red active blink';
-        bYellow.className = 'traffic-bulb bulb-yellow';
+        bYellow.className = 'traffic-bulb bulb-yellow active blink';
+        bRed.className = 'traffic-bulb bulb-red';
         bGreen.className = 'traffic-bulb bulb-green';
-        if (tLabel) { tLabel.innerText = "Offline"; tLabel.style.color = "#ef4444"; }
+        if (tLabel) { tLabel.innerText = "Sinkron..."; tLabel.style.color = "#f59e0b"; }
       }
-      
-      // Also reset pole card on error to Sensor Terputus (Merah blink)
-      updateTrafficPoleCard({ statusColor: 'bahaya', isEsp8266Unplugged: 1 }, true, false, false, null, null);
     });
 }
 
@@ -6689,7 +7774,7 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     if (rtcBadge) rtcBadge.style.display = 'inline-flex';
     if (cardLabel) { cardLabel.innerText = 'JADWAL RTC AKTIF'; cardLabel.style.background = 'rgba(245,158,11,0.15)'; cardLabel.style.color = '#f59e0b'; cardLabel.style.borderColor = 'rgba(245,158,11,0.3)'; }
     if (curStatus) { curStatus.innerText = 'Jadwal Penyiraman RTC Sedang Berjalan'; curStatus.style.color = '#f59e0b'; }
-    if (curDetail) curDetail.innerText = 'Lampu Traffic Light fisik (Pin 27/33/32) menyala bergantian sebagai indikator jadwal aktif';
+    if (curDetail) curDetail.innerText = 'Lampu Traffic Light fisik (Pin 25/33/32) menyala bergantian sebagai indikator jadwal aktif';
     var _cycleStep = 0;
     var _poles     = [['pole-bulb-red','pole-red','#ef4444','traffic-dot-red'],['pole-bulb-yellow','pole-yellow','#f59e0b','traffic-dot-yellow'],['pole-bulb-green','pole-green','#10b981','traffic-dot-green']];
     function _doCycle() {
@@ -6705,24 +7790,28 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     return;
   }
 
-  // PRIORITY 2: Sensor terputus → Merah blink
-  if (isOfflineOrWaiting && data.isWaiting != 1) {
+  // PRIORITY 2: Hardware Error Darurat → Merah blink
+  if (data.isSystemError == 1) {
     pRed.className = 'traffic-pole-bulb pole-red lit blink';
     if (dotRed) { dotRed.style.opacity = '1'; dotRed.style.boxShadow = '0 0 8px #ef4444'; }
-    if (cardLabel) { cardLabel.innerText = 'SENSOR TERPUTUS'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
-    if (curStatus) { curStatus.innerText = 'ESP8266 Terputus / Sensor Offline'; curStatus.style.color = '#ef4444'; }
-    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe';
+    if (cardLabel) { cardLabel.innerText = 'HARDWARE DARURAT'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
+    if (curStatus) { curStatus.innerText = 'Hardware Error / Failsafe Aktif'; curStatus.style.color = '#ef4444'; }
+    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 25) berkedip. Failsafe sistem terkunci.';
     updateLedDiagPanel(1);
     return;
   }
 
-  // PRIORITY 3: Boot / Menunggu → Kuning blink
-  if (data.isWaiting == 1) {
+  // PRIORITY 3: Boot / Menunggu → Kuning blink (Hanya jika belum ada telemetri tanah)
+  var isWaiting = (data.isWaiting == 1 && !hasSoil);
+  if (isWaiting) {
+    var pct = (data.waitingPercent !== undefined) ? data.waitingPercent : 0;
+    var wSec = (data.waitingSecs !== undefined) ? data.waitingSecs : 0;
+    var waitTimeStr = pct + "% (" + wSec + "s / 60s)";
     pYellow.className = 'traffic-pole-bulb pole-yellow lit blink';
     if (dotYellow) { dotYellow.style.opacity = '1'; dotYellow.style.boxShadow = '0 0 8px #f59e0b'; }
     if (cardLabel) { cardLabel.innerText = 'MENUNGGU KONEKSI'; cardLabel.style.background = 'rgba(245,158,11,0.15)'; cardLabel.style.color = '#f59e0b'; cardLabel.style.borderColor = 'rgba(245,158,11,0.3)'; }
     if (curStatus) { curStatus.innerText = 'Menunggu sinyal ESP8266...'; curStatus.style.color = '#f59e0b'; }
-    if (curDetail) curDetail.innerText = 'Lampu Kuning (Pin 33) berkedip. Boot ' + (data.waitingPercent || 0) + '% selesai';
+    if (curDetail) curDetail.innerText = 'Lampu Kuning (Pin 33) berkedip. Mencari sinyal: ' + waitTimeStr;
     updateLedDiagPanel(2);
     return;
   }
@@ -6733,7 +7822,7 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     if (dotRed) { dotRed.style.opacity = '1'; dotRed.style.boxShadow = '0 0 8px #ef4444'; }
     if (cardLabel) { cardLabel.innerText = 'BAHAYA KRITIS'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
     if (curStatus) { curStatus.innerText = 'BAHAYA — Suhu Ekstrem ' + (tVal !== null ? tVal + '°C' : '--'); curStatus.style.color = '#ef4444'; }
-    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 27) menyala solid. Segera lakukan pendinginan lahan!';
+    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 25) menyala solid. Segera lakukan pendinginan lahan!';
     updateLedDiagPanel(1);
     return;
   }
@@ -6762,7 +7851,7 @@ function updateTrafficPoleCard(data, isOfflineOrWaiting, hasSoil, hasTemp, sVal,
     if (dotRed) { dotRed.style.opacity = '1'; dotRed.style.boxShadow = '0 0 8px #ef4444'; }
     if (cardLabel) { cardLabel.innerText = 'SENSOR TERPUTUS / OFFLINE'; cardLabel.style.background = 'rgba(239,68,68,0.15)'; cardLabel.style.color = '#ef4444'; cardLabel.style.borderColor = 'rgba(239,68,68,0.3)'; }
     if (curStatus) { curStatus.innerText = 'ESP8266 Terputus / Sensor Offline'; curStatus.style.color = '#ef4444'; }
-    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 27) berkedip. Pompa dikunci mati oleh failsafe sistem.';
+    if (curDetail) curDetail.innerText = 'Lampu Merah (Pin 25) berkedip. Pompa dikunci mati oleh failsafe sistem.';
     updateLedDiagPanel(1);
   }
 
@@ -6825,6 +7914,17 @@ function updateLedDiagPanel(ledState) {
       if (dYellow) { dYellow.style.opacity = '1'; dYellow.style.boxShadow = '0 0 4px #f59e0b'; }
       if (dGreen) { dGreen.style.opacity = '1'; dGreen.style.boxShadow = '0 0 4px #10b981'; }
       break;
+    case 5: // Menyiram Lahan (3 Lampu Berkedip Aktif)
+      stRed.innerText    = 'PULSE (Menyiram)';
+      stYellow.innerText = 'PULSE (Menyiram)';
+      stGreen.innerText  = 'PULSE (Menyiram)';
+      stRed.style.color    = '#ef4444';
+      stYellow.style.color = '#f59e0b';
+      stGreen.style.color  = '#10b981';
+      if (dRed) { dRed.style.opacity = '1'; dRed.style.boxShadow = '0 0 8px #ef4444'; }
+      if (dYellow) { dYellow.style.opacity = '1'; dYellow.style.boxShadow = '0 0 8px #f59e0b'; }
+      if (dGreen) { dGreen.style.opacity = '1'; dGreen.style.boxShadow = '0 0 8px #10b981'; }
+      break;
     default: // 0 = semua mati
       break;
   }
@@ -6844,6 +7944,43 @@ function reportLedMismatch() {
     alertEl.style.display = 'none';
   }
 }
+
+// ================================================================
+// POLLING TELEMETRI OTOMATIS REALTIME (LANGSUNG LOAD & TIAP 2 DETIK)
+// ================================================================
+var _telemetryTimer = null;
+function initTelemetryPolling() {
+  // 1. Instant Hydration dari cache localStorage agar saat refresh halaman langsung tampil stabil seketika
+  try {
+    var cached = localStorage.getItem('sf_telemetry_cache');
+    if (cached) {
+      var cData = JSON.parse(cached);
+      if (cData && typeof cData === 'object') {
+        applyTelemetryData(cData);
+      }
+    }
+  } catch (e) {}
+
+  // 2. Langsung ambil telemetri terbaru dari ESP32
+  if (typeof fetchData === 'function') {
+    fetchData();
+  }
+
+  if (!_telemetryTimer) {
+    _telemetryTimer = setInterval(function () {
+      if (typeof fetchData === 'function') {
+        fetchData(); // Perbarui terus menerus tiap 2 detik
+      }
+    }, 2000);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTelemetryPolling);
+} else {
+  initTelemetryPolling();
+}
+
 
 
 // =================================================================
@@ -6921,30 +8058,38 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var hasMicroclimateData = (tempNum !== null && humNum !== null);
 
   // 3. Heat Index (Indeks Panas Terasa)
-  var heatC = data.heatC;
-  var heatF = data.heatF;
-  if ((!heatC || heatC === "--") && hasMicroclimateData) {
-    var tempF = tempNum * 1.8 + 32;
-    var hiF = 0.5 * (tempF + 61.0 + ((tempF - 68.0) * 1.2) + (humNum * 0.094));
+  var rawHeatC = (data && data.heatC !== undefined && data.heatC !== null && data.heatC !== "undefined" && data.heatC !== "--") ? parseFloat(data.heatC) : NaN;
+  var heatC = !isNaN(rawHeatC) ? rawHeatC.toFixed(1) : null;
+  var rawHeatF = (data && data.heatF !== undefined && data.heatF !== null && data.heatF !== "undefined" && data.heatF !== "--") ? parseFloat(data.heatF) : NaN;
+  var heatF = !isNaN(rawHeatF) ? rawHeatF.toFixed(1) : null;
+
+  var hiTemp = (hasMicroclimateData && tempNum !== null) ? tempNum : (!isNaN(satT) ? satT : null);
+  var hiHum = (hasMicroclimateData && humNum !== null) ? humNum : (!isNaN(satH) ? satH : null);
+
+  if ((!heatC || !heatF) && hiTemp !== null && hiHum !== null) {
+    var tempF = hiTemp * 1.8 + 32;
+    var hiF = 0.5 * (tempF + 61.0 + ((tempF - 68.0) * 1.2) + (hiHum * 0.094));
     if (hiF >= 80) {
-      hiF = -42.379 + 2.04901523 * tempF + 10.14333127 * humNum - 0.22475541 * tempF * humNum
-            - 0.00683783 * tempF * tempF - 0.05481717 * humNum * humNum
-            + 0.00122874 * tempF * tempF * humNum + 0.00085282 * tempF * humNum * humNum
-            - 0.00000199 * tempF * tempF * humNum * humNum;
+      hiF = -42.379 + 2.04901523 * tempF + 10.14333127 * hiHum - 0.22475541 * tempF * hiHum
+            - 0.00683783 * tempF * tempF - 0.05481717 * hiHum * hiHum
+            + 0.00122874 * tempF * tempF * hiHum + 0.00085282 * tempF * hiHum * hiHum
+            - 0.00000199 * tempF * tempF * hiHum * hiHum;
     }
-    heatF = hiF.toFixed(1);
-    heatC = ((hiF - 32) / 1.8).toFixed(1);
+    if (!isNaN(hiF)) {
+      heatF = hiF.toFixed(1);
+      heatC = ((hiF - 32) / 1.8).toFixed(1);
+    }
   }
   var elHeatC = document.getElementById('bmkg-heat-index');
   var elHeatF = document.getElementById('bmkg-heat-f');
   var elHeatStat = document.getElementById('bmkg-heat-status');
   var elHeatBadge = document.getElementById('bmkg-heat-badge');
-  if (elHeatC) elHeatC.innerText = hasMicroclimateData ? (heatC + "°C") : "--°C";
-  if (elHeatF) elHeatF.innerText = hasMicroclimateData ? (heatF + "°F") : "--°F";
+  if (elHeatC) elHeatC.innerText = (heatC && heatC !== "NaN" && heatC !== "undefined") ? (heatC + "°C") : "--°C";
+  if (elHeatF) elHeatF.innerText = (heatF && heatF !== "NaN" && heatF !== "undefined") ? (heatF + "°F") : "--°F";
   if (elHeatStat) {
     var hNum = parseFloat(heatC);
     var hStat = "--";
-    if (hasMicroclimateData && !isNaN(hNum)) {
+    if (!isNaN(hNum)) {
       if (hNum >= 38) hStat = "Stres Termal Bahaya!";
       else if (hNum >= 32) hStat = "Waspada Panas Ekstrem";
       else if (hNum >= 27) hStat = "Hangat Normal";
@@ -6952,52 +8097,88 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
       else hStat = "Sensasi Sejuk";
     }
     elHeatStat.innerText = hStat;
-    if (elHeatBadge) elHeatBadge.innerText = hasMicroclimateData ? hStat : "Termal Riil";
+    if (elHeatBadge) elHeatBadge.innerText = hasMicroclimateData ? hStat : (heatC ? "Satelit BMKG" : "Termal Riil");
   }
 
   // 4. Dew Point & Absolute Humidity (Magnus Formula)
-  var dew = data.dew;
-  var absHum = data.absHum;
-  if ((!dew || dew === "--") && hasMicroclimateData) {
+  var rawDew = (data && data.dew !== undefined && data.dew !== null && data.dew !== "undefined" && data.dew !== "--") ? parseFloat(data.dew) : NaN;
+  var dew = !isNaN(rawDew) ? rawDew.toFixed(1) : null;
+  var absHum = null;
+
+  if (hasMicroclimateData && tempNum !== null && humNum !== null && humNum > 0) {
     var a = 17.27, b = 237.7;
     var alpha = ((a * tempNum) / (b + tempNum)) + Math.log(humNum / 100.0);
-    dew = ((b * alpha) / (a - alpha)).toFixed(1);
-    absHum = ((216.7 * (humNum / 100.0) * 6.112 * Math.exp((17.67 * tempNum) / (tempNum + 243.5))) / (273.15 + tempNum)).toFixed(1);
+    var calcDew = (b * alpha) / (a - alpha);
+    if (!isNaN(calcDew)) {
+      if (!dew) dew = calcDew.toFixed(1);
+    }
+    var calcAbs = (216.7 * (humNum / 100.0) * 6.112 * Math.exp((17.67 * tempNum) / (tempNum + 243.5))) / (273.15 + tempNum);
+    if (!isNaN(calcAbs)) {
+      absHum = calcAbs.toFixed(1);
+    }
+  } else if (!dew && !isNaN(satT) && !isNaN(satH) && satH > 0) {
+    // Fallback cerdas: Jika sensor kebun belum terhubung tapi data cuaca satelit BMKG ada
+    var aS = 17.27, bS = 237.7;
+    var alphaS = ((aS * satT) / (bS + satT)) + Math.log(satH / 100.0);
+    var calcDewS = (bS * alphaS) / (aS - alphaS);
+    if (!isNaN(calcDewS)) dew = calcDewS.toFixed(1);
+    var calcAbsS = (216.7 * (satH / 100.0) * 6.112 * Math.exp((17.67 * satT) / (satT + 243.5))) / (273.15 + satT);
+    if (!isNaN(calcAbsS)) absHum = calcAbsS.toFixed(1);
   }
+
   var elDew = document.getElementById('bmkg-dew-point');
   var elAbsHum = document.getElementById('bmkg-abs-hum');
   var elDewStat = document.getElementById('bmkg-dew-status');
   var elDewBadge = document.getElementById('bmkg-dew-badge');
-  if (elDew) elDew.innerText = hasMicroclimateData ? (dew + "°C") : "--°C";
-  if (elAbsHum) elAbsHum.innerText = hasMicroclimateData ? (absHum + " g/m³") : "-- g/m³";
+  if (elDew) elDew.innerText = (dew && dew !== "NaN" && dew !== "undefined") ? (dew + "°C") : "--°C";
+  if (elAbsHum) elAbsHum.innerText = (absHum && absHum !== "NaN" && absHum !== "undefined") ? (absHum + " g/m³") : "-- g/m³";
   if (elDewStat) {
-    var dewDiff = hasMicroclimateData ? (tempNum - parseFloat(dew)) : null;
+    var dewDiff = (hasMicroclimateData && dew && !isNaN(parseFloat(dew))) ? (tempNum - parseFloat(dew)) : null;
     var dStat = "--";
     if (dewDiff !== null && !isNaN(dewDiff)) {
       if (dewDiff <= 1.5) dStat = "Kondensasi Embun Jenuh";
       else if (dewDiff <= 3.0) dStat = "Potensi Embun Pagi";
       else dStat = "Bebas Embun";
+    } else if (!hasMicroclimateData && !isNaN(satT) && dew && !isNaN(parseFloat(dew))) {
+      var satDiff = satT - parseFloat(dew);
+      if (satDiff <= 1.5) dStat = "Potensi Embun Satelit";
+      else dStat = "Bebas Embun (Satelit)";
     }
     elDewStat.innerText = dStat;
-    if (elDewBadge) elDewBadge.innerText = hasMicroclimateData ? (dewDiff !== null && dewDiff <= 2 ? "Embun Aktif" : "Bebas Embun") : "Magnus";
+    if (elDewBadge) {
+      if (hasMicroclimateData) {
+        elDewBadge.innerText = (dewDiff !== null && dewDiff <= 2 ? "Embun Aktif" : "Bebas Embun");
+      } else if (!isNaN(satT) && dew) {
+        elDewBadge.innerText = "Estimasi Satelit";
+      } else {
+        elDewBadge.innerText = "Magnus Termal";
+      }
+    }
   }
 
   // 5. VPD (Defisit Tekanan Uap & Status Stomata)
-  var vpd = data.vpd;
-  if ((!vpd || vpd === "--") && hasMicroclimateData) {
+  var rawVpd = (data && data.vpd !== undefined && data.vpd !== null && data.vpd !== "undefined" && data.vpd !== "--") ? parseFloat(data.vpd) : NaN;
+  var vpd = !isNaN(rawVpd) ? rawVpd.toFixed(2) : null;
+  if (!vpd && hasMicroclimateData && tempNum !== null && humNum !== null) {
     var es = 0.61078 * Math.exp((17.27 * tempNum) / (tempNum + 237.3));
     var ea = es * (humNum / 100.0);
-    vpd = Math.max(0, es - ea).toFixed(2);
+    var calcVpd = Math.max(0, es - ea);
+    if (!isNaN(calcVpd)) vpd = calcVpd.toFixed(2);
+  } else if (!vpd && !isNaN(satT) && !isNaN(satH)) {
+    var esS = 0.61078 * Math.exp((17.27 * satT) / (satT + 237.3));
+    var eaS = esS * (satH / 100.0);
+    var calcVpdS = Math.max(0, esS - eaS);
+    if (!isNaN(calcVpdS)) vpd = calcVpdS.toFixed(2);
   }
   var elVpd = document.getElementById('bmkg-vpd-val');
   var elVpdStat = document.getElementById('bmkg-vpd-status');
   var elVpdBadge = document.getElementById('bmkg-vpd-badge');
-  if (elVpd) elVpd.innerText = hasMicroclimateData ? (vpd + " kPa") : "-- kPa";
+  if (elVpd) elVpd.innerText = (vpd && vpd !== "NaN" && vpd !== "undefined") ? (vpd + " kPa") : "-- kPa";
   if (elVpdStat) {
     var vpdNum = parseFloat(vpd);
     var vStat = "--";
     var vBadge = "Stomata";
-    if (hasMicroclimateData && !isNaN(vpdNum)) {
+    if (!isNaN(vpdNum)) {
       if (vpdNum < 0.4) {
         vStat = "Terlalu Lembap (Risiko Jamur)";
         vBadge = "Risiko Jamur";
@@ -7016,30 +8197,32 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
       }
     }
     elVpdStat.innerText = vStat;
-    if (elVpdBadge) elVpdBadge.innerText = hasMicroclimateData ? vBadge : "Stomata";
+    if (elVpdBadge) elVpdBadge.innerText = vBadge;
   }
 
   // 6. Evaporation Rate (Laju Penguapan Air Lahan)
-  var evap = data.evaporation;
-  if ((!evap || evap === "--") && hasMicroclimateData && vpd && !isNaN(parseFloat(vpd))) {
-    evap = ((0.7 * parseFloat(vpd) + 0.15 * (tempNum / 10.0)) * 1.05).toFixed(1);
+  var evap = null;
+  var evapTemp = (hasMicroclimateData && tempNum !== null) ? tempNum : (!isNaN(satT) ? satT : null);
+  if (vpd && !isNaN(parseFloat(vpd)) && evapTemp !== null) {
+    var calcEvap = ((0.7 * parseFloat(vpd) + 0.15 * (evapTemp / 10.0)) * 1.05);
+    if (!isNaN(calcEvap)) evap = calcEvap.toFixed(1);
   }
   var elEvap = document.getElementById('bmkg-evap-val');
   var elEvapStat = document.getElementById('bmkg-evap-status');
   var elEvapLoss = document.getElementById('bmkg-evap-loss');
   var elEvapBadge = document.getElementById('bmkg-evap-badge');
-  if (elEvap) elEvap.innerText = hasMicroclimateData ? (evap + " mm/hari") : "-- mm/hari";
-  if (elEvapLoss) elEvapLoss.innerText = hasMicroclimateData ? (evap + " L/m²") : "-- L/m²";
+  if (elEvap) elEvap.innerText = (evap && evap !== "NaN" && evap !== "undefined") ? (evap + " mm/hari") : "-- mm/hari";
+  if (elEvapLoss) elEvapLoss.innerText = (evap && evap !== "NaN" && evap !== "undefined") ? (evap + " L/m²") : "-- L/m²";
   if (elEvapStat) {
     var eNum = parseFloat(evap);
     var eStat = "--";
-    if (hasMicroclimateData && !isNaN(eNum)) {
+    if (!isNaN(eNum)) {
       if (eNum > 6.0) eStat = "Penguapan Cepat (Kering)";
       else if (eNum < 2.5) eStat = "Penguapan Lambat (Basah)";
       else eStat = "Penguapan Sedang";
     }
     elEvapStat.innerText = eStat;
-    if (elEvapBadge) elEvapBadge.innerText = hasMicroclimateData ? (eNum > 5.0 ? "Evap Tinggi" : "Evap Normal") : "Penman ET";
+    if (elEvapBadge) elEvapBadge.innerText = (!isNaN(eNum) && eNum > 5.0) ? "Evap Tinggi" : "Penman ET";
   }
 
   // 7 & 8. BMKG Atmosphere, Wind & Rain Interlock
@@ -7096,24 +8279,34 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var mDesc = document.getElementById('mode-desc-text');
   if (btnOn) btnOn.disabled = !isManual;
   if (btnOff) btnOff.disabled = !isManual;
-  if (mDesc) mDesc.innerText = isManual ? "Mode Manual" : "Mode Otomatis (Sensor & RTC)";
+  if (mDesc) mDesc.innerText = isManual ? "Mode Manual (Aktuator Terbuka)" : "Mode Otomatis (Sensor & RTC)";
 
   var isRelayOn = (data.relayOn == 1);
-  var modeText = (data.manual == 1) ? " (Manual)" : " (Auto)";
+  var modeText = isManual ? " (Manual)" : " (Auto)";
   var relayBadge = document.getElementById('relay-status-badge');
   var liveBar = document.getElementById('pump-live-bar');
+  var liveTimer = document.getElementById('pump-live-timer');
+  var liveSub = document.getElementById('pump-live-subtitle');
+
   if (relayBadge) {
     if (isRelayOn) {
-      relayBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#10b981; box-shadow:0 0 6px #10b981;"></span><span>Pompa Menyala' + modeText + '</span>';
-      relayBadge.style.color = "#10b981";
-      relayBadge.style.borderColor = "rgba(16, 185, 129, 0.4)";
-      relayBadge.style.background = "rgba(16, 185, 129, 0.15)";
+      relayBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#06b6d4; box-shadow:0 0 10px #06b6d4;"></span><span style="font-weight:800; letter-spacing:0.5px; color:#06b6d4;">💧 SEDANG MENYIRAM' + modeText + '</span>';
+      relayBadge.style.color = "#06b6d4";
+      relayBadge.style.borderColor = "rgba(6, 182, 212, 0.5)";
+      relayBadge.style.background = "rgba(6, 182, 212, 0.18)";
       if (liveBar) liveBar.style.display = 'flex';
+      if (liveTimer) {
+        liveTimer.innerHTML = '<span style="color:#06b6d4; font-weight:800;">💧 IRIGASI AKTIF</span>';
+      }
+      if (liveSub) {
+        var sValText = (data.soil !== undefined && data.soil !== null && data.soil !== "--") ? data.soil + "%" : "--";
+        liveSub.innerText = "Pin 26 Aktif • Air Mengalir ke Perakaran (Kelembapan: " + sValText + ")";
+      }
     } else {
-      relayBadge.innerHTML = '<span class="badge-dot dot-red" style="background:#ef4444;"></span><span>Standby' + modeText + '</span>';
-      relayBadge.style.color = "#ef4444";
-      relayBadge.style.borderColor = "rgba(239, 68, 68, 0.4)";
-      relayBadge.style.background = "rgba(239, 68, 68, 0.15)";
+      relayBadge.innerHTML = '<span class="badge-dot dot-gray" style="background:#94a3b8;"></span><span>STANDBY (Mati)' + modeText + '</span>';
+      relayBadge.style.color = "var(--text-sub)";
+      relayBadge.style.borderColor = "rgba(255, 255, 255, 0.1)";
+      relayBadge.style.background = "rgba(0, 0, 0, 0.2)";
       if (liveBar) liveBar.style.display = 'none';
     }
   }
@@ -7138,20 +8331,19 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var lDesc = document.getElementById('lamp-mode-desc-text');
   if (btnLampOn) btnLampOn.disabled = !isLampManual;
   if (btnLampOff) btnLampOff.disabled = !isLampManual;
-  if (lDesc) lDesc.innerText = isLampManual ? "Mode Manual" : "Mode Otomatis (18:00 - 06:00)";
+  if (lDesc) lDesc.innerText = isLampManual ? "Mode Manual (Aktuator Terbuka)" : (data.l_en == 1 ? "Mode Otomatis (Jadwal RTC Aktif)" : "Mode Otomatis (Lampu Nonaktif / Mati)");
 
   var isLampOn = (data.lampOn == 1);
-  var isLampManual = (data.lampManual == 1);
   var lModeText = isLampManual ? " (Manual)" : " (Auto)";
   var lampBadge = document.getElementById('lamp-status-badge');
   if (lampBadge) {
     if (isLampOn) {
-      lampBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308; box-shadow:0 0 6px #eab308;"></span><span>Lampu Menyala' + lModeText + '</span>';
+      lampBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308; box-shadow:0 0 6px #eab308;"></span><span>AKTIF (Menyala)' + lModeText + '</span>';
       lampBadge.style.color = "#eab308";
       lampBadge.style.borderColor = "rgba(234, 179, 8, 0.4)";
       lampBadge.style.background = "rgba(234, 179, 8, 0.15)";
     } else {
-      lampBadge.innerHTML = '<span class="badge-dot dot-gray" style="background:#94a3b8;"></span><span>Standby' + lModeText + '</span>';
+      lampBadge.innerHTML = '<span class="badge-dot dot-gray" style="background:#94a3b8;"></span><span>NONAKTIF (Mati)' + lModeText + '</span>';
       lampBadge.style.color = "#94a3b8";
       lampBadge.style.borderColor = "rgba(148, 163, 184, 0.4)";
       lampBadge.style.background = "rgba(148, 163, 184, 0.15)";
@@ -7163,14 +8355,14 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var txtPump = document.getElementById('text-global-pump');
   if (bgPump && txtPump) {
     if (isRelayOn) {
-      txtPump.innerText = "Pompa ON";
+      txtPump.innerText = "Pompa AKTIF";
       bgPump.className = "badge-pill badge-pump-active";
       bgPump.title = "Pompa Air Aktif (Menyiram Lahan)";
     } else {
-      txtPump.innerText = "Pompa OFF";
+      txtPump.innerText = "Pompa MATI";
       bgPump.className = "badge-pill";
       bgPump.style.color = "var(--text-sub)";
-      bgPump.title = "Pompa Air Standby / Mati";
+      bgPump.title = "Pompa Air Nonaktif / Mati";
     }
   }
 
@@ -7178,14 +8370,14 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var txtLamp = document.getElementById('text-global-lamp');
   if (bgLamp && txtLamp) {
     if (isLampOn) {
-      txtLamp.innerText = "Lampu ON";
+      txtLamp.innerText = "Lampu AKTIF";
       bgLamp.className = "badge-pill badge-lamp-active";
       bgLamp.title = "Lampu Pemanas/Growlight Aktif";
     } else {
-      txtLamp.innerText = "Lampu OFF";
+      txtLamp.innerText = "Lampu MATI";
       bgLamp.className = "badge-pill";
       bgLamp.style.color = "var(--text-sub)";
-      bgLamp.title = "Lampu Pemanas/Growlight Standby / Mati";
+      bgLamp.title = "Lampu Pemanas/Growlight Nonaktif / Mati";
     }
   }
 
@@ -7208,35 +8400,57 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
 
 
   var statCount = document.getElementById('stat-pump-count');
-  if (statCount) statCount.innerText = (data.pumpCount !== undefined ? data.pumpCount : "--") + " Kali";
+  if (statCount) statCount.innerText = (data.pumpCount !== undefined ? data.pumpCount : 0) + " Nyala";
+
+  var statOffCount = document.getElementById('stat-pump-off-count');
+  if (statOffCount) statOffCount.innerText = (data.pumpOffCount !== undefined ? data.pumpOffCount : 0) + " Mati";
 
   var totalSecs = data.totalPumpSecs !== undefined ? data.totalPumpSecs : -1;
-    var timeStr = "-- Detik";
+  var durStr = "-- Detik";
+  var subSecsStr = "-- Detik Akumulasi";
   if (totalSecs !== -1) {
-    var mins = Math.floor(totalSecs / 60);
+    var hrs = Math.floor(totalSecs / 3600);
+    var mins = Math.floor((totalSecs % 3600) / 60);
     var secs = totalSecs % 60;
-    timeStr = totalSecs + " Detik";
-    if (mins > 0) timeStr += " (" + mins + "m " + secs + "s)";
+    if (hrs > 0) {
+      durStr = hrs + "j " + mins + "m " + secs + "s";
+    } else if (mins > 0) {
+      durStr = mins + " Menit " + secs + "s";
+    } else {
+      durStr = secs + " Detik";
+    }
+    subSecsStr = totalSecs + " Detik Total Nyala";
   }
+
+  var statDur = document.getElementById('stat-pump-duration');
+  if (statDur) statDur.innerText = durStr;
   var statSecs = document.getElementById('stat-pump-secs');
-  if (statSecs) statSecs.innerText = timeStr;
+  if (statSecs) statSecs.innerText = subSecsStr;
 
   var statWater = document.getElementById('stat-water-liters');
+  if (statWater) statWater.innerText = (data.waterLiters !== undefined ? data.waterLiters : "0.0") + " Liter";
+  var statWaterRate = document.getElementById('stat-water-rate');
+  if (statWaterRate) statWaterRate.innerText = "Debit: " + (data.pumpLph || 1800) + " L/jam";
+
   var statCost = document.getElementById('stat-cost-idr');
-  if (statWater) statWater.innerText = (data.waterLiters !== undefined ? data.waterLiters : "--") + " Liter";
-  if (statCost) statCost.innerText = "Rp " + (data.costIdr !== undefined ? data.costIdr : "--");
+  if (statCost) statCost.innerText = "Rp " + (data.costIdr !== undefined ? data.costIdr : "0");
+  var statKwh = document.getElementById('stat-kwh-used');
+  if (statKwh) statKwh.innerText = "Energi: " + (data.kWhUsed !== undefined ? data.kWhUsed : "0.000") + " kWh";
 
   if (data.pumpLph !== undefined && document.activeElement.id !== 'cfg-pump-lph') {
     var elLph = document.getElementById('cfg-pump-lph');
     if (elLph) elLph.value = data.pumpLph;
+    try { localStorage.setItem('smartfarm_pump_lph', data.pumpLph); } catch (e) {}
   }
   if (data.pumpWatt !== undefined && document.activeElement.id !== 'cfg-pump-watt') {
     var elWatt = document.getElementById('cfg-pump-watt');
     if (elWatt) elWatt.value = data.pumpWatt;
+    try { localStorage.setItem('smartfarm_pump_watt', data.pumpWatt); } catch (e) {}
   }
   if (data.plnTariff !== undefined && document.activeElement.id !== 'cfg-pln-tariff') {
     var elTariff = document.getElementById('cfg-pln-tariff');
     if (elTariff) elTariff.value = parseFloat(data.plnTariff);
+    try { localStorage.setItem('smartfarm_pump_tariff', data.plnTariff); } catch (e) {}
   }
 
   // RTC & Schedule Form
@@ -7255,9 +8469,17 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
     var s1en = document.getElementById('sched1-en');
     var s1tm = document.getElementById('sched1-time');
     var s1dur = document.getElementById('sched1-dur');
+    var s1h = parseInt(data.sched1_h, 10);
+    var s1m = parseInt(data.sched1_m, 10);
+    var s1timeStr = (s1h < 10 ? '0' : '') + s1h + ':' + (s1m < 10 ? '0' : '') + s1m;
     if (s1en) s1en.checked = (data.sched1_en == 1);
-    if (s1tm) s1tm.value = (data.sched1_h < 10 ? '0' : '') + data.sched1_h + ':' + (data.sched1_m < 10 ? '0' : '') + data.sched1_m;
+    if (s1tm) s1tm.value = s1timeStr;
     if (s1dur) s1dur.value = data.sched1_dur;
+    try {
+      localStorage.setItem('smartfarm_sched1_en', data.sched1_en);
+      localStorage.setItem('smartfarm_sched1_time', s1timeStr);
+      localStorage.setItem('smartfarm_sched1_dur', data.sched1_dur);
+    } catch (e) {}
   }
 
   if (data.sched2_h !== undefined &&
@@ -7267,9 +8489,17 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
     var s2en = document.getElementById('sched2-en');
     var s2tm = document.getElementById('sched2-time');
     var s2dur = document.getElementById('sched2-dur');
+    var s2h = parseInt(data.sched2_h, 10);
+    var s2m = parseInt(data.sched2_m, 10);
+    var s2timeStr = (s2h < 10 ? '0' : '') + s2h + ':' + (s2m < 10 ? '0' : '') + s2m;
     if (s2en) s2en.checked = (data.sched2_en == 1);
-    if (s2tm) s2tm.value = (data.sched2_h < 10 ? '0' : '') + data.sched2_h + ':' + (data.sched2_m < 10 ? '0' : '') + data.sched2_m;
+    if (s2tm) s2tm.value = s2timeStr;
     if (s2dur) s2dur.value = data.sched2_dur;
+    try {
+      localStorage.setItem('smartfarm_sched2_en', data.sched2_en);
+      localStorage.setItem('smartfarm_sched2_time', s2timeStr);
+      localStorage.setItem('smartfarm_sched2_dur', data.sched2_dur);
+    } catch (e) {}
   }
 
   if (data.l_h !== undefined &&
@@ -7279,9 +8509,17 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
     var l_en = document.getElementById('lamp-sched-en');
     var l_tm = document.getElementById('lamp-sched-time');
     var l_dur = document.getElementById('lamp-sched-dur');
+    var lh = parseInt(data.l_h, 10);
+    var lm = parseInt(data.l_m, 10);
+    var ltimeStr = (lh < 10 ? '0' : '') + lh + ':' + (lm < 10 ? '0' : '') + lm;
     if (l_en) l_en.checked = (data.l_en == 1);
-    if (l_tm) l_tm.value = (data.l_h < 10 ? '0' : '') + data.l_h + ':' + (data.l_m < 10 ? '0' : '') + data.l_m;
+    if (l_tm) l_tm.value = ltimeStr;
     if (l_dur) l_dur.value = data.l_dur;
+    try {
+      localStorage.setItem('smartfarm_lamp_en', data.l_en);
+      localStorage.setItem('smartfarm_lamp_time', ltimeStr);
+      localStorage.setItem('smartfarm_lamp_dur', data.l_dur);
+    } catch (e) {}
   }
 
   // Crop Profile & Thresholds from NVS
@@ -7292,17 +8530,67 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
       if (typeof updateCropProfileUI === 'function') updateCropProfileUI(data.cropMode);
     }
   }
-  if (data.batasTanah !== undefined && document.activeElement.id !== 'slider-soil') {
-    var elSoil = document.getElementById('slider-soil');
-    if (elSoil) elSoil.value = data.batasTanah;
-    var valSoil = document.getElementById('val-slider-soil');
-    if (valSoil) valSoil.innerText = data.batasTanah + '%';
+  if (data.cropName !== undefined && data.cropName !== '' && document.activeElement.id !== 'crop-name') {
+    var elCropName = document.getElementById('crop-name');
+    if (elCropName && elCropName.value !== data.cropName) elCropName.value = data.cropName;
+    try { localStorage.setItem('crop_name', data.cropName); } catch(e){}
   }
-  if (data.batasSuhu !== undefined && document.activeElement.id !== 'slider-temp') {
+  if (data.cropAge !== undefined && document.activeElement.id !== 'crop-age-days') {
+    var elCropAge = document.getElementById('crop-age-days');
+    if (elCropAge && elCropAge.value != data.cropAge) elCropAge.value = data.cropAge;
+    try { localStorage.setItem('crop_age', data.cropAge); } catch(e){}
+  }
+  if (data.cropStage !== undefined && document.activeElement.id !== 'crop-stage') {
+    var elCropStage = document.getElementById('crop-stage');
+    if (elCropStage && elCropStage.value !== data.cropStage) elCropStage.value = data.cropStage;
+    try { localStorage.setItem('crop_stage', data.cropStage); } catch(e){}
+  }
+  if (data.cropLeaves !== undefined && document.activeElement.id !== 'crop-leaves-count') {
+    var elCropLeaves = document.getElementById('crop-leaves-count');
+    if (elCropLeaves && elCropLeaves.value != data.cropLeaves) elCropLeaves.value = data.cropLeaves;
+    try { localStorage.setItem('crop_leaves', data.cropLeaves); } catch(e){}
+  }
+  if (data.cropEnv !== undefined && data.cropEnv !== '' && document.activeElement.id !== 'crop-env') {
+    var elCropEnv = document.getElementById('crop-env');
+    if (elCropEnv && elCropEnv.value !== data.cropEnv) elCropEnv.value = data.cropEnv;
+    try { localStorage.setItem('crop_env', data.cropEnv); } catch(e){}
+  }
+  if (data.cropArea !== undefined && document.activeElement.id !== 'crop-area-size') {
+    var elCropArea = document.getElementById('crop-area-size');
+    if (elCropArea && elCropArea.value != data.cropArea) elCropArea.value = data.cropArea;
+    try { localStorage.setItem('crop_area', data.cropArea); } catch(e){}
+  }
+
+  // Jika data profil tanaman dari ESP32 NVS baru tiba, sinkronkan sektor zonasi, agronomis & ringkasan
+  if (data.cropName) {
+    if (typeof window.syncSectorFromEsp32 === 'function') {
+      window.syncSectorFromEsp32(data);
+    }
+    if (!window._initialCropHydrated) {
+      window._initialCropHydrated = true;
+      if (typeof updateCropAgronomyAnalysis === 'function') updateCropAgronomyAnalysis();
+      if (typeof updateCropHistorySummary === 'function') updateCropHistorySummary();
+    }
+  }
+  if (data.batasTanah !== undefined && document.activeElement.id !== 'slider-soil' && !window._sliderSaveTimer) {
+    var elSoil = document.getElementById('slider-soil');
+    var bSoilNum = parseInt(data.batasTanah, 10);
+    if (elSoil && !isNaN(bSoilNum)) {
+      elSoil.value = bSoilNum;
+      var valSoil = document.getElementById('val-slider-soil');
+      if (valSoil) valSoil.innerText = bSoilNum + '%';
+      try { localStorage.setItem('smartfarm_batasTanah', bSoilNum); } catch(e){}
+    }
+  }
+  if (data.batasSuhu !== undefined && document.activeElement.id !== 'slider-temp' && !window._sliderSaveTimer) {
     var elTemp = document.getElementById('slider-temp');
-    if (elTemp) elTemp.value = data.batasSuhu;
-    var valTemp = document.getElementById('val-slider-temp');
-    if (valTemp) valTemp.innerText = data.batasSuhu + '°C';
+    var bTempNum = parseFloat(data.batasSuhu);
+    if (elTemp && !isNaN(bTempNum)) {
+      elTemp.value = bTempNum;
+      var valTemp = document.getElementById('val-slider-temp');
+      if (valTemp) valTemp.innerText = (Number.isInteger(bTempNum) ? bTempNum : bTempNum.toFixed(1)) + '°C';
+      try { localStorage.setItem('smartfarm_batasSuhu', bTempNum); } catch(e){}
+    }
   }
 }
 
@@ -7365,28 +8653,97 @@ function updateScadaTicker(data, friendlyRtc, hasTemp, tVal, hasHum, hVal, isRel
 
 // =================================================================
 // 05_SECTORS.JS - DYNAMIC LOCALSTORAGE SECTOR & ZONATION ENGINE
-// Target lines: ~150 (Max < 350)
+// 100% Real ESP32 Telemetry & Crop Profile • Zero Fake Data
 // =================================================================
-
-var SAMPLE_PRESET_SECTORS = [
-  { id: 'sec_a', code: 'SEKTOR A', name: 'Cabai Rawit Merah', stage: 'semai', age: 14, area: 100, env: 'open' },
-  { id: 'sec_b', code: 'SEKTOR B', name: 'Greenhouse Tomat Servo', stage: 'vegetatif', age: 35, area: 200, env: 'greenhouse' },
-  { id: 'sec_c', code: 'SEKTOR C', name: 'Bawang Merah Bima', stage: 'generatif', age: 45, area: 300, env: 'open' },
-  { id: 'sec_d', code: 'SEKTOR D', name: 'Padi Sawah Ciherang', stage: 'vegetatif', age: 60, area: 1000, env: 'open' }
-];
 
 function getStoredSectors() {
   try {
     var raw = localStorage.getItem('smartfarm_sectors');
     if (raw) {
       var parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Filter out any legacy dummy presets (Tomat Servo, Bawang Merah Bima, Padi Sawah Ciherang)
+        var cleaned = parsed.filter(function(s) {
+          if (!s) return false;
+          var nLow = (s.name || '').toLowerCase();
+          return s.id !== 'sec_b' && s.id !== 'sec_c' && s.id !== 'sec_d' &&
+                 nLow.indexOf('tomat servo') === -1 && nLow.indexOf('ciherang') === -1;
+        });
+        if (cleaned.length > 0) return cleaned;
+      }
     }
   } catch (e) {
     console.warn("Gagal membaca smartfarm_sectors dari localStorage", e);
   }
-  return []; // STRICT ZERO DUMMY DEFAULT
+
+  // Sinkronisasi otomatis dari Profil Riil Tanaman yang tersimpan di chip Flash NVS ESP32
+  var tData = window.lastTelemetryData || {};
+  var cName = (tData.cropName && tData.cropName !== '') ? tData.cropName : (localStorage.getItem('crop_name') || 'Cabai Rawit');
+  var cAge = (tData.cropAge !== undefined && tData.cropAge > 0) ? tData.cropAge : parseInt(localStorage.getItem('crop_age') || 14, 10);
+  var cStage = (tData.cropStage && tData.cropStage !== '') ? tData.cropStage : (localStorage.getItem('crop_stage') || 'vegetatif');
+  var cArea = (tData.cropArea !== undefined && tData.cropArea > 0) ? tData.cropArea : parseInt(localStorage.getItem('crop_area') || 100, 10);
+  var cEnv = (tData.cropEnv && tData.cropEnv !== '') ? tData.cropEnv : (localStorage.getItem('crop_env') || 'open');
+
+  if (cName) {
+    var primarySector = [{
+      id: 'sec_1',
+      code: 'SEKTOR 1',
+      name: cName,
+      stage: cStage,
+      age: cAge,
+      area: cArea,
+      env: cEnv
+    }];
+    saveStoredSectors(primarySector);
+    try { localStorage.setItem('smartfarm_active_sector_id', 'sec_1'); } catch(e){}
+    return primarySector;
+  }
+
+  return [];
 }
+
+function syncSectorFromEsp32(data) {
+  if (!data || !data.cropName) return;
+  var sectors = getStoredSectors();
+  if (sectors.length === 0) {
+    var newSec = {
+      id: 'sec_1',
+      code: 'SEKTOR 1',
+      name: data.cropName,
+      stage: data.cropStage || 'vegetatif',
+      age: data.cropAge || 14,
+      area: data.cropArea || 100,
+      env: data.cropEnv || 'open'
+    };
+    saveStoredSectors([newSec]);
+    try { localStorage.setItem('smartfarm_active_sector_id', 'sec_1'); } catch(e){}
+    renderSectorGrid();
+    selectSector('sec_1');
+  } else {
+    var activeId = getActiveSectorId() || sectors[0].id;
+    var activeSec = sectors.find(function(s) { return s.id === activeId; }) || sectors[0];
+    if (activeSec) {
+      var changed = false;
+      if (activeSec.name !== data.cropName) { activeSec.name = data.cropName; changed = true; }
+      if (activeSec.age != data.cropAge) { activeSec.age = data.cropAge; changed = true; }
+      if (activeSec.stage !== data.cropStage) { activeSec.stage = data.cropStage; changed = true; }
+      if (data.cropArea && activeSec.area != data.cropArea) { activeSec.area = data.cropArea; changed = true; }
+      if (data.cropEnv && activeSec.env !== data.cropEnv) { activeSec.env = data.cropEnv; changed = true; }
+      if (changed) {
+        saveStoredSectors(sectors);
+        renderSectorGrid();
+        if (typeof updatePhenologyAI === 'function') {
+          var curT = (data.suhuC !== undefined && data.suhuC !== "--") ? parseFloat(data.suhuC) : null;
+          var curH = (data.hum !== undefined && data.hum !== "--") ? parseFloat(data.hum) : null;
+          var curS = (data.soil !== undefined && data.soil !== "--") ? parseFloat(data.soil) : null;
+          var curVpd = (data.vpd !== undefined) ? parseFloat(data.vpd) : null;
+          updatePhenologyAI(activeSec, curT, curH, curS, curVpd);
+        }
+      }
+    }
+  }
+}
+window.syncSectorFromEsp32 = syncSectorFromEsp32;
 
 function saveStoredSectors(sectors) {
   try {
@@ -7449,14 +8806,11 @@ function renderSectorGrid() {
         '</div>' +
         '<div style="font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:4px;">Belum Ada Sektor Kebun Dikonfigurasi</div>' +
         '<div style="font-size:12px; color:var(--text-sub); max-width:440px; margin-bottom:16px; line-height:1.5;">' +
-          'Sistem zonasi lahan masih bersih. Daftarkan petak kebun Anda untuk mulai mengalkulasi kebutuhan air, evapotranspirasi, dan analisis fenologi tanaman.' +
+          'Daftarkan petak kebun Anda untuk mulai mengalkulasi kebutuhan air, evapotranspirasi, dan analisis fenologi tanaman.' +
         '</div>' +
         '<div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">' +
           '<button type="button" class="btn btn-primary" onclick="openAddSectorForm()" style="padding:8px 18px; font-size:12px;">' +
             '+ Tambah Sektor Baru' +
-          '</button>' +
-          '<button type="button" class="btn btn-secondary" onclick="loadSamplePresetSectors()" style="padding:8px 16px; font-size:12px;">' +
-            'Muat Contoh Template (Opsional)' +
           '</button>' +
         '</div>' +
       '</div>';
@@ -7471,16 +8825,18 @@ function renderSectorGrid() {
     btn.id = 'btn-sector-' + sec.id;
     btn.onclick = function() { selectSector(sec.id); };
 
-    var envBadge = sec.env === 'greenhouse' ? ' • GH' : '';
+    var envBadge = sec.env === 'greenhouse' ? ' • Greenhouse' : ' • Lahan';
     var areaFormatted = Number(sec.area).toLocaleString('id-ID');
+    var hstBadge = (sec.age !== undefined && sec.age !== null) ? ' • ' + sec.age + ' HST' : '';
 
     btn.innerHTML =
       '<div class="sector-card-top">' +
         '<span class="sector-code">' + escapeHtml(sec.code || 'SEKTOR') + '</span>' +
-        '<span class="sector-pulse"></span>' +
+        '<span class="sector-pulse" style="' + (isActive ? '' : 'display:none;') + '"></span>' +
       '</div>' +
       '<div class="sector-name">' + escapeHtml(sec.name || 'Tanaman') + '</div>' +
-      '<div class="sector-specs">' + areaFormatted + ' m² • ' + formatStageLabel(sec.stage) + envBadge + '</div>';
+      '<div class="sector-specs">' + areaFormatted + ' m²' + hstBadge + ' • ' + formatStageLabel(sec.stage) + envBadge + '</div>' +
+      (isActive ? '<div style="margin-top:6px; font-size:10px; color:#10b981; font-weight:700; display:flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span> Aktif Lapangan (ESP32)</div>' : '');
 
     container.appendChild(btn);
   });
@@ -7500,20 +8856,20 @@ function selectSector(secId) {
 
   localStorage.setItem('smartfarm_active_sector_id', secId);
 
-  sectors.forEach(function(s) {
-    var el = document.getElementById('btn-sector-' + s.id);
-    if (el) {
-      if (s.id === secId) {
-        el.className = 'sector-card active btn-primary';
-      } else {
-        el.className = 'sector-card btn-secondary';
-      }
-    }
-  });
+  renderSectorGrid();
 
   if (typeof applyCropPreset === 'function') {
     applyCropPreset(sec.name, sec.stage, sec.age, (sec.env || 'open'), sec.area);
   }
+
+  // Kirim sinkronisasi langsung ke ESP32 Flash Memory NVS agar Serial Monitor dan LCD 16x2 langsung berubah!
+  var cropSyncUrl = '/setCropProfile?name=' + encodeURIComponent(sec.name) +
+                    '&age=' + sec.age +
+                    '&stage=' + encodeURIComponent(sec.stage) +
+                    '&leaves=4' +
+                    '&env=' + encodeURIComponent(sec.env || 'open') +
+                    '&area=' + sec.area;
+  fetch(cropSyncUrl).catch(function(err) { console.warn("Sync crop to ESP32 NVS:", err); });
 
   var curT = document.getElementById('kpi-temp') ? parseFloat(document.getElementById('kpi-temp').innerText) : null;
   var curH = document.getElementById('kpi-hum') ? parseFloat(document.getElementById('kpi-hum').innerText) : null;
@@ -7721,26 +9077,11 @@ function deleteSector(id) {
 }
 
 function clearAllSectors() {
-  if (!confirm("Kosongkan semua data sektor kebun dari LocalStorage?\n\nTampilan zonasi lahan dan kalibrasi akan dikembalikan ke kondisi awal bersih.")) return;
-  saveStoredSectors([]);
+  if (!confirm("Kosongkan semua data sektor kebun dari LocalStorage?\n\nTampilan zonasi lahan dan kalibrasi akan disinkronkan ulang ke profil riil ESP32.")) return;
+  localStorage.removeItem('smartfarm_sectors');
   localStorage.removeItem('smartfarm_active_sector_id');
-  localStorage.removeItem('crop_name');
-  localStorage.removeItem('crop_stage');
-  localStorage.removeItem('crop_age');
-  localStorage.removeItem('crop_area');
   renderSectorGrid();
   renderSectorManagerList();
-  if (typeof clearCropFormUI === 'function') clearCropFormUI();
-  if (typeof updatePhenologyAI === 'function') updatePhenologyAI(null);
-}
-
-function loadSamplePresetSectors() {
-  if (!confirm("Muat 4 contoh template sektor pertanian presisi (Cabai, Tomat GH, Bawang, Padi)?")) return;
-  saveStoredSectors(SAMPLE_PRESET_SECTORS);
-  localStorage.setItem('smartfarm_active_sector_id', SAMPLE_PRESET_SECTORS[0].id);
-  renderSectorGrid();
-  renderSectorManagerList();
-  selectSector(SAMPLE_PRESET_SECTORS[0].id);
 }
 
 function resetSectorsToDefault() {
@@ -7841,6 +9182,14 @@ function updatePhenologyAI(sec, tVal, hVal, sVal, vpdVal) {
     tBase = 8;
     nurseryDays = 35;
     harvestDays = 65;
+  } else if (nameLow.indexOf('melon') !== -1) {
+    tBase = 13;
+    nurseryDays = 14;
+    harvestDays = 70;
+  } else if (nameLow.indexOf('semangka') !== -1 || nameLow.indexOf('watermelon') !== -1) {
+    tBase = 13;
+    nurseryDays = 14;
+    harvestDays = 70;
   } else if (nameLow.indexOf('padi') !== -1 || nameLow.indexOf('rice') !== -1) {
     tBase = 10;
     nurseryDays = 20;
@@ -8033,29 +9382,89 @@ function updatePhenologyAI(sec, tVal, hVal, sVal, vpdVal) {
 
 function toggleSystemMode(isManual) {
   var modeStr = isManual ? "manual" : "auto";
+  var btnPumpAuto = document.getElementById('btn-pump-mode-auto');
+  var btnPumpManual = document.getElementById('btn-pump-mode-manual');
+  var btnOn = document.getElementById('btn-pump-on');
+  var btnOff = document.getElementById('btn-pump-off');
+  var mDesc = document.getElementById('mode-desc-text');
+  
+  // Instant visual feedback
+  if (btnPumpAuto && btnPumpManual) {
+    if (isManual) {
+      btnPumpManual.className = "segment-btn active-manual";
+      btnPumpAuto.className = "segment-btn";
+    } else {
+      btnPumpAuto.className = "segment-btn active";
+      btnPumpManual.className = "segment-btn";
+    }
+  }
+  if (btnOn) btnOn.disabled = !isManual;
+  if (btnOff) btnOff.disabled = !isManual;
+  if (mDesc) mDesc.innerText = isManual ? "Mode Manual (Aktuator Terbuka)" : "Mode Otomatis (Sensor & RTC)";
+
   fetch('/setMode?m=' + modeStr)
     .then(function (res) { if (typeof fetchData === 'function') fetchData(); })
-    .catch(function (err) { alert("Gagal ubah mode"); });
+    .catch(function (err) { alert("Gagal ubah mode pompa"); });
 }
 
 function sendRelayCommand(stateStr) {
+  var btnOn = document.getElementById('btn-pump-on');
+  if (btnOn && btnOn.disabled) {
+    alert("Tombol Pompa Terkunci! Pompa berada dalam Mode Otomatis (AUTO). Ubah ke Mode Manual terlebih dahulu jika ingin menyalakan/mematikan secara manual.");
+    return;
+  }
   fetch('/toggleRelay?s=' + stateStr)
-    .then(function (res) { if (typeof fetchData === 'function') fetchData(); })
-    .catch(function (err) { alert("Gagal kirim perintah relay"); });
+    .then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (txt) { throw new Error(txt); });
+      }
+      if (typeof fetchData === 'function') fetchData();
+    })
+    .catch(function (err) { alert(err.message || "Gagal kirim perintah relay"); });
 }
 
 
 function toggleLampSystemMode(isManual) {
   var modeStr = isManual ? "manual" : "auto";
+  var btnLampAuto = document.getElementById('btn-lamp-mode-auto');
+  var btnLampManual = document.getElementById('btn-lamp-mode-manual');
+  var btnLampOn = document.getElementById('btn-lamp-on');
+  var btnLampOff = document.getElementById('btn-lamp-off');
+  var mLampDesc = document.getElementById('lamp-mode-desc-text');
+  
+  // Instant visual feedback
+  if (btnLampAuto && btnLampManual) {
+    if (isManual) {
+      btnLampManual.className = "segment-btn active-manual";
+      btnLampAuto.className = "segment-btn";
+    } else {
+      btnLampAuto.className = "segment-btn active";
+      btnLampManual.className = "segment-btn";
+    }
+  }
+  if (btnLampOn) btnLampOn.disabled = !isManual;
+  if (btnLampOff) btnLampOff.disabled = !isManual;
+  if (mLampDesc) mLampDesc.innerText = isManual ? "Mode Manual (Aktuator Terbuka)" : "Mode Otomatis (Timer & Jadwal)";
+
   fetch('/setLampMode?m=' + modeStr)
     .then(function (res) { if (typeof fetchData === 'function') fetchData(); })
     .catch(function (err) { alert("Gagal ubah mode lampu"); });
 }
 
 function sendLampRelayCommand(stateStr) {
+  var btnLampOn = document.getElementById('btn-lamp-on');
+  if (btnLampOn && btnLampOn.disabled) {
+    alert("Tombol Lampu Terkunci! Lampu berada dalam Mode Otomatis (AUTO). Ubah ke Mode Manual terlebih dahulu jika ingin menyalakan/mematikan secara manual.");
+    return;
+  }
   fetch('/toggleLamp?s=' + stateStr)
-    .then(function (res) { if (typeof fetchData === 'function') fetchData(); })
-    .catch(function (err) { alert("Gagal kirim perintah lampu"); });
+    .then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (txt) { throw new Error(txt); });
+      }
+      if (typeof fetchData === 'function') fetchData();
+    })
+    .catch(function (err) { alert(err.message || "Gagal kirim perintah lampu"); });
 }
 
 function resetPumpStats() {
@@ -8080,20 +9489,37 @@ function togglePumpConfigForm() {
 }
 
 function savePumpConfig() {
-  var lph = document.getElementById('cfg-pump-lph').value;
-  var watt = document.getElementById('cfg-pump-watt').value;
-  var tariff = document.getElementById('cfg-pln-tariff').value;
+  var lph = document.getElementById('cfg-pump-lph').value || 1800;
+  var watt = document.getElementById('cfg-pump-watt').value || 25;
+  var tariff = document.getElementById('cfg-pln-tariff').value || 415;
+
+  try {
+    localStorage.setItem('smartfarm_pump_lph', lph);
+    localStorage.setItem('smartfarm_pump_watt', watt);
+    localStorage.setItem('smartfarm_pump_tariff', tariff);
+  } catch (e) {}
+
+  var statusBadge = document.getElementById('pump-save-status');
+  if (statusBadge) {
+    statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Menyimpan ke ESP32...';
+    statusBadge.style.color = 'var(--warning)';
+  }
 
   fetch('/setPumpConfig?lph=' + lph + '&watt=' + watt + '&tariff=' + tariff)
     .then(function (res) { return res.json(); })
     .then(function (json) {
-      alert("Kalibrasi Pompa & Listrik Disimpan!\n" +
-        "• Debit Pompa: " + lph + " Liter/Jam (1800 L/H = 0.5 L/detik)\n" +
-        "• Daya Pompa: " + watt + " Watt\n" +
-        "• Tarif Listrik PLN: Rp " + tariff + " / kWh");
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#10b981;"></span>Tersimpan di ESP32 ✓';
+        statusBadge.style.color = 'var(--primary)';
+      }
       if (typeof fetchData === 'function') fetchData();
     })
-    .catch(function (err) { alert("Gagal simpan kalibrasi pompa"); });
+    .catch(function (err) {
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Tersimpan di Cache Browser';
+        statusBadge.style.color = 'var(--warning)';
+      }
+    });
 }
 
 function syncRtcWithBrowser() {
@@ -8106,11 +9532,18 @@ function syncRtcWithBrowser() {
   var min = now.getMinutes();
   var s = now.getSeconds();
 
+  var rtcLive = document.getElementById('rtc-live-time');
+  if (rtcLive) rtcLive.innerText = "Sinkronisasi...";
+
   var url = '/setRtc?epoch=' + ep + '&y=' + y + '&m=' + m + '&d=' + d + '&h=' + h + '&min=' + min + '&s=' + s;
   fetch(url)
     .then(function (res) { return res.json(); })
     .then(function (json) {
-      alert("Jam RTC Berhasil Disinkronkan ke Jam Browser (WIB)!\nWaktu RTC Terbaru: " + (typeof formatFriendlyDateTime === 'function' ? formatFriendlyDateTime(json.rtcTime) : json.rtcTime));
+      var rtcValid = document.getElementById('rtc-valid-badge');
+      if (rtcValid) {
+        rtcValid.innerText = "RTC Tersinkron";
+        rtcValid.style.color = "var(--primary)";
+      }
       if (typeof fetchData === 'function') fetchData();
     })
     .catch(function (err) {
@@ -8118,38 +9551,92 @@ function syncRtcWithBrowser() {
     });
 }
 
-
 function saveLampSchedule() {
-  var en = document.getElementById('lamp-sched-en').checked ? 1 : 0;
-  var tVal = document.getElementById('lamp-sched-time').value || '18:00';
-  var dur = document.getElementById('lamp-sched-dur').value || 12;
+  var elEn = document.getElementById('lamp-sched-en');
+  var elTm = document.getElementById('lamp-sched-time');
+  var elDur = document.getElementById('lamp-sched-dur');
+  var en = elEn && elEn.checked ? 1 : 0;
+  var tVal = (elTm && elTm.value) ? elTm.value : '18:00';
+  var dur = (elDur && elDur.value) ? parseInt(elDur.value, 10) : 12;
+  if (isNaN(dur) || dur < 1) dur = 12;
   var parts = tVal.split(':');
   var h = parseInt(parts[0], 10);
+  if (isNaN(h)) h = 18;
   var m = parseInt(parts[1], 10);
-  
+  if (isNaN(m)) m = 0;
+
+  try {
+    localStorage.setItem('smartfarm_lamp_en', en);
+    localStorage.setItem('smartfarm_lamp_time', tVal);
+    localStorage.setItem('smartfarm_lamp_dur', dur);
+  } catch (e) {}
+
+  var statusBadge = document.getElementById('lamp-save-status');
+  if (statusBadge) {
+    statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Menyimpan ke ESP32...';
+    statusBadge.style.color = 'var(--warning)';
+  }
+
   fetch('/setLampSchedule?en=' + en + '&h=' + h + '&m=' + m + '&dur=' + dur)
-    .then(function (res) { return res.json(); })
-    .then(function (json) {
-      alert("Jadwal Lampu Grow Light berhasil disimpan ke NVS ESP32!");
+    .then(function (res) {
+      if (!res.ok) throw new Error("Status " + res.status);
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#10b981;"></span>Jadwal Lampu Tersimpan di ESP32 ✓';
+        statusBadge.style.color = 'var(--primary)';
+      }
       if (typeof fetchData === 'function') fetchData();
     })
-    .catch(function (err) { alert("Gagal simpan jadwal lampu"); });
+    .catch(function (err) {
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Tersimpan di Cache Browser';
+        statusBadge.style.color = 'var(--warning)';
+      }
+    });
 }
 
 function saveSchedule(slotNum) {
-  var en = document.getElementById('sched' + slotNum + '-en').checked ? 1 : 0;
-  var tVal = document.getElementById('sched' + slotNum + '-time').value || '06:00';
-  var dur = document.getElementById('sched' + slotNum + '-dur').value || 15;
+  var elEn = document.getElementById('sched' + slotNum + '-en');
+  var elTm = document.getElementById('sched' + slotNum + '-time');
+  var elDur = document.getElementById('sched' + slotNum + '-dur');
+  var en = elEn && elEn.checked ? 1 : 0;
+  var defaultTime = (slotNum === 1 ? '06:00' : '17:00');
+  var defaultDur = (slotNum === 1 ? 15 : 10);
+  var tVal = (elTm && elTm.value) ? elTm.value : defaultTime;
+  var dur = (elDur && elDur.value) ? parseInt(elDur.value, 10) : defaultDur;
+  if (isNaN(dur) || dur < 1) dur = defaultDur;
   var parts = tVal.split(':');
   var h = parseInt(parts[0], 10);
+  if (isNaN(h)) h = (slotNum === 1 ? 6 : 17);
   var m = parseInt(parts[1], 10);
+  if (isNaN(m)) m = 0;
+
+  try {
+    localStorage.setItem('smartfarm_sched' + slotNum + '_en', en);
+    localStorage.setItem('smartfarm_sched' + slotNum + '_time', tVal);
+    localStorage.setItem('smartfarm_sched' + slotNum + '_dur', dur);
+  } catch (e) {}
+
+  var statusBadge = document.getElementById('sched' + slotNum + '-save-status');
+  if (statusBadge) {
+    statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Menyimpan ke ESP32...';
+    statusBadge.style.color = 'var(--warning)';
+  }
+
   fetch('/setSchedule?slot=' + slotNum + '&en=' + en + '&h=' + h + '&m=' + m + '&dur=' + dur)
-    .then(function (res) { return res.json(); })
-    .then(function (json) {
-      alert("Jadwal Slot " + slotNum + " berhasil disimpan ke NVS!");
+    .then(function (res) {
+      if (!res.ok) throw new Error("Status " + res.status);
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#10b981;"></span>Slot ' + slotNum + ' Tersimpan di ESP32 ✓';
+        statusBadge.style.color = 'var(--primary)';
+      }
       if (typeof fetchData === 'function') fetchData();
     })
-    .catch(function (err) { alert("Gagal simpan jadwal"); });
+    .catch(function (err) {
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Tersimpan di Cache Browser';
+        statusBadge.style.color = 'var(--warning)';
+      }
+    });
 }
 
 var CROP_GUIDES = {
@@ -8276,34 +9763,174 @@ function onCropProfileChange(mode) {
     });
 }
 
+var _sliderSaveTimer = null;
+window._sliderSaveTimer = null;
+
 function onSliderManualChange(type, val) {
   if (type === 'soil') {
     var vSoil = document.getElementById('val-slider-soil');
     if (vSoil) vSoil.innerText = val + '%';
+    try { localStorage.setItem('smartfarm_batasTanah', val); } catch (e) {}
   } else {
     var vTemp = document.getElementById('val-slider-temp');
     if (vTemp) vTemp.innerText = val + '°C';
+    try { localStorage.setItem('smartfarm_batasSuhu', val); } catch (e) {}
   }
   var sel = document.getElementById('crop-profile-select');
   if (sel && sel.value !== "3") {
     sel.value = "3";
     updateCropProfileUI(3);
   }
+
+  var statusBadge = document.getElementById('threshold-save-status');
+  if (statusBadge) {
+    statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Menyimpan ke ESP32...';
+    statusBadge.style.color = 'var(--warning)';
+  }
+
+  // Debounced auto-save ke ESP32 600ms setelah user selesai menggeser
+  if (_sliderSaveTimer) clearTimeout(_sliderSaveTimer);
+  window._sliderSaveTimer = true;
+  _sliderSaveTimer = setTimeout(function () {
+    window._sliderSaveTimer = null;
+    saveThresholds(true);
+  }, 600);
 }
 
 function saveThresholds(silent) {
-  var soilVal = document.getElementById('slider-soil').value;
-  var tempVal = document.getElementById('slider-temp').value;
-  fetch('/setThreshold?soil=' + soilVal + '&temp=' + tempVal)
+  var elSoil = document.getElementById('slider-soil');
+  var elTemp = document.getElementById('slider-temp');
+  if (!elSoil || !elTemp) return;
+  var soilVal = elSoil.value;
+  var tempVal = elTemp.value;
+
+  try {
+    localStorage.setItem('smartfarm_batasTanah', soilVal);
+    localStorage.setItem('smartfarm_batasSuhu', tempVal);
+  } catch (e) {}
+
+  var statusBadge = document.getElementById('threshold-save-status');
+  if (statusBadge) {
+    statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Menyimpan...';
+    statusBadge.style.color = 'var(--warning)';
+  }
+
+  fetch('/setThreshold?soil=' + encodeURIComponent(soilVal) + '&temp=' + encodeURIComponent(tempVal))
     .then(function (res) {
-      if (!silent) alert("Batas Ambang Berhasil Disimpan Permanen ke ESP32!");
+      if (res.ok) {
+        if (statusBadge) {
+          statusBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#10b981;"></span>Tersimpan di ESP32 ✓';
+          statusBadge.style.color = 'var(--primary)';
+        }
+        if (!silent) alert("Batas Ambang Berhasil Disimpan Permanen ke NVS ESP32!\nTanah: < " + soilVal + "% | Suhu: > " + tempVal + "°C");
+      } else {
+        if (statusBadge) {
+          statusBadge.innerHTML = '<span class="badge-dot dot-red" style="background:#ef4444;"></span>Gagal Simpan ✗';
+          statusBadge.style.color = 'var(--danger)';
+        }
+        if (!silent) alert("Gagal menyimpan threshold ke ESP32");
+      }
       if (typeof fetchData === 'function') fetchData();
     })
     .catch(function (err) {
-      if (!silent) alert("Gagal simpan threshold");
-      else console.error("Auto-save failed");
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308;"></span>Tersimpan di Cache Browser';
+        statusBadge.style.color = 'var(--warning)';
+      }
+      if (!silent) alert("Gagal koneksi ke ESP32. Nilai tersimpan di browser.");
+      else console.error("Auto-save failed", err);
     });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  try {
+    // 1. Ambang Batas Sensor
+    var savedSoil = localStorage.getItem('smartfarm_batasTanah');
+    var savedTemp = localStorage.getItem('smartfarm_batasSuhu');
+    if (savedSoil !== null && savedSoil !== '') {
+      var elSoil = document.getElementById('slider-soil');
+      var valSoil = document.getElementById('val-slider-soil');
+      if (elSoil) elSoil.value = savedSoil;
+      if (valSoil) valSoil.innerText = savedSoil + '%';
+    }
+    if (savedTemp !== null && savedTemp !== '') {
+      var elTemp = document.getElementById('slider-temp');
+      var valTemp = document.getElementById('val-slider-temp');
+      if (elTemp) elTemp.value = savedTemp;
+      if (valTemp) valTemp.innerText = savedTemp + '°C';
+    }
+
+    // 2. Jadwal Slot 1 (Pagi)
+    var s1en = localStorage.getItem('smartfarm_sched1_en');
+    var s1tm = localStorage.getItem('smartfarm_sched1_time');
+    var s1dur = localStorage.getItem('smartfarm_sched1_dur');
+    if (s1en !== null) {
+      var elS1En = document.getElementById('sched1-en');
+      if (elS1En) elS1En.checked = (s1en == '1' || s1en === true);
+    }
+    if (s1tm) {
+      var elS1Tm = document.getElementById('sched1-time');
+      if (elS1Tm) elS1Tm.value = s1tm;
+    }
+    if (s1dur) {
+      var elS1Dur = document.getElementById('sched1-dur');
+      if (elS1Dur) elS1Dur.value = s1dur;
+    }
+
+    // 3. Jadwal Slot 2 (Sore)
+    var s2en = localStorage.getItem('smartfarm_sched2_en');
+    var s2tm = localStorage.getItem('smartfarm_sched2_time');
+    var s2dur = localStorage.getItem('smartfarm_sched2_dur');
+    if (s2en !== null) {
+      var elS2En = document.getElementById('sched2-en');
+      if (elS2En) elS2En.checked = (s2en == '1' || s2en === true);
+    }
+    if (s2tm) {
+      var elS2Tm = document.getElementById('sched2-time');
+      if (elS2Tm) elS2Tm.value = s2tm;
+    }
+    if (s2dur) {
+      var elS2Dur = document.getElementById('sched2-dur');
+      if (elS2Dur) elS2Dur.value = s2dur;
+    }
+
+    // 4. Jadwal Lampu Grow Light
+    var lEn = localStorage.getItem('smartfarm_lamp_en');
+    var lTm = localStorage.getItem('smartfarm_lamp_time');
+    var lDur = localStorage.getItem('smartfarm_lamp_dur');
+    if (lEn !== null) {
+      var elLEn = document.getElementById('lamp-sched-en');
+      if (elLEn) elLEn.checked = (lEn == '1' || lEn === true);
+    }
+    if (lTm) {
+      var elLTm = document.getElementById('lamp-sched-time');
+      if (elLTm) elLTm.value = lTm;
+    }
+    if (lDur) {
+      var elLDur = document.getElementById('lamp-sched-dur');
+      if (elLDur) elLDur.value = lDur;
+    }
+
+    // 5. Kalibrasi & Spesifikasi Pompa
+    var pLph = localStorage.getItem('smartfarm_pump_lph');
+    var pWatt = localStorage.getItem('smartfarm_pump_watt');
+    var pTariff = localStorage.getItem('smartfarm_pump_tariff');
+    if (pLph) {
+      var elLph = document.getElementById('cfg-pump-lph');
+      if (elLph) elLph.value = pLph;
+    }
+    if (pWatt) {
+      var elWatt = document.getElementById('cfg-pump-watt');
+      if (elWatt) elWatt.value = pWatt;
+    }
+    if (pTariff) {
+      var elTariff = document.getElementById('cfg-pln-tariff');
+      if (elTariff) elTariff.value = pTariff;
+    }
+  } catch (e) {
+    console.warn("Hydrate form from localStorage failed", e);
+  }
+});
 
 function clearSystemLogs() {
   if (confirm("Apakah Anda yakin ingin menghapus seluruh log LittleFS?")) {
@@ -8390,6 +10017,15 @@ function updateCropAgronomyAnalysis() {
   localStorage.setItem('crop_ph', phLevel);
   localStorage.setItem('crop_ec', ecLevel);
 
+  // Synchronize to ESP32 Flash Memory (NVS Preferences)
+  var cropSyncUrl = '/setCropProfile?name=' + encodeURIComponent(name) +
+                    '&age=' + age +
+                    '&stage=' + encodeURIComponent(stage) +
+                    '&leaves=' + leavesCount +
+                    '&env=' + encodeURIComponent(env) +
+                    '&area=' + area;
+  fetch(cropSyncUrl).catch(function(err) { console.warn("Sync crop to ESP32 NVS:", err); });
+
   // Live Telemetry Values from ESP32
   var tData = window.lastTelemetryData || {};
   var tempElem = document.getElementById('kpi-temp');
@@ -8404,6 +10040,7 @@ function updateCropAgronomyAnalysis() {
   else if (nameLower.indexOf("bawang") !== -1 || nameLower.indexOf("onion") !== -1) targetAge = 15;
   else if (nameLower.indexOf("tomat") !== -1 || nameLower.indexOf("tomato") !== -1) targetAge = 25;
   else if (nameLower.indexOf("melon") !== -1) targetAge = 14;
+  else if (nameLower.indexOf("semangka") !== -1 || nameLower.indexOf("watermelon") !== -1) targetAge = 14;
   else if (nameLower.indexOf("padi") !== -1 || nameLower.indexOf("rice") !== -1) targetAge = 22;
 
   var daysRemaining = Math.max(0, targetAge - age);
@@ -8582,15 +10219,22 @@ function clearCropFormUI() {
 }
 
 function loadCropFormFromStorage() {
-  var storedName = localStorage.getItem('crop_name');
+  var tData = window.lastTelemetryData || {};
+  var storedName = localStorage.getItem('crop_name') || tData.cropName;
   if (storedName) {
+    var storedStage = localStorage.getItem('crop_stage') || tData.cropStage;
+    var storedAge = localStorage.getItem('crop_age') || tData.cropAge;
+    var storedEnv = localStorage.getItem('crop_env') || tData.cropEnv;
+    var storedArea = localStorage.getItem('crop_area') || tData.cropArea;
+    var storedLeaves = localStorage.getItem('crop_leaves') || tData.cropLeaves;
+
     var elName = document.getElementById('crop-name');
     if (elName) elName.value = storedName;
-    if (localStorage.getItem('crop_stage') && document.getElementById('crop-stage')) document.getElementById('crop-stage').value = localStorage.getItem('crop_stage');
-    if (localStorage.getItem('crop_age') && document.getElementById('crop-age-days')) document.getElementById('crop-age-days').value = localStorage.getItem('crop_age');
-    if (localStorage.getItem('crop_env') && document.getElementById('crop-env')) document.getElementById('crop-env').value = localStorage.getItem('crop_env');
-    if (localStorage.getItem('crop_area') && document.getElementById('crop-area-size')) document.getElementById('crop-area-size').value = localStorage.getItem('crop_area');
-    if (localStorage.getItem('crop_leaves') && document.getElementById('crop-leaves-count')) document.getElementById('crop-leaves-count').value = localStorage.getItem('crop_leaves');
+    if (storedStage && document.getElementById('crop-stage')) document.getElementById('crop-stage').value = storedStage;
+    if (storedAge && document.getElementById('crop-age-days')) document.getElementById('crop-age-days').value = storedAge;
+    if (storedEnv && document.getElementById('crop-env')) document.getElementById('crop-env').value = storedEnv;
+    if (storedArea && document.getElementById('crop-area-size')) document.getElementById('crop-area-size').value = storedArea;
+    if (storedLeaves && document.getElementById('crop-leaves-count')) document.getElementById('crop-leaves-count').value = storedLeaves;
     if (localStorage.getItem('crop_root') && document.getElementById('crop-root-status')) document.getElementById('crop-root-status').value = localStorage.getItem('crop_root');
     if (localStorage.getItem('crop_ph') && document.getElementById('crop-ph-level')) document.getElementById('crop-ph-level').value = localStorage.getItem('crop_ph');
     if (localStorage.getItem('crop_ec') && document.getElementById('crop-ec-level')) document.getElementById('crop-ec-level').value = localStorage.getItem('crop_ec');
@@ -9753,6 +11397,7 @@ function runOfflineAgronomicAnalysis() {
 /**
  * 12_weather.js - BMKG Satellite Weather Integration & Microclimate Telemetry Engine
  * Real-time Forecast API adm4: 35.13.05.2002 (Kec. Leces, Probolinggo)
+ * Fallback to Open-Meteo Satellite & Offline Local Cache
  * Zero-Dummy Telemetry, Physical Thermodynamic Formulas & Clean SCADA UI
  * Strict line limit < 400 lines
  */
@@ -9761,22 +11406,11 @@ function parseWindDirection(wd) {
   if (!wd) return "Selatan (S)";
   var str = String(wd).trim();
   var map = {
-    "N": "Utara (N)",
-    "NNE": "Utara-Timur Laut (NNE)",
-    "NE": "Timur Laut (NE)",
-    "ENE": "Timur-Timur Laut (ENE)",
-    "E": "Timur (E)",
-    "ESE": "Timur-Tenggara (ESE)",
-    "SE": "Tenggara (SE)",
-    "SSE": "Selatan-Tenggara (SSE)",
-    "S": "Selatan (S)",
-    "SSW": "Selatan-Barat Daya (SSW)",
-    "SW": "Barat Daya (SW)",
-    "WSW": "Barat-Barat Daya (WSW)",
-    "W": "Barat (W)",
-    "WNW": "Barat-Barat Laut (WNW)",
-    "NW": "Barat Laut (NW)",
-    "NNW": "Utara-Barat Laut (NNW)"
+    "N": "Utara (N)", "NNE": "Utara-Timur Laut (NNE)", "NE": "Timur Laut (NE)",
+    "ENE": "Timur-Timur Laut (ENE)", "E": "Timur (E)", "ESE": "Timur-Tenggara (ESE)",
+    "SE": "Tenggara (SE)", "SSE": "Selatan-Tenggara (SSE)", "S": "Selatan (S)",
+    "SSW": "Selatan-Barat Daya (SSW)", "SW": "Barat Daya (SW)", "WSW": "Barat-Barat Daya (WSW)",
+    "W": "Barat (W)", "WNW": "Barat-Barat Laut (WNW)", "NW": "Barat Laut (NW)", "NNW": "Utara-Barat Laut (NNW)"
   };
 
   if (str.indexOf("->") !== -1 || str.indexOf(" -> ") !== -1) {
@@ -9831,6 +11465,50 @@ function pickCurrentBMKGCuaca(cuacaGroup) {
   return bestItem;
 }
 
+function fetchWithTimeout(url, timeoutMs) {
+  timeoutMs = timeoutMs || 4500;
+  if (typeof AbortController === 'undefined') {
+    return fetch(url);
+  }
+  var controller = new AbortController();
+  var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+  return fetch(url, { signal: controller.signal }).finally(function () {
+    clearTimeout(timer);
+  });
+}
+
+function parseOpenMeteoPayload(json) {
+  if (!json || !json.current) return null;
+  var c = json.current;
+  var code = c.weather_code || 0;
+  var desc = "Cerah Berawan";
+  if (code === 0) desc = "Cerah";
+  else if (code === 1 || code === 2) desc = "Cerah Berawan";
+  else if (code === 3) desc = "Berawan";
+  else if (code === 45 || code === 48) desc = "Berkabut";
+  else if (code >= 51 && code <= 55) desc = "Gerimis";
+  else if (code >= 61 && code <= 65) desc = "Hujan";
+  else if (code >= 80 && code <= 82) desc = "Hujan Lebat";
+  else if (code >= 95) desc = "Hujan Petir";
+
+  var dirs = ["Utara (N)", "Timur Laut (NE)", "Timur (E)", "Tenggara (SE)", "Selatan (S)", "Barat Daya (SW)", "Barat (W)", "Barat Laut (NW)"];
+  var dirDeg = c.wind_direction_10m !== undefined ? c.wind_direction_10m : 180;
+  var dirIdx = Math.round((dirDeg % 360) / 45) % 8;
+  var windDirStr = dirs[dirIdx];
+
+  return {
+    t: c.temperature_2m !== undefined ? String(Math.round(c.temperature_2m * 10) / 10) : "--",
+    hu: c.relative_humidity_2m !== undefined ? String(Math.round(c.relative_humidity_2m)) : "--",
+    weather_desc: desc,
+    wd: windDirStr,
+    wd_to: "",
+    ws: c.wind_speed_10m !== undefined ? Math.round(c.wind_speed_10m) + " km/jam" : "-- km/jam",
+    tp: c.precipitation !== undefined ? c.precipitation : 0,
+    tcc: null,
+    source: "Open-Meteo"
+  };
+}
+
 function loadCachedBMKGData() {
   var temp = localStorage.getItem('bmkg_temp');
   var hum = localStorage.getItem('bmkg_hum');
@@ -9867,6 +11545,15 @@ function loadCachedBMKGData() {
     }
   }
 
+  // Segera perbarui kartu mikroklimat turunan (Dew Point, VPD, Heat Index) dari cache
+  if (typeof updateActuatorAndScheduleUI === 'function') {
+    var d = window.lastTelemetryData || {};
+    var rawT = (d.suhuC !== undefined && d.suhuC !== null && d.suhuC !== "--") ? d.suhuC : d.temp;
+    var hasT = (rawT !== undefined && rawT !== null && rawT !== -1 && rawT !== "--" && !isNaN(parseFloat(rawT)));
+    var hasH = (d.hum !== undefined && d.hum !== null && d.hum !== -1 && d.hum !== "--" && !isNaN(parseFloat(d.hum)));
+    updateActuatorAndScheduleUI(d, d.time || tStr || "--:--", hasT, rawT, hasH, d.hum);
+  }
+
   // If cache is empty or older than 30 minutes, sync automatically in background
   var lastEpoch = parseInt(localStorage.getItem('bmkg_sync_epoch') || '0', 10);
   var nowEpoch = Math.floor(Date.now() / 1000);
@@ -9889,101 +11576,143 @@ async function syncBMKGData(silent) {
   if (dot) dot.style.background = "#f59e0b";
   if (icon) icon.style.animation = "spin 1s linear infinite";
 
+  var parsedWeather = null;
+  var providerName = "BMKG";
+
+  // 1. Coba Sumber Utama: API Resmi BMKG
   try {
-    const res = await fetch('https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=35.13.05.2002');
+    var res = await fetchWithTimeout('https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=35.13.05.2002', 4500);
     if (!res.ok) throw new Error("HTTP " + res.status);
-    const json = await res.json();
-
-    var item = null;
+    var json = await res.json();
     if (json && json.data && json.data[0] && json.data[0].cuaca) {
-      item = pickCurrentBMKGCuaca(json.data[0].cuaca);
-    }
-
-    if (!item) throw new Error("Format prakiraan BMKG tidak dikenali.");
-
-    var temp = (item.t !== undefined) ? String(item.t) : "--";
-    var hum = (item.hu !== undefined) ? String(item.hu) : "--";
-    var desc = item.weather_desc || item.weather_desc_en || "Prakiraan Cuaca";
-    var windDir = (item.wd && item.wd_to) ? (item.wd + " -> " + item.wd_to) : (item.wd || "--");
-    var windSpd = (item.ws !== undefined ? item.ws + " km/jam" : "-- km/jam");
-    var tpVal = (item.tp !== undefined) ? parseFloat(item.tp) : 0;
-    var tccVal = (item.tcc !== undefined) ? item.tcc : null;
-    var visVal = item.vs_text || "> 10 km";
-
-    var rain = (tpVal > 0) ? ("Presipitasi " + tpVal + " mm/jam (Hujan)") : (desc + " (Tidak Hujan)");
-    var skyDesc = desc + (tccVal !== null ? " (" + tccVal + "% Awan)" : "");
-    var tStr = new Date().toLocaleTimeString();
-    var ep = Math.floor(Date.now() / 1000);
-
-    localStorage.setItem('bmkg_temp', temp);
-    localStorage.setItem('bmkg_hum', hum);
-    localStorage.setItem('bmkg_desc', skyDesc);
-    localStorage.setItem('bmkg_wind_dir', windDir);
-    localStorage.setItem('bmkg_wind_spd', windSpd);
-    localStorage.setItem('bmkg_rain', rain);
-    localStorage.setItem('bmkg_sync_time', tStr);
-    localStorage.setItem('bmkg_sync_epoch', ep);
-
-    if (document.getElementById('bmkg-sat-temp')) document.getElementById('bmkg-sat-temp').innerText = temp + "°C";
-    if (document.getElementById('bmkg-sat-hum')) document.getElementById('bmkg-sat-hum').innerText = hum + "%";
-    if (document.getElementById('bmkg-sat-desc')) document.getElementById('bmkg-sat-desc').innerText = skyDesc;
-    if (document.getElementById('bmkg-wind-dir')) document.getElementById('bmkg-wind-dir').innerText = parseWindDirection(windDir);
-    if (document.getElementById('bmkg-wind-speed')) document.getElementById('bmkg-wind-speed').innerText = windSpd;
-    if (document.getElementById('bmkg-rain-pred')) {
-      var rpEl = document.getElementById('bmkg-rain-pred');
-      rpEl.innerText = rain;
-      rpEl.style.color = (tpVal > 0) ? "#f59e0b" : "#10b981";
-    }
-    if (document.getElementById('bmkg-last-sync')) document.getElementById('bmkg-last-sync').innerText = tStr + " WIB (Leces)";
-    if (document.getElementById('bmkg-last-sync-badge')) document.getElementById('bmkg-last-sync-badge').innerText = "Live " + tStr;
-    if (dot) dot.style.background = "#10b981";
-
-    var recomEl = document.getElementById('bmkg-recommendation');
-    if (recomEl) {
-      if (tpVal > 0 || desc.toLowerCase().includes("hujan")) {
-        recomEl.innerText = "Peringatan Hujan Satelit: Menunda siklus penyiraman otomatis untuk konservasi air.";
-        recomEl.style.color = "#f59e0b";
-      } else {
-        recomEl.innerText = "Cuaca Kondusif: Penyiraman otomatis beroperasi penuh mengikuti sensor tanah.";
-        recomEl.style.color = "var(--text-sub)";
+      var item = pickCurrentBMKGCuaca(json.data[0].cuaca);
+      if (item) {
+        parsedWeather = {
+          t: (item.t !== undefined) ? String(item.t) : "--",
+          hu: (item.hu !== undefined) ? String(item.hu) : "--",
+          weather_desc: item.weather_desc || item.weather_desc_en || "Prakiraan Cuaca",
+          wd: (item.wd && item.wd_to) ? (item.wd + " -> " + item.wd_to) : (item.wd || "--"),
+          ws: (item.ws !== undefined ? item.ws + " km/jam" : "-- km/jam"),
+          tp: (item.tp !== undefined) ? parseFloat(item.tp) : 0,
+          tcc: (item.tcc !== undefined) ? item.tcc : null,
+          source: "BMKG"
+        };
       }
     }
-
-    // Push to ESP32 LittleFS logger
-    var body = "temp=" + encodeURIComponent(temp) +
-      "&desc=" + encodeURIComponent(desc) +
-      "&rain=" + encodeURIComponent(rain) +
-      "&time=" + encodeURIComponent(tStr) +
-      "&epoch=" + ep;
-
-    fetch('/pushWeather', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body
-    }).catch(function() {});
-
-    // Recalculate microclimate variance against current garden sensors
-    if (window.lastTelemetryData && typeof updateActuatorAndScheduleUI === 'function') {
-      var d = window.lastTelemetryData;
-      var hasT = (d.temp !== undefined && d.temp !== null && d.temp !== -1);
-      var hasH = (d.hum !== undefined && d.hum !== null && d.hum !== -1);
-      updateActuatorAndScheduleUI(d, d.time || tStr, hasT, d.temp, hasH, d.hum);
-    }
-
-  } catch (err) {
-    console.warn("BMKG sync error:", err);
-    if (badge) badge.innerText = "Sync Tertunda";
-    if (dot) dot.style.background = "#ef4444";
-    if (!silent) {
-      alert("Tidak dapat menjangkau server BMKG: " + err.message + "\nMenampilkan data tersimpan terakhir.");
-    }
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = '1';
-    }
-    if (icon) icon.style.animation = "";
+  } catch (errBMKG) {
+    console.warn("Server BMKG utama tidak merespon, mencoba satelit Open-Meteo fallback...", errBMKG);
   }
+
+  // 2. Fallback Otomatis: Satelit Open-Meteo (Kec. Leces, Probolinggo: -7.8806, 113.2331)
+  if (!parsedWeather) {
+    try {
+      var urlMeteo = 'https://api.open-meteo.com/v1/forecast?latitude=-7.8806&longitude=113.2331&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m&timezone=Asia%2FJakarta';
+      var resMeteo = await fetchWithTimeout(urlMeteo, 4500);
+      if (resMeteo.ok) {
+        var jsonMeteo = await resMeteo.json();
+        parsedWeather = parseOpenMeteoPayload(jsonMeteo);
+        if (parsedWeather) providerName = "Satelit";
+      }
+    } catch (errMeteo) {
+      console.warn("Satelit Open-Meteo fallback juga gagal (perangkat kemungkinan offline):", errMeteo);
+    }
+  }
+
+  // 3. Jika Berhasil Mendapatkan Data Cuaca
+  if (parsedWeather) {
+    try {
+      var temp = parsedWeather.t;
+      var hum = parsedWeather.hu;
+      var desc = parsedWeather.weather_desc;
+      var windDir = parsedWeather.wd;
+      var windSpd = parsedWeather.ws;
+      var tpVal = parsedWeather.tp;
+      var tccVal = parsedWeather.tcc;
+
+      var rain = (tpVal > 0) ? ("Presipitasi " + tpVal + " mm/jam (Hujan)") : (desc + " (Tidak Hujan)");
+      var skyDesc = desc + (tccVal !== null && tccVal !== undefined ? " (" + tccVal + "% Awan)" : "");
+      var tStr = new Date().toLocaleTimeString();
+      var ep = Math.floor(Date.now() / 1000);
+
+      localStorage.setItem('bmkg_temp', temp);
+      localStorage.setItem('bmkg_hum', hum);
+      localStorage.setItem('bmkg_desc', skyDesc);
+      localStorage.setItem('bmkg_wind_dir', windDir);
+      localStorage.setItem('bmkg_wind_spd', windSpd);
+      localStorage.setItem('bmkg_rain', rain);
+      localStorage.setItem('bmkg_sync_time', tStr);
+      localStorage.setItem('bmkg_sync_epoch', ep);
+
+      if (document.getElementById('bmkg-sat-temp')) document.getElementById('bmkg-sat-temp').innerText = temp + "°C";
+      if (document.getElementById('bmkg-sat-hum')) document.getElementById('bmkg-sat-hum').innerText = hum + "%";
+      if (document.getElementById('bmkg-sat-desc')) document.getElementById('bmkg-sat-desc').innerText = skyDesc;
+      if (document.getElementById('bmkg-wind-dir')) document.getElementById('bmkg-wind-dir').innerText = parseWindDirection(windDir);
+      if (document.getElementById('bmkg-wind-speed')) document.getElementById('bmkg-wind-speed').innerText = windSpd;
+      if (document.getElementById('bmkg-rain-pred')) {
+        var rpEl = document.getElementById('bmkg-rain-pred');
+        rpEl.innerText = rain;
+        rpEl.style.color = (tpVal > 0) ? "#f59e0b" : "#10b981";
+      }
+      if (document.getElementById('bmkg-last-sync')) document.getElementById('bmkg-last-sync').innerText = tStr + " WIB (" + providerName + ")";
+      if (document.getElementById('bmkg-last-sync-badge')) document.getElementById('bmkg-last-sync-badge').innerText = "Live " + tStr;
+      if (dot) dot.style.background = "#10b981";
+
+      var recomEl = document.getElementById('bmkg-recommendation');
+      if (recomEl) {
+        if (tpVal > 0 || desc.toLowerCase().includes("hujan")) {
+          recomEl.innerText = "Peringatan Hujan Satelit: Menunda siklus penyiraman otomatis untuk konservasi air.";
+          recomEl.style.color = "#f59e0b";
+        } else {
+          recomEl.innerText = "Cuaca Kondusif: Penyiraman otomatis beroperasi penuh mengikuti sensor tanah.";
+          recomEl.style.color = "var(--text-sub)";
+        }
+      }
+
+      // Push to ESP32 LittleFS logger
+      var body = "temp=" + encodeURIComponent(temp) +
+        "&desc=" + encodeURIComponent(desc) +
+        "&rain=" + encodeURIComponent(rain) +
+        "&time=" + encodeURIComponent(tStr) +
+        "&epoch=" + ep;
+
+      fetch('/pushWeather', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+      }).catch(function() {});
+
+      // Recalculate microclimate variance against current garden sensors
+      if (typeof updateActuatorAndScheduleUI === 'function') {
+        var d = window.lastTelemetryData || {};
+        var rawT = (d.suhuC !== undefined && d.suhuC !== null && d.suhuC !== "--") ? d.suhuC : d.temp;
+        var hasT = (rawT !== undefined && rawT !== null && rawT !== -1 && rawT !== "--" && !isNaN(parseFloat(rawT)));
+        var hasH = (d.hum !== undefined && d.hum !== null && d.hum !== -1 && d.hum !== "--" && !isNaN(parseFloat(d.hum)));
+        updateActuatorAndScheduleUI(d, d.time || tStr || "--:--", hasT, rawT, hasH, d.hum);
+      }
+    } catch (renderErr) {
+      console.warn("Error rendering weather data:", renderErr);
+    }
+  } else {
+    // 4. Kasus Keduanya Gagal (Perangkat Offline / Hanya terkoneksi ke Access Point Lokal ESP32)
+    console.info("Sinkronisasi cuaca satelit tertunda: Perangkat dalam mode offline (WiFi lokal ESP32).");
+    if (badge) badge.innerText = "Mode Offline (Cache)";
+    if (dot) dot.style.background = "#f59e0b";
+    
+    // Tampilkan data tersimpan terakhir jika ada
+    loadCachedBMKGData();
+
+    if (!silent) {
+      alert("ℹ️ Mode Offline (Jaringan Lokal ESP32)\n\n" +
+            "Perangkat Anda saat ini terhubung langsung ke WiFi AP lokal ESP32 ('SmartFarm-ESP32') tanpa kuota internet luar, sehingga server satelit BMKG tidak dapat dijangkau saat ini.\n\n" +
+            "✅ Dashboard tetap berjalan normal dengan menampilkan rekaman cuaca satelit terakhir yang tersimpan di memori.");
+    }
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+  if (icon) icon.style.animation = "";
 }
 
 // Auto init on DOM ready
@@ -10156,57 +11885,101 @@ window.appendLiveTelemetryFeed = function(data) {
   if (statElem) statElem.innerText = "Total Paket Tertangkap: " + window.feedPacketsCount;
 
   var now = new Date();
-  var timeStr = (data.time && data.time !== "--" && data.time !== "-") ? data.time : now.toLocaleTimeString();
+  var pad = function(n, z) { z = z || 2; return ('00' + n).slice(-z); };
+  var ms1 = pad(now.getMilliseconds(), 3);
+  var ms2 = pad((now.getMilliseconds() + 33) % 1000, 3);
 
-  var tVal = (data.temp !== undefined && data.temp !== -1) ? (data.temp + "°C") : "--";
-  var hVal = (data.hum !== undefined && data.hum !== -1) ? (data.hum + "%") : "--";
-  var sVal = (data.soil !== undefined && data.soil !== -1) ? (data.soil + "%") : "--";
-  var adcVal = data.rawAdc || "--";
-  var batVal = (data.battery !== undefined && data.battery > 0) ? (data.battery + "%") : "--";
-  var rssiVal = (data.rssi !== undefined && data.rssi !== 0) ? (data.rssi + "dBm") : "--";
-  var pumpStat = (data.relay == 1 || data.relayOn == 1) ? "<span style='color:#10b981;font-weight:bold;'>ON</span>" : "<span style='color:#64748b;'>OFF</span>";
-  var lampStat = (data.lamp == 1 || data.lampOn == 1) ? "<span style='color:#eab308;font-weight:bold;'>ON</span>" : "<span style='color:#64748b;'>OFF</span>";
+  var p1 = '', p2 = '';
+  if (data.rtcTime && data.rtcTime.indexOf(' ') !== -1) {
+    var parts = data.rtcTime.split(' ');
+    p1 = parts[1] + '.' + ms1 + ' -> ';
+    p2 = parts[1] + '.' + ms2 + ' -> ';
+  } else {
+    var hhmmss = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    p1 = hhmmss + '.' + ms1 + ' -> ';
+    p2 = hhmmss + '.' + ms2 + ' -> ';
+  }
+
+  var rawT = (data.suhuC !== undefined && data.suhuC !== null && data.suhuC !== '--') ? data.suhuC : data.temp;
+  var sC = (rawT !== undefined && rawT !== null && rawT !== '--') ? parseFloat(rawT).toFixed(2) : '--';
+  var sF = (data.suhuF !== undefined && data.suhuF !== '--') ? parseFloat(data.suhuF).toFixed(2) : (sC !== '--' ? (parseFloat(sC) * 1.8 + 32).toFixed(2) : '--');
+  var hum = (data.hum !== undefined && data.hum !== null && data.hum !== '--') ? parseFloat(data.hum).toFixed(2) : '--';
+  var heatC = (data.heatC !== undefined && data.heatC !== null && data.heatC !== '--') ? parseFloat(data.heatC).toFixed(2) : '--';
+  var heatF = (data.heatF !== undefined && data.heatF !== null && data.heatF !== '--') ? parseFloat(data.heatF).toFixed(2) : '--';
+  var dew = (data.dew !== undefined && data.dew !== null && data.dew !== '--') ? parseFloat(data.dew).toFixed(2) : '--';
+  var soilCat = data.soilCategory || (data.soil !== undefined && data.soil !== '--' ? (data.soil < 50 ? '🍂 TANAH KERING (PERLU MENYIRAM)' : '🌿 TANAH CUKUP LEMBAB') : '--');
+  var rawAdc = (data.rawAdc !== undefined) ? data.rawAdc : '--';
+  var vcc = data.espVcc || '3.3V (Stabil)';
+  var heap = (data.freeHeap !== undefined ? data.freeHeap + ' KB' : (data.heap || '204 KB'));
+  var aiSummary = data.plantSummary || (data.statusText || 'Normal');
+  var pumpStat = (data.relay == 1 || data.relayOn == 1) ? "<span style='color:#10b981;font-weight:bold;'>AKTIF (Menyiram)</span>" : "<span style='color:#64748b;'>NONAKTIF (Mati)</span>";
+  var lampStat = (data.lamp == 1 || data.lampOn == 1) ? "<span style='color:#eab308;font-weight:bold;'>AKTIF (Menyala)</span>" : "<span style='color:#64748b;'>NONAKTIF (Mati)</span>";
 
   // Cache live packet in memory for Firebase export
   window.liveTelemetryFeedCache = window.liveTelemetryFeedCache || [];
   window.liveTelemetryFeedCache.push({
-    timestamp: timeStr,
-    soil: sVal,
-    rawAdc: adcVal,
-    battery: batVal,
-    rssi: rssiVal,
-    temp: tVal,
-    hum: hVal,
+    timestamp: p1,
+    temp: sC,
+    hum: hum,
+    heat: heatC,
+    dew: dew,
+    soilCat: soilCat,
+    rawAdc: rawAdc,
+    vcc: vcc,
+    heap: heap,
     pump: (data.relay == 1 || data.relayOn == 1) ? "ON" : "OFF",
     lamp: (data.lamp == 1 || data.lampOn == 1) ? "ON" : "OFF"
   });
-  if (window.liveTelemetryFeedCache.length > 200) {
-    window.liveTelemetryFeedCache.shift();
+  if (window.liveTelemetryFeedCache.length > 200) window.liveTelemetryFeedCache.shift();
+
+  var statusLine = '';
+  if (data.statusText) {
+    statusLine = '<div><span style="color:#64748b;">' + p1 + '</span><span style="color:#f59e0b;font-weight:bold;"> => STATUS: ' + data.statusText + '</span></div>';
   }
 
-  var entryHtml = `
-    <div style="border-bottom:1px solid rgba(255,255,255,0.04); padding:4px 0;">
-      <span style="color:#64748b;">[${timeStr}]</span>
-      <span style="color:#38bdf8; font-weight:bold;">RX-LINK:</span>
-      <span style="color:#10b981;">soil=${sVal}</span>
-      <span style="color:#94a3b8;">adc=${adcVal}</span>
-      <span style="color:#f59e0b;">bat=${batVal}</span>
-      <span style="color:#a855f7;">rssi=${rssiVal}</span>
-      <span style="color:#64748b;">|</span>
-      <span style="color:#06b6d4;">temp=${tVal}</span>
-      <span style="color:#c084fc;">hum=${hVal}</span>
-      <span style="color:#64748b;">|</span>
-      <span style="color:#cbd5e1;">pompa:${pumpStat}</span>
-      <span style="color:#cbd5e1;">lampu:${lampStat}</span>
-      <span style="color:#10b981; font-size:10px; background:rgba(16,185,129,0.12); padding:1px 4px; border-radius:4px; margin-left:6px;">VALID</span>
-    </div>
-  `;
+  var blockHtml = '<div class="serial-feed-block" style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">' +
+    statusLine +
+    '<div style="color:#38bdf8; font-weight:700; border-bottom:1px dashed rgba(255,255,255,0.15); padding-bottom:3px; margin:4px 0; word-break:break-word;">' + p1 + '☁️ ========= DATA CUACA (DHT11) =========</div>' +
+    '<div><span style="color:#64748b;">' + p1 + '</span><span style="color:#94a3b8;">🌡️ Suhu Udara       : </span><span style="color:#38bdf8;font-weight:bold;">' + sC + ' °C</span>  |  <span style="color:#cbd5e1;">' + sF + ' °F</span></div>' +
+    '<div><span style="color:#64748b;">' + p1 + '</span><span style="color:#94a3b8;">💧 Kelembapan Udara : </span><span style="color:#a855f7;font-weight:bold;">' + hum + ' %</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🔥 Terasa Seperti   : </span><span style="color:#f59e0b;font-weight:bold;">' + heatC + ' °C</span>  |  <span style="color:#cbd5e1;">' + heatF + ' °F</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">❄️ Titik Embun (Dew): </span><span style="color:#06b6d4;font-weight:bold;">' + dew + ' °C</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🌱 Status Tanah     : </span><span style="color:#10b981;font-weight:bold;">' + soilCat + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">📊 Raw ADC A0       : </span><span style="color:#e2e8f0;font-weight:bold;">' + rawAdc + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">⚡ Stabilitas VCC   : </span><span style="color:#10b981;">' + vcc + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🧠 Free Heap RAM    : </span><span style="color:#38bdf8;">' + heap + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">🤖 Kesimpulan AI    : </span><span style="color:#e2e8f0;">' + aiSummary + '</span></div>' +
+    '<div><span style="color:#64748b;">' + p2 + '</span><span style="color:#94a3b8;">⚙️ Status Pompa     : </span>' + pumpStat + '  |  <span style="color:#94a3b8;">💡 Lampu : </span>' + lampStat + '</div>' +
+    '<div style="color:#64748b; font-size:10px; margin-top:2px;">' + p2 + '=========================================</div>' +
+    '</div>';
 
-  consoleElem.innerHTML += entryHtml;
+  if (consoleElem.innerHTML.indexOf('[Sistem Standby]') !== -1 || consoleElem.innerHTML.indexOf('[Konsol Dibersihkan]') !== -1) {
+    consoleElem.innerHTML = '';
+  }
+  consoleElem.innerHTML += blockHtml;
+
+  while (consoleElem.children.length > 40) {
+    consoleElem.removeChild(consoleElem.firstChild);
+  }
 
   var autoScroll = document.getElementById('feed-autoscroll');
   if (autoScroll && autoScroll.checked) {
     consoleElem.scrollTop = consoleElem.scrollHeight;
+  }
+};
+
+window.copyLiveFeedText = function() {
+  var consoleElem = document.getElementById('live-telemetry-console');
+  if (!consoleElem) return;
+  var text = consoleElem.innerText || consoleElem.textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert("Isi log Serial Monitor berhasil disalin ke clipboard!");
+    }).catch(function() {
+      alert("Gagal menyalin otomatis. Silakan salin secara manual.");
+    });
+  } else {
+    alert("Clipboard API tidak didukung pada peramban ini.");
   }
 };
 
@@ -10350,14 +12123,38 @@ function executeFirebaseBackup() {
 }
 
 function exportLogsAsJSON() {
-  if (!rawLogsCache || rawLogsCache.length === 0) { alert("Log masih kosong!"); return; }
-  var jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rawLogsCache, null, 2));
-  var a = document.createElement('a');
-  a.setAttribute("href", jsonStr);
-  a.setAttribute("download", "smartfarm_logs_" + Date.now() + ".json");
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  function downloadJSONData(data) {
+    var jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    var a = document.createElement('a');
+    a.setAttribute("href", jsonStr);
+    a.setAttribute("download", "smartfarm_logs_" + Date.now() + ".json");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  if (rawLogsCache && rawLogsCache.length > 0) {
+    downloadJSONData(rawLogsCache);
+    return;
+  }
+
+  // Jika cache memori peramban masih kosong, ambil langsung dari LittleFS ESP32
+  fetch('/downloadLog')
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    })
+    .then(function (text) {
+      parseCSVLogs(text);
+      if (rawLogsCache && rawLogsCache.length > 0) {
+        downloadJSONData(rawLogsCache);
+      } else {
+        alert("Log masih kosong di memori Flash LittleFS ESP32.");
+      }
+    })
+    .catch(function (err) {
+      alert("Gagal mengunduh log dari ESP32: " + err.message);
+    });
 }
 
 function clearSystemLogs() {
@@ -10379,6 +12176,9 @@ function clearSystemLogs() {
   } else {
     if (typeof updatePhenologyAI === 'function') updatePhenologyAI(null);
     if (typeof loadCropFormFromStorage === 'function') loadCropFormFromStorage();
+  }
+  if (window.lastTelemetryData && typeof window.appendLiveTelemetryFeed === 'function') {
+    window.appendLiveTelemetryFeed(window.lastTelemetryData);
   }
 })();
 

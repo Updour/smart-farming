@@ -28,6 +28,7 @@
       color: var(--text-main);
       min-height: 100vh;
       padding: 16px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
       line-height: 1.5;
     }
 
@@ -959,22 +960,30 @@
     }
     .segment-btn {
       flex: 1;
-      padding: 6px 12px;
+      padding: 7px 12px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
       background: transparent;
-      color: var(--text-sub);
+      color: rgba(255, 255, 255, 0.45);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+    .segment-btn:hover {
+      color: rgba(255, 255, 255, 0.85);
     }
     .segment-btn.active {
-      background: var(--primary);
-      color: #fff;
+      background: #10b981 !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.6);
     }
     .segment-btn.active-manual {
-      background: var(--warning);
-      color: #fff;
+      background: #f59e0b !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
     }
 
     /* DROPZONE UPLOADER */
@@ -1277,8 +1286,14 @@
    ANDROID & MOBILE SPECIFIC BOTTOM NAVIGATION DOCK (< 768px)
    ================================================================= */
 @media (max-width: 768px) {
+  body {
+    padding: 12px 10px;
+    padding-top: max(16px, env(safe-area-inset-top, 16px));
+  }
+
   .container {
     padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px));
+    gap: 14px;
   }
 
   .tabs-nav, .tabs-nav.bottom-dock {
@@ -1643,35 +1658,63 @@
     font-size: 10px;
   }
   
-  /* PERMINTAAN USER: HEADER CONTROLS 3 ATAS 3 BAWAH DI MOBILE */
+  /* ANDROID & MOBILE SCADA HEADER UX ENHANCEMENTS */
+  header, .unified-header {
+    margin-top: 4px !important;
+    margin-bottom: 14px !important;
+    padding: 14px !important;
+    gap: 12px !important;
+    border-radius: 14px !important;
+  }
+
   .header-controls {
     flex-direction: column !important;
     width: 100% !important;
     align-items: stretch !important;
     gap: 8px !important;
   }
-  .status-badge-bar, .header-action-group {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
+
+  /* 2 BARIS x 3 KOLOM MERATA UNTUK 6 STATUS BADGE (TIDAK SALING TUMPANG TINDIH) */
+  .status-badge-bar {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     width: 100% !important;
     gap: 6px !important;
-    flex-wrap: nowrap !important; /* Paksa sebaris */
   }
+
+  /* 1 BARIS x 3 KOLOM MERATA UNTUK 3 ACTION BUTTON */
+  .header-action-group {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
   .status-badge-bar > .badge-pill, .header-action-group > .header-btn {
-    flex: 1 !important; /* Paksa lebar merata sepertiga (3 items per baris) */
+    width: 100% !important;
+    min-width: 0 !important;
     justify-content: center !important;
     text-align: center !important;
-    padding: 6px 4px !important;
-    font-size: 10px !important;
-    min-width: 0 !important;
+    padding: 6px 3px !important;
+    font-size: 10.5px !important;
+    border-radius: 8px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   /* Sembunyikan SVG di tombol saat mobile agar teks muat 3 sejajar */
   .header-action-group > .header-btn svg {
     display: none !important;
+  }
+
+  /* Berikan breathing room bersih pada Ticker Bar & Tab Content agar tidak nempel ke header */
+  .scada-ticker-bar {
+    margin: 2px 0 14px 0 !important;
+  }
+
+  .tab-content {
+    margin-top: 2px !important;
   }
 }
 
@@ -2815,6 +2858,131 @@
 .agri-advanced-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-main);
+}
+
+/* =================================================================
+   LOGS & SERIAL MONITOR RESPONSIVE SCADA LAYOUT (ANTI-OVERFLOW)
+   ================================================================= */
+.logs-subnav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logs-switcher-wrap {
+  display: flex;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 4px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.logs-switcher-btn {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.logs-actions-wrap {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.telemetry-terminal-container {
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 11.5px;
+  height: 380px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: auto;
+  line-height: 1.55;
+  color: #94a3b8;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.serial-feed-block {
+  border-left: 3px solid #38bdf8;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+  .logs-subnav-container {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .logs-switcher-wrap {
+    width: 100% !important;
+    display: flex !important;
+  }
+  .logs-switcher-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+  .logs-actions-wrap {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+  .logs-actions-wrap .btn {
+    padding: 6px 4px !important;
+    font-size: 10px !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+  }
+  .telemetry-terminal-container {
+    padding: 8px !important;
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+    height: 330px !important;
+  }
+  .serial-feed-block {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+  }
 }
 
 

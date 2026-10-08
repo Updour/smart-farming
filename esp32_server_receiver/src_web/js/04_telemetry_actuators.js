@@ -73,30 +73,38 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var hasMicroclimateData = (tempNum !== null && humNum !== null);
 
   // 3. Heat Index (Indeks Panas Terasa)
-  var heatC = data.heatC;
-  var heatF = data.heatF;
-  if ((!heatC || heatC === "--") && hasMicroclimateData) {
-    var tempF = tempNum * 1.8 + 32;
-    var hiF = 0.5 * (tempF + 61.0 + ((tempF - 68.0) * 1.2) + (humNum * 0.094));
+  var rawHeatC = (data && data.heatC !== undefined && data.heatC !== null && data.heatC !== "undefined" && data.heatC !== "--") ? parseFloat(data.heatC) : NaN;
+  var heatC = !isNaN(rawHeatC) ? rawHeatC.toFixed(1) : null;
+  var rawHeatF = (data && data.heatF !== undefined && data.heatF !== null && data.heatF !== "undefined" && data.heatF !== "--") ? parseFloat(data.heatF) : NaN;
+  var heatF = !isNaN(rawHeatF) ? rawHeatF.toFixed(1) : null;
+
+  var hiTemp = (hasMicroclimateData && tempNum !== null) ? tempNum : (!isNaN(satT) ? satT : null);
+  var hiHum = (hasMicroclimateData && humNum !== null) ? humNum : (!isNaN(satH) ? satH : null);
+
+  if ((!heatC || !heatF) && hiTemp !== null && hiHum !== null) {
+    var tempF = hiTemp * 1.8 + 32;
+    var hiF = 0.5 * (tempF + 61.0 + ((tempF - 68.0) * 1.2) + (hiHum * 0.094));
     if (hiF >= 80) {
-      hiF = -42.379 + 2.04901523 * tempF + 10.14333127 * humNum - 0.22475541 * tempF * humNum
-            - 0.00683783 * tempF * tempF - 0.05481717 * humNum * humNum
-            + 0.00122874 * tempF * tempF * humNum + 0.00085282 * tempF * humNum * humNum
-            - 0.00000199 * tempF * tempF * humNum * humNum;
+      hiF = -42.379 + 2.04901523 * tempF + 10.14333127 * hiHum - 0.22475541 * tempF * hiHum
+            - 0.00683783 * tempF * tempF - 0.05481717 * hiHum * hiHum
+            + 0.00122874 * tempF * tempF * hiHum + 0.00085282 * tempF * hiHum * hiHum
+            - 0.00000199 * tempF * tempF * hiHum * hiHum;
     }
-    heatF = hiF.toFixed(1);
-    heatC = ((hiF - 32) / 1.8).toFixed(1);
+    if (!isNaN(hiF)) {
+      heatF = hiF.toFixed(1);
+      heatC = ((hiF - 32) / 1.8).toFixed(1);
+    }
   }
   var elHeatC = document.getElementById('bmkg-heat-index');
   var elHeatF = document.getElementById('bmkg-heat-f');
   var elHeatStat = document.getElementById('bmkg-heat-status');
   var elHeatBadge = document.getElementById('bmkg-heat-badge');
-  if (elHeatC) elHeatC.innerText = hasMicroclimateData ? (heatC + "°C") : "--°C";
-  if (elHeatF) elHeatF.innerText = hasMicroclimateData ? (heatF + "°F") : "--°F";
+  if (elHeatC) elHeatC.innerText = (heatC && heatC !== "NaN" && heatC !== "undefined") ? (heatC + "°C") : "--°C";
+  if (elHeatF) elHeatF.innerText = (heatF && heatF !== "NaN" && heatF !== "undefined") ? (heatF + "°F") : "--°F";
   if (elHeatStat) {
     var hNum = parseFloat(heatC);
     var hStat = "--";
-    if (hasMicroclimateData && !isNaN(hNum)) {
+    if (!isNaN(hNum)) {
       if (hNum >= 38) hStat = "Stres Termal Bahaya!";
       else if (hNum >= 32) hStat = "Waspada Panas Ekstrem";
       else if (hNum >= 27) hStat = "Hangat Normal";
@@ -104,52 +112,88 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
       else hStat = "Sensasi Sejuk";
     }
     elHeatStat.innerText = hStat;
-    if (elHeatBadge) elHeatBadge.innerText = hasMicroclimateData ? hStat : "Termal Riil";
+    if (elHeatBadge) elHeatBadge.innerText = hasMicroclimateData ? hStat : (heatC ? "Satelit BMKG" : "Termal Riil");
   }
 
   // 4. Dew Point & Absolute Humidity (Magnus Formula)
-  var dew = data.dew;
-  var absHum = data.absHum;
-  if ((!dew || dew === "--") && hasMicroclimateData) {
+  var rawDew = (data && data.dew !== undefined && data.dew !== null && data.dew !== "undefined" && data.dew !== "--") ? parseFloat(data.dew) : NaN;
+  var dew = !isNaN(rawDew) ? rawDew.toFixed(1) : null;
+  var absHum = null;
+
+  if (hasMicroclimateData && tempNum !== null && humNum !== null && humNum > 0) {
     var a = 17.27, b = 237.7;
     var alpha = ((a * tempNum) / (b + tempNum)) + Math.log(humNum / 100.0);
-    dew = ((b * alpha) / (a - alpha)).toFixed(1);
-    absHum = ((216.7 * (humNum / 100.0) * 6.112 * Math.exp((17.67 * tempNum) / (tempNum + 243.5))) / (273.15 + tempNum)).toFixed(1);
+    var calcDew = (b * alpha) / (a - alpha);
+    if (!isNaN(calcDew)) {
+      if (!dew) dew = calcDew.toFixed(1);
+    }
+    var calcAbs = (216.7 * (humNum / 100.0) * 6.112 * Math.exp((17.67 * tempNum) / (tempNum + 243.5))) / (273.15 + tempNum);
+    if (!isNaN(calcAbs)) {
+      absHum = calcAbs.toFixed(1);
+    }
+  } else if (!dew && !isNaN(satT) && !isNaN(satH) && satH > 0) {
+    // Fallback cerdas: Jika sensor kebun belum terhubung tapi data cuaca satelit BMKG ada
+    var aS = 17.27, bS = 237.7;
+    var alphaS = ((aS * satT) / (bS + satT)) + Math.log(satH / 100.0);
+    var calcDewS = (bS * alphaS) / (aS - alphaS);
+    if (!isNaN(calcDewS)) dew = calcDewS.toFixed(1);
+    var calcAbsS = (216.7 * (satH / 100.0) * 6.112 * Math.exp((17.67 * satT) / (satT + 243.5))) / (273.15 + satT);
+    if (!isNaN(calcAbsS)) absHum = calcAbsS.toFixed(1);
   }
+
   var elDew = document.getElementById('bmkg-dew-point');
   var elAbsHum = document.getElementById('bmkg-abs-hum');
   var elDewStat = document.getElementById('bmkg-dew-status');
   var elDewBadge = document.getElementById('bmkg-dew-badge');
-  if (elDew) elDew.innerText = hasMicroclimateData ? (dew + "°C") : "--°C";
-  if (elAbsHum) elAbsHum.innerText = hasMicroclimateData ? (absHum + " g/m³") : "-- g/m³";
+  if (elDew) elDew.innerText = (dew && dew !== "NaN" && dew !== "undefined") ? (dew + "°C") : "--°C";
+  if (elAbsHum) elAbsHum.innerText = (absHum && absHum !== "NaN" && absHum !== "undefined") ? (absHum + " g/m³") : "-- g/m³";
   if (elDewStat) {
-    var dewDiff = hasMicroclimateData ? (tempNum - parseFloat(dew)) : null;
+    var dewDiff = (hasMicroclimateData && dew && !isNaN(parseFloat(dew))) ? (tempNum - parseFloat(dew)) : null;
     var dStat = "--";
     if (dewDiff !== null && !isNaN(dewDiff)) {
       if (dewDiff <= 1.5) dStat = "Kondensasi Embun Jenuh";
       else if (dewDiff <= 3.0) dStat = "Potensi Embun Pagi";
       else dStat = "Bebas Embun";
+    } else if (!hasMicroclimateData && !isNaN(satT) && dew && !isNaN(parseFloat(dew))) {
+      var satDiff = satT - parseFloat(dew);
+      if (satDiff <= 1.5) dStat = "Potensi Embun Satelit";
+      else dStat = "Bebas Embun (Satelit)";
     }
     elDewStat.innerText = dStat;
-    if (elDewBadge) elDewBadge.innerText = hasMicroclimateData ? (dewDiff !== null && dewDiff <= 2 ? "Embun Aktif" : "Bebas Embun") : "Magnus";
+    if (elDewBadge) {
+      if (hasMicroclimateData) {
+        elDewBadge.innerText = (dewDiff !== null && dewDiff <= 2 ? "Embun Aktif" : "Bebas Embun");
+      } else if (!isNaN(satT) && dew) {
+        elDewBadge.innerText = "Estimasi Satelit";
+      } else {
+        elDewBadge.innerText = "Magnus Termal";
+      }
+    }
   }
 
   // 5. VPD (Defisit Tekanan Uap & Status Stomata)
-  var vpd = data.vpd;
-  if ((!vpd || vpd === "--") && hasMicroclimateData) {
+  var rawVpd = (data && data.vpd !== undefined && data.vpd !== null && data.vpd !== "undefined" && data.vpd !== "--") ? parseFloat(data.vpd) : NaN;
+  var vpd = !isNaN(rawVpd) ? rawVpd.toFixed(2) : null;
+  if (!vpd && hasMicroclimateData && tempNum !== null && humNum !== null) {
     var es = 0.61078 * Math.exp((17.27 * tempNum) / (tempNum + 237.3));
     var ea = es * (humNum / 100.0);
-    vpd = Math.max(0, es - ea).toFixed(2);
+    var calcVpd = Math.max(0, es - ea);
+    if (!isNaN(calcVpd)) vpd = calcVpd.toFixed(2);
+  } else if (!vpd && !isNaN(satT) && !isNaN(satH)) {
+    var esS = 0.61078 * Math.exp((17.27 * satT) / (satT + 237.3));
+    var eaS = esS * (satH / 100.0);
+    var calcVpdS = Math.max(0, esS - eaS);
+    if (!isNaN(calcVpdS)) vpd = calcVpdS.toFixed(2);
   }
   var elVpd = document.getElementById('bmkg-vpd-val');
   var elVpdStat = document.getElementById('bmkg-vpd-status');
   var elVpdBadge = document.getElementById('bmkg-vpd-badge');
-  if (elVpd) elVpd.innerText = hasMicroclimateData ? (vpd + " kPa") : "-- kPa";
+  if (elVpd) elVpd.innerText = (vpd && vpd !== "NaN" && vpd !== "undefined") ? (vpd + " kPa") : "-- kPa";
   if (elVpdStat) {
     var vpdNum = parseFloat(vpd);
     var vStat = "--";
     var vBadge = "Stomata";
-    if (hasMicroclimateData && !isNaN(vpdNum)) {
+    if (!isNaN(vpdNum)) {
       if (vpdNum < 0.4) {
         vStat = "Terlalu Lembap (Risiko Jamur)";
         vBadge = "Risiko Jamur";
@@ -168,30 +212,32 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
       }
     }
     elVpdStat.innerText = vStat;
-    if (elVpdBadge) elVpdBadge.innerText = hasMicroclimateData ? vBadge : "Stomata";
+    if (elVpdBadge) elVpdBadge.innerText = vBadge;
   }
 
   // 6. Evaporation Rate (Laju Penguapan Air Lahan)
-  var evap = data.evaporation;
-  if ((!evap || evap === "--") && hasMicroclimateData && vpd && !isNaN(parseFloat(vpd))) {
-    evap = ((0.7 * parseFloat(vpd) + 0.15 * (tempNum / 10.0)) * 1.05).toFixed(1);
+  var evap = null;
+  var evapTemp = (hasMicroclimateData && tempNum !== null) ? tempNum : (!isNaN(satT) ? satT : null);
+  if (vpd && !isNaN(parseFloat(vpd)) && evapTemp !== null) {
+    var calcEvap = ((0.7 * parseFloat(vpd) + 0.15 * (evapTemp / 10.0)) * 1.05);
+    if (!isNaN(calcEvap)) evap = calcEvap.toFixed(1);
   }
   var elEvap = document.getElementById('bmkg-evap-val');
   var elEvapStat = document.getElementById('bmkg-evap-status');
   var elEvapLoss = document.getElementById('bmkg-evap-loss');
   var elEvapBadge = document.getElementById('bmkg-evap-badge');
-  if (elEvap) elEvap.innerText = hasMicroclimateData ? (evap + " mm/hari") : "-- mm/hari";
-  if (elEvapLoss) elEvapLoss.innerText = hasMicroclimateData ? (evap + " L/m²") : "-- L/m²";
+  if (elEvap) elEvap.innerText = (evap && evap !== "NaN" && evap !== "undefined") ? (evap + " mm/hari") : "-- mm/hari";
+  if (elEvapLoss) elEvapLoss.innerText = (evap && evap !== "NaN" && evap !== "undefined") ? (evap + " L/m²") : "-- L/m²";
   if (elEvapStat) {
     var eNum = parseFloat(evap);
     var eStat = "--";
-    if (hasMicroclimateData && !isNaN(eNum)) {
+    if (!isNaN(eNum)) {
       if (eNum > 6.0) eStat = "Penguapan Cepat (Kering)";
       else if (eNum < 2.5) eStat = "Penguapan Lambat (Basah)";
       else eStat = "Penguapan Sedang";
     }
     elEvapStat.innerText = eStat;
-    if (elEvapBadge) elEvapBadge.innerText = hasMicroclimateData ? (eNum > 5.0 ? "Evap Tinggi" : "Evap Normal") : "Penman ET";
+    if (elEvapBadge) elEvapBadge.innerText = (!isNaN(eNum) && eNum > 5.0) ? "Evap Tinggi" : "Penman ET";
   }
 
   // 7 & 8. BMKG Atmosphere, Wind & Rain Interlock
@@ -248,24 +294,34 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var mDesc = document.getElementById('mode-desc-text');
   if (btnOn) btnOn.disabled = !isManual;
   if (btnOff) btnOff.disabled = !isManual;
-  if (mDesc) mDesc.innerText = isManual ? "Mode Manual" : "Mode Otomatis (Sensor & RTC)";
+  if (mDesc) mDesc.innerText = isManual ? "Mode Manual (Aktuator Terbuka)" : "Mode Otomatis (Sensor & RTC)";
 
   var isRelayOn = (data.relayOn == 1);
-  var modeText = (data.manual == 1) ? " (Manual)" : " (Auto)";
+  var modeText = isManual ? " (Manual)" : " (Auto)";
   var relayBadge = document.getElementById('relay-status-badge');
   var liveBar = document.getElementById('pump-live-bar');
+  var liveTimer = document.getElementById('pump-live-timer');
+  var liveSub = document.getElementById('pump-live-subtitle');
+
   if (relayBadge) {
     if (isRelayOn) {
-      relayBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#10b981; box-shadow:0 0 6px #10b981;"></span><span>Pompa Menyala' + modeText + '</span>';
-      relayBadge.style.color = "#10b981";
-      relayBadge.style.borderColor = "rgba(16, 185, 129, 0.4)";
-      relayBadge.style.background = "rgba(16, 185, 129, 0.15)";
+      relayBadge.innerHTML = '<span class="badge-dot dot-green" style="background:#06b6d4; box-shadow:0 0 10px #06b6d4;"></span><span style="font-weight:800; letter-spacing:0.5px; color:#06b6d4;">💧 SEDANG MENYIRAM' + modeText + '</span>';
+      relayBadge.style.color = "#06b6d4";
+      relayBadge.style.borderColor = "rgba(6, 182, 212, 0.5)";
+      relayBadge.style.background = "rgba(6, 182, 212, 0.18)";
       if (liveBar) liveBar.style.display = 'flex';
+      if (liveTimer) {
+        liveTimer.innerHTML = '<span style="color:#06b6d4; font-weight:800;">💧 IRIGASI AKTIF</span>';
+      }
+      if (liveSub) {
+        var sValText = (data.soil !== undefined && data.soil !== null && data.soil !== "--") ? data.soil + "%" : "--";
+        liveSub.innerText = "Pin 26 Aktif • Air Mengalir ke Perakaran (Kelembapan: " + sValText + ")";
+      }
     } else {
-      relayBadge.innerHTML = '<span class="badge-dot dot-red" style="background:#ef4444;"></span><span>Standby' + modeText + '</span>';
-      relayBadge.style.color = "#ef4444";
-      relayBadge.style.borderColor = "rgba(239, 68, 68, 0.4)";
-      relayBadge.style.background = "rgba(239, 68, 68, 0.15)";
+      relayBadge.innerHTML = '<span class="badge-dot dot-gray" style="background:#94a3b8;"></span><span>STANDBY (Mati)' + modeText + '</span>';
+      relayBadge.style.color = "var(--text-sub)";
+      relayBadge.style.borderColor = "rgba(255, 255, 255, 0.1)";
+      relayBadge.style.background = "rgba(0, 0, 0, 0.2)";
       if (liveBar) liveBar.style.display = 'none';
     }
   }
@@ -290,20 +346,19 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var lDesc = document.getElementById('lamp-mode-desc-text');
   if (btnLampOn) btnLampOn.disabled = !isLampManual;
   if (btnLampOff) btnLampOff.disabled = !isLampManual;
-  if (lDesc) lDesc.innerText = isLampManual ? "Mode Manual" : "Mode Otomatis (18:00 - 06:00)";
+  if (lDesc) lDesc.innerText = isLampManual ? "Mode Manual (Aktuator Terbuka)" : (data.l_en == 1 ? "Mode Otomatis (Jadwal RTC Aktif)" : "Mode Otomatis (Lampu Nonaktif / Mati)");
 
   var isLampOn = (data.lampOn == 1);
-  var isLampManual = (data.lampManual == 1);
   var lModeText = isLampManual ? " (Manual)" : " (Auto)";
   var lampBadge = document.getElementById('lamp-status-badge');
   if (lampBadge) {
     if (isLampOn) {
-      lampBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308; box-shadow:0 0 6px #eab308;"></span><span>Lampu Menyala' + lModeText + '</span>';
+      lampBadge.innerHTML = '<span class="badge-dot dot-yellow" style="background:#eab308; box-shadow:0 0 6px #eab308;"></span><span>AKTIF (Menyala)' + lModeText + '</span>';
       lampBadge.style.color = "#eab308";
       lampBadge.style.borderColor = "rgba(234, 179, 8, 0.4)";
       lampBadge.style.background = "rgba(234, 179, 8, 0.15)";
     } else {
-      lampBadge.innerHTML = '<span class="badge-dot dot-gray" style="background:#94a3b8;"></span><span>Standby' + lModeText + '</span>';
+      lampBadge.innerHTML = '<span class="badge-dot dot-gray" style="background:#94a3b8;"></span><span>NONAKTIF (Mati)' + lModeText + '</span>';
       lampBadge.style.color = "#94a3b8";
       lampBadge.style.borderColor = "rgba(148, 163, 184, 0.4)";
       lampBadge.style.background = "rgba(148, 163, 184, 0.15)";
@@ -315,14 +370,14 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var txtPump = document.getElementById('text-global-pump');
   if (bgPump && txtPump) {
     if (isRelayOn) {
-      txtPump.innerText = "Pompa ON";
+      txtPump.innerText = "Pompa AKTIF";
       bgPump.className = "badge-pill badge-pump-active";
       bgPump.title = "Pompa Air Aktif (Menyiram Lahan)";
     } else {
-      txtPump.innerText = "Pompa OFF";
+      txtPump.innerText = "Pompa MATI";
       bgPump.className = "badge-pill";
       bgPump.style.color = "var(--text-sub)";
-      bgPump.title = "Pompa Air Standby / Mati";
+      bgPump.title = "Pompa Air Nonaktif / Mati";
     }
   }
 
@@ -330,14 +385,14 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
   var txtLamp = document.getElementById('text-global-lamp');
   if (bgLamp && txtLamp) {
     if (isLampOn) {
-      txtLamp.innerText = "Lampu ON";
+      txtLamp.innerText = "Lampu AKTIF";
       bgLamp.className = "badge-pill badge-lamp-active";
       bgLamp.title = "Lampu Pemanas/Growlight Aktif";
     } else {
-      txtLamp.innerText = "Lampu OFF";
+      txtLamp.innerText = "Lampu MATI";
       bgLamp.className = "badge-pill";
       bgLamp.style.color = "var(--text-sub)";
-      bgLamp.title = "Lampu Pemanas/Growlight Standby / Mati";
+      bgLamp.title = "Lampu Pemanas/Growlight Nonaktif / Mati";
     }
   }
 
@@ -360,35 +415,57 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
 
 
   var statCount = document.getElementById('stat-pump-count');
-  if (statCount) statCount.innerText = (data.pumpCount !== undefined ? data.pumpCount : "--") + " Kali";
+  if (statCount) statCount.innerText = (data.pumpCount !== undefined ? data.pumpCount : 0) + " Nyala";
+
+  var statOffCount = document.getElementById('stat-pump-off-count');
+  if (statOffCount) statOffCount.innerText = (data.pumpOffCount !== undefined ? data.pumpOffCount : 0) + " Mati";
 
   var totalSecs = data.totalPumpSecs !== undefined ? data.totalPumpSecs : -1;
-    var timeStr = "-- Detik";
+  var durStr = "-- Detik";
+  var subSecsStr = "-- Detik Akumulasi";
   if (totalSecs !== -1) {
-    var mins = Math.floor(totalSecs / 60);
+    var hrs = Math.floor(totalSecs / 3600);
+    var mins = Math.floor((totalSecs % 3600) / 60);
     var secs = totalSecs % 60;
-    timeStr = totalSecs + " Detik";
-    if (mins > 0) timeStr += " (" + mins + "m " + secs + "s)";
+    if (hrs > 0) {
+      durStr = hrs + "j " + mins + "m " + secs + "s";
+    } else if (mins > 0) {
+      durStr = mins + " Menit " + secs + "s";
+    } else {
+      durStr = secs + " Detik";
+    }
+    subSecsStr = totalSecs + " Detik Total Nyala";
   }
+
+  var statDur = document.getElementById('stat-pump-duration');
+  if (statDur) statDur.innerText = durStr;
   var statSecs = document.getElementById('stat-pump-secs');
-  if (statSecs) statSecs.innerText = timeStr;
+  if (statSecs) statSecs.innerText = subSecsStr;
 
   var statWater = document.getElementById('stat-water-liters');
+  if (statWater) statWater.innerText = (data.waterLiters !== undefined ? data.waterLiters : "0.0") + " Liter";
+  var statWaterRate = document.getElementById('stat-water-rate');
+  if (statWaterRate) statWaterRate.innerText = "Debit: " + (data.pumpLph || 1800) + " L/jam";
+
   var statCost = document.getElementById('stat-cost-idr');
-  if (statWater) statWater.innerText = (data.waterLiters !== undefined ? data.waterLiters : "--") + " Liter";
-  if (statCost) statCost.innerText = "Rp " + (data.costIdr !== undefined ? data.costIdr : "--");
+  if (statCost) statCost.innerText = "Rp " + (data.costIdr !== undefined ? data.costIdr : "0");
+  var statKwh = document.getElementById('stat-kwh-used');
+  if (statKwh) statKwh.innerText = "Energi: " + (data.kWhUsed !== undefined ? data.kWhUsed : "0.000") + " kWh";
 
   if (data.pumpLph !== undefined && document.activeElement.id !== 'cfg-pump-lph') {
     var elLph = document.getElementById('cfg-pump-lph');
     if (elLph) elLph.value = data.pumpLph;
+    try { localStorage.setItem('smartfarm_pump_lph', data.pumpLph); } catch (e) {}
   }
   if (data.pumpWatt !== undefined && document.activeElement.id !== 'cfg-pump-watt') {
     var elWatt = document.getElementById('cfg-pump-watt');
     if (elWatt) elWatt.value = data.pumpWatt;
+    try { localStorage.setItem('smartfarm_pump_watt', data.pumpWatt); } catch (e) {}
   }
   if (data.plnTariff !== undefined && document.activeElement.id !== 'cfg-pln-tariff') {
     var elTariff = document.getElementById('cfg-pln-tariff');
     if (elTariff) elTariff.value = parseFloat(data.plnTariff);
+    try { localStorage.setItem('smartfarm_pump_tariff', data.plnTariff); } catch (e) {}
   }
 
   // RTC & Schedule Form
@@ -407,9 +484,17 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
     var s1en = document.getElementById('sched1-en');
     var s1tm = document.getElementById('sched1-time');
     var s1dur = document.getElementById('sched1-dur');
+    var s1h = parseInt(data.sched1_h, 10);
+    var s1m = parseInt(data.sched1_m, 10);
+    var s1timeStr = (s1h < 10 ? '0' : '') + s1h + ':' + (s1m < 10 ? '0' : '') + s1m;
     if (s1en) s1en.checked = (data.sched1_en == 1);
-    if (s1tm) s1tm.value = (data.sched1_h < 10 ? '0' : '') + data.sched1_h + ':' + (data.sched1_m < 10 ? '0' : '') + data.sched1_m;
+    if (s1tm) s1tm.value = s1timeStr;
     if (s1dur) s1dur.value = data.sched1_dur;
+    try {
+      localStorage.setItem('smartfarm_sched1_en', data.sched1_en);
+      localStorage.setItem('smartfarm_sched1_time', s1timeStr);
+      localStorage.setItem('smartfarm_sched1_dur', data.sched1_dur);
+    } catch (e) {}
   }
 
   if (data.sched2_h !== undefined &&
@@ -419,9 +504,17 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
     var s2en = document.getElementById('sched2-en');
     var s2tm = document.getElementById('sched2-time');
     var s2dur = document.getElementById('sched2-dur');
+    var s2h = parseInt(data.sched2_h, 10);
+    var s2m = parseInt(data.sched2_m, 10);
+    var s2timeStr = (s2h < 10 ? '0' : '') + s2h + ':' + (s2m < 10 ? '0' : '') + s2m;
     if (s2en) s2en.checked = (data.sched2_en == 1);
-    if (s2tm) s2tm.value = (data.sched2_h < 10 ? '0' : '') + data.sched2_h + ':' + (data.sched2_m < 10 ? '0' : '') + data.sched2_m;
+    if (s2tm) s2tm.value = s2timeStr;
     if (s2dur) s2dur.value = data.sched2_dur;
+    try {
+      localStorage.setItem('smartfarm_sched2_en', data.sched2_en);
+      localStorage.setItem('smartfarm_sched2_time', s2timeStr);
+      localStorage.setItem('smartfarm_sched2_dur', data.sched2_dur);
+    } catch (e) {}
   }
 
   if (data.l_h !== undefined &&
@@ -431,9 +524,17 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
     var l_en = document.getElementById('lamp-sched-en');
     var l_tm = document.getElementById('lamp-sched-time');
     var l_dur = document.getElementById('lamp-sched-dur');
+    var lh = parseInt(data.l_h, 10);
+    var lm = parseInt(data.l_m, 10);
+    var ltimeStr = (lh < 10 ? '0' : '') + lh + ':' + (lm < 10 ? '0' : '') + lm;
     if (l_en) l_en.checked = (data.l_en == 1);
-    if (l_tm) l_tm.value = (data.l_h < 10 ? '0' : '') + data.l_h + ':' + (data.l_m < 10 ? '0' : '') + data.l_m;
+    if (l_tm) l_tm.value = ltimeStr;
     if (l_dur) l_dur.value = data.l_dur;
+    try {
+      localStorage.setItem('smartfarm_lamp_en', data.l_en);
+      localStorage.setItem('smartfarm_lamp_time', ltimeStr);
+      localStorage.setItem('smartfarm_lamp_dur', data.l_dur);
+    } catch (e) {}
   }
 
   // Crop Profile & Thresholds from NVS
@@ -444,17 +545,67 @@ function updateActuatorAndScheduleUI(data, friendlyRtc, hasTemp, tVal, hasHum, h
       if (typeof updateCropProfileUI === 'function') updateCropProfileUI(data.cropMode);
     }
   }
-  if (data.batasTanah !== undefined && document.activeElement.id !== 'slider-soil') {
-    var elSoil = document.getElementById('slider-soil');
-    if (elSoil) elSoil.value = data.batasTanah;
-    var valSoil = document.getElementById('val-slider-soil');
-    if (valSoil) valSoil.innerText = data.batasTanah + '%';
+  if (data.cropName !== undefined && data.cropName !== '' && document.activeElement.id !== 'crop-name') {
+    var elCropName = document.getElementById('crop-name');
+    if (elCropName && elCropName.value !== data.cropName) elCropName.value = data.cropName;
+    try { localStorage.setItem('crop_name', data.cropName); } catch(e){}
   }
-  if (data.batasSuhu !== undefined && document.activeElement.id !== 'slider-temp') {
+  if (data.cropAge !== undefined && document.activeElement.id !== 'crop-age-days') {
+    var elCropAge = document.getElementById('crop-age-days');
+    if (elCropAge && elCropAge.value != data.cropAge) elCropAge.value = data.cropAge;
+    try { localStorage.setItem('crop_age', data.cropAge); } catch(e){}
+  }
+  if (data.cropStage !== undefined && document.activeElement.id !== 'crop-stage') {
+    var elCropStage = document.getElementById('crop-stage');
+    if (elCropStage && elCropStage.value !== data.cropStage) elCropStage.value = data.cropStage;
+    try { localStorage.setItem('crop_stage', data.cropStage); } catch(e){}
+  }
+  if (data.cropLeaves !== undefined && document.activeElement.id !== 'crop-leaves-count') {
+    var elCropLeaves = document.getElementById('crop-leaves-count');
+    if (elCropLeaves && elCropLeaves.value != data.cropLeaves) elCropLeaves.value = data.cropLeaves;
+    try { localStorage.setItem('crop_leaves', data.cropLeaves); } catch(e){}
+  }
+  if (data.cropEnv !== undefined && data.cropEnv !== '' && document.activeElement.id !== 'crop-env') {
+    var elCropEnv = document.getElementById('crop-env');
+    if (elCropEnv && elCropEnv.value !== data.cropEnv) elCropEnv.value = data.cropEnv;
+    try { localStorage.setItem('crop_env', data.cropEnv); } catch(e){}
+  }
+  if (data.cropArea !== undefined && document.activeElement.id !== 'crop-area-size') {
+    var elCropArea = document.getElementById('crop-area-size');
+    if (elCropArea && elCropArea.value != data.cropArea) elCropArea.value = data.cropArea;
+    try { localStorage.setItem('crop_area', data.cropArea); } catch(e){}
+  }
+
+  // Jika data profil tanaman dari ESP32 NVS baru tiba, sinkronkan sektor zonasi, agronomis & ringkasan
+  if (data.cropName) {
+    if (typeof window.syncSectorFromEsp32 === 'function') {
+      window.syncSectorFromEsp32(data);
+    }
+    if (!window._initialCropHydrated) {
+      window._initialCropHydrated = true;
+      if (typeof updateCropAgronomyAnalysis === 'function') updateCropAgronomyAnalysis();
+      if (typeof updateCropHistorySummary === 'function') updateCropHistorySummary();
+    }
+  }
+  if (data.batasTanah !== undefined && document.activeElement.id !== 'slider-soil' && !window._sliderSaveTimer) {
+    var elSoil = document.getElementById('slider-soil');
+    var bSoilNum = parseInt(data.batasTanah, 10);
+    if (elSoil && !isNaN(bSoilNum)) {
+      elSoil.value = bSoilNum;
+      var valSoil = document.getElementById('val-slider-soil');
+      if (valSoil) valSoil.innerText = bSoilNum + '%';
+      try { localStorage.setItem('smartfarm_batasTanah', bSoilNum); } catch(e){}
+    }
+  }
+  if (data.batasSuhu !== undefined && document.activeElement.id !== 'slider-temp' && !window._sliderSaveTimer) {
     var elTemp = document.getElementById('slider-temp');
-    if (elTemp) elTemp.value = data.batasSuhu;
-    var valTemp = document.getElementById('val-slider-temp');
-    if (valTemp) valTemp.innerText = data.batasSuhu + '°C';
+    var bTempNum = parseFloat(data.batasSuhu);
+    if (elTemp && !isNaN(bTempNum)) {
+      elTemp.value = bTempNum;
+      var valTemp = document.getElementById('val-slider-temp');
+      if (valTemp) valTemp.innerText = (Number.isInteger(bTempNum) ? bTempNum : bTempNum.toFixed(1)) + '°C';
+      try { localStorage.setItem('smartfarm_batasSuhu', bTempNum); } catch(e){}
+    }
   }
 }
 

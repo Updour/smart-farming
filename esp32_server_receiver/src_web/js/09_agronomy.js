@@ -70,6 +70,15 @@ function updateCropAgronomyAnalysis() {
   localStorage.setItem('crop_ph', phLevel);
   localStorage.setItem('crop_ec', ecLevel);
 
+  // Synchronize to ESP32 Flash Memory (NVS Preferences)
+  var cropSyncUrl = '/setCropProfile?name=' + encodeURIComponent(name) +
+                    '&age=' + age +
+                    '&stage=' + encodeURIComponent(stage) +
+                    '&leaves=' + leavesCount +
+                    '&env=' + encodeURIComponent(env) +
+                    '&area=' + area;
+  fetch(cropSyncUrl).catch(function(err) { console.warn("Sync crop to ESP32 NVS:", err); });
+
   // Live Telemetry Values from ESP32
   var tData = window.lastTelemetryData || {};
   var tempElem = document.getElementById('kpi-temp');
@@ -84,6 +93,7 @@ function updateCropAgronomyAnalysis() {
   else if (nameLower.indexOf("bawang") !== -1 || nameLower.indexOf("onion") !== -1) targetAge = 15;
   else if (nameLower.indexOf("tomat") !== -1 || nameLower.indexOf("tomato") !== -1) targetAge = 25;
   else if (nameLower.indexOf("melon") !== -1) targetAge = 14;
+  else if (nameLower.indexOf("semangka") !== -1 || nameLower.indexOf("watermelon") !== -1) targetAge = 14;
   else if (nameLower.indexOf("padi") !== -1 || nameLower.indexOf("rice") !== -1) targetAge = 22;
 
   var daysRemaining = Math.max(0, targetAge - age);
@@ -262,15 +272,22 @@ function clearCropFormUI() {
 }
 
 function loadCropFormFromStorage() {
-  var storedName = localStorage.getItem('crop_name');
+  var tData = window.lastTelemetryData || {};
+  var storedName = localStorage.getItem('crop_name') || tData.cropName;
   if (storedName) {
+    var storedStage = localStorage.getItem('crop_stage') || tData.cropStage;
+    var storedAge = localStorage.getItem('crop_age') || tData.cropAge;
+    var storedEnv = localStorage.getItem('crop_env') || tData.cropEnv;
+    var storedArea = localStorage.getItem('crop_area') || tData.cropArea;
+    var storedLeaves = localStorage.getItem('crop_leaves') || tData.cropLeaves;
+
     var elName = document.getElementById('crop-name');
     if (elName) elName.value = storedName;
-    if (localStorage.getItem('crop_stage') && document.getElementById('crop-stage')) document.getElementById('crop-stage').value = localStorage.getItem('crop_stage');
-    if (localStorage.getItem('crop_age') && document.getElementById('crop-age-days')) document.getElementById('crop-age-days').value = localStorage.getItem('crop_age');
-    if (localStorage.getItem('crop_env') && document.getElementById('crop-env')) document.getElementById('crop-env').value = localStorage.getItem('crop_env');
-    if (localStorage.getItem('crop_area') && document.getElementById('crop-area-size')) document.getElementById('crop-area-size').value = localStorage.getItem('crop_area');
-    if (localStorage.getItem('crop_leaves') && document.getElementById('crop-leaves-count')) document.getElementById('crop-leaves-count').value = localStorage.getItem('crop_leaves');
+    if (storedStage && document.getElementById('crop-stage')) document.getElementById('crop-stage').value = storedStage;
+    if (storedAge && document.getElementById('crop-age-days')) document.getElementById('crop-age-days').value = storedAge;
+    if (storedEnv && document.getElementById('crop-env')) document.getElementById('crop-env').value = storedEnv;
+    if (storedArea && document.getElementById('crop-area-size')) document.getElementById('crop-area-size').value = storedArea;
+    if (storedLeaves && document.getElementById('crop-leaves-count')) document.getElementById('crop-leaves-count').value = storedLeaves;
     if (localStorage.getItem('crop_root') && document.getElementById('crop-root-status')) document.getElementById('crop-root-status').value = localStorage.getItem('crop_root');
     if (localStorage.getItem('crop_ph') && document.getElementById('crop-ph-level')) document.getElementById('crop-ph-level').value = localStorage.getItem('crop_ph');
     if (localStorage.getItem('crop_ec') && document.getElementById('crop-ec-level')) document.getElementById('crop-ec-level').value = localStorage.getItem('crop_ec');
